@@ -1,0 +1,17 @@
+[tool.pytest.ini_options]
+addopts = "-vs --alluredir=./temps --clean-alluredir"
+testpaths = ["testcases"]
+
+[project]
+name = "jkpt-api-test"
+version = "1.0.0"
+description = "监控平台API自动化测试框架"
+dependencies = [
+    "pytest>=7.0.0",
+    "requests>=2.28.0",
+    "pyyaml>=6.0",
+    "ddddocr>=1.4.0",
+    "pillow>=9.0.0",
+    "allure-pytest>=2.13.0",
+    "pytest-rerunfailures>=11.0",
+]

@@ -1,0 +1,14 @@
+{
+  "case_name": "获取设备分组信息-负向-缺少Token",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups",
+  "params": {
+    "account": "",
+    "include": "true",
+    "queryType": "ALL",
+    "terminalType": ""
+  },
+  "json": null,
+  "data": null,
+  "headers": {}
+}

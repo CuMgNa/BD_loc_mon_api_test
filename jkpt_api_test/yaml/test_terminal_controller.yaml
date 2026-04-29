@@ -1,0 +1,105 @@
+# yaml/test_terminal_controller.yaml
+# 设备管理接口测试数据 (Terminal Controller)
+# 覆盖: 设备增删改查、设备批量导入、设备移动、设备收藏等
+
+list_terminals_cases:
+  - name: "分页获取分组下设备列表-正向"
+    groupId: "{{one_id}}"
+    addr: ""
+    page: 1
+    pageSize: 100
+    terminalType: ""
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "分页获取分组下设备列表-负向-缺少Token"
+    groupId: "{{one_id}}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+add_terminal_cases:
+  - name: "添加单个设备-正向"
+    groupId: "{{two_id}}"
+    addr: "{{random_int}}"
+    remark: "测试设备"
+    terminalType: "PN07"
+    useScope: "ANIMAL"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "添加单个设备-负向-设备地址为空"
+    groupId: "{{two_id}}"
+    addr: ""
+    remark: "测试设备"
+    terminalType: "PN07"
+    useScope: "ANIMAL"
+    expected:
+      code: 1001
+      error_msg: "设备地址不能为空"
+
+terminal_types_cases:
+  - name: "设备类型查看-正向"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "设备类型查看-负向-缺少Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+update_terminal_cases:
+  - name: "编辑设备-正向"
+    groupId: "{{one_id}}"
+    remark: "更新后的备注"
+    terminalType: "PN07"
+    useScope: "ANIMAL"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+batch_add_terminals_cases:
+  - name: "手动输入卡号批量添加-正向"
+    groupId: "{{two_id}}"
+    remark: "批量添加测试"
+    useScope: "TRAIN"
+    terminalType: "PD18"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+comm_records_cases:
+  - name: "分页获取通信记录-正向"
+    groupId: "{{one_id}}"
+    page: 1
+    pageSize: 100
+    expected:
+      code: 0
+      error_msg: "成功"
+
+follow_terminal_cases:
+  - name: "关注/收藏设备-正向"
+    groupId: "{{one_id}}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+move_terminal_cases:
+  - name: "移动设备分组-正向"
+    groupId: "{{one_id}}"
+    newGroupId: "{{three_id}}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "移动设备分组-负向-目标分组不存在"
+    groupId: "{{one_id}}"
+    newGroupId: "NONEXIST_GROUP_ID"
+    expected:
+      code: 999
+      error_msg: "失败"

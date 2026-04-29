@@ -1,0 +1,72 @@
+# test_xxx.yaml — 测试数据文件标准模板
+# 从 api-test-framework Skill 生成
+#
+# 规则说明:
+#   1. name 必须语义化 → Python中用 case["name"] 做关键词匹配走不同分支
+#   2. expected.code 必填 → 作为主断言目标（0=成功，其他=业务错误码）
+#   3. expected.error_msg 仅负向用例需要 → 与接口返回的 msg 字段对比
+#   4. 动态字段留空或占位 → Python中通过关键字匹配后覆盖
+#   5. 正向用例在前，负向在后 → Python中用切片 test_data[:N] 分组参数化
+
+xxx_cases:                        # ← 顶层key，与 read_yaml() 中引用的键一致
+
+  # ========== 正向用例 ==========
+  - name: "创建成功"               # ← 关键字：包含"成功"
+    fieldName1: ""                 # ← 留空或占位，Python中动态填充
+    fieldName2: "固定值"
+    expected:
+      code: 0                     # 成功码
+
+  - name: "查询成功"
+    searchKey: "test"
+    expected:
+      code: 0
+
+  # ========== 负向用例 ==========
+  - name: "名称为空"
+    fieldName1: ""                 # ← 空值测试
+    expected:
+      code: 1001                  # ← 你的业务错误码
+      error_msg: "名称不能为空"
+
+  - name: "名称超长"
+    fieldName1: "这是一个非常非常非常长的名称超出限制长度了..."
+    expected:
+      code: 1002
+      error_msg: "名称长度不能超过50个字符"
+
+  - name: "参数缺失"
+    # 故意不传某些必填字段
+    expected:
+      code: 1003
+      error_msg: "缺少必要参数"
+
+  # ========== 编辑/删除用例（如果此YAML用于CRUD模板）==========
+  - name: "编辑成功"
+    # id字段在Python中通过 Test_xxxAPI.created_id 注入
+    newName: ""
+    expected:
+      code: 0
+
+  - name: "编辑-名称为空"
+    newName: ""
+    expected:
+      code: 1001
+      error_msg: "名称不能为空"
+
+  - name: "删除成功-资源不存在数据"
+    # id在Python中注入（空的资源）
+    expected:
+      code: 0
+
+  - name: "删除失败-资源存在数据"
+    # id在Python中注入（有数据的资源）
+    expected:
+      code: 1004
+      error_msg: "该资源下存在关联数据，无法删除"
+
+  - name: "删除-资源ID不存在"
+    # id在Python中注入一个不存在的值
+    expected:
+      code: 1005
+      error_msg: "资源不存在"
