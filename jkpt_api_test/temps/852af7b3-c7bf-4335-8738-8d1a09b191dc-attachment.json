@@ -1,0 +1,15 @@
+{
+  "case_name": "创建二级分组",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups",
+  "params": {
+    "groupName": "L2_42744509",
+    "parentId": "69f32658a6be4b76aec992ff"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

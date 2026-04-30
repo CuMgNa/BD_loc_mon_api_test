@@ -1,0 +1,26 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Thu, 30 Apr 2026 09:51:58 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "id": "69f3263ea6be4b76aec99280",
+      "parentId": "69f3263ba6be4b76aec9927d",
+      "name": "AUTO_GROUP_L22",
+      "selected": false,
+      "expanded": false,
+      "level": null,
+      "terminals": [],
+      "children": []
+    }
+  },
+  "elapsed_ms": 837
+}

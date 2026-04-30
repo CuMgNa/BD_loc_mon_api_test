@@ -193,12 +193,13 @@ def group_fixture(base_url, auth_headers):
 
     groups_url = f"{base_url}/api/monitor/groups"
     group_ids = {"one_id": None, "two_id": None, "three_id": None}
+    suffix = str(int(time.time() * 1000))[-8:]
 
     # 1. 创建一级分组
     resp = http.send_request(
         method="post",
         url=groups_url,
-        params={"groupName": "AUTO_L1_GROUP", "parentId": 0},
+        params={"groupName": f"L1_{suffix}", "parentId": 0},
         headers=auth_headers,
         case_name="创建一级分组",
         log_level="none"
@@ -209,14 +210,14 @@ def group_fixture(base_url, auth_headers):
         group_ids["one_id"] = _jsonpath_parse(json_data, "$.data.id")[0]
         key("一级分组ID", group_ids["one_id"])
     else:
-        key("一级分组ID", f"创建失败(code={code})")
-        return group_ids
+        msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+        pytest.fail(f"group_fixture创建一级分组失败: code={code}, msg={msg}")
 
     # 2. 创建二级分组
     resp = http.send_request(
         method="post",
         url=groups_url,
-        params={"groupName": "AUTO_L2_GROUP", "parentId": group_ids["one_id"]},
+        params={"groupName": f"L2_{suffix}", "parentId": group_ids["one_id"]},
         headers=auth_headers,
         case_name="创建二级分组",
         log_level="none"
@@ -227,14 +228,14 @@ def group_fixture(base_url, auth_headers):
         group_ids["two_id"] = _jsonpath_parse(json_data, "$.data.id")[0]
         key("二级分组ID", group_ids["two_id"])
     else:
-        key("二级分组ID", f"创建失败(code={code})")
-        return group_ids
+        msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+        pytest.fail(f"group_fixture创建二级分组失败: code={code}, msg={msg}")
 
     # 3. 创建三级分组
     resp = http.send_request(
         method="post",
         url=groups_url,
-        params={"groupName": "AUTO_L3_GROUP", "parentId": group_ids["two_id"]},
+        params={"groupName": f"L3_{suffix}", "parentId": group_ids["two_id"]},
         headers=auth_headers,
         case_name="创建三级分组",
         log_level="none"
@@ -245,12 +246,45 @@ def group_fixture(base_url, auth_headers):
         group_ids["three_id"] = _jsonpath_parse(json_data, "$.data.id")[0]
         key("三级分组ID", group_ids["three_id"])
     else:
-        key("三级分组ID", f"创建失败(code={code})")
+        msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+        pytest.fail(f"group_fixture创建三级分组失败: code={code}, msg={msg}")
 
     # 将分组ID写入 extract.yaml
     write_yaml("./extract.yaml", group_ids, mode="append")
 
     return group_ids
+
+# ==================== 设备类型 Fixture ====================
+@pytest.fixture(scope="session")
+def terminal_types(base_url, auth_headers):
+    """获取所有设备类型枚举，session级别只调用一次"""
+    sep(" 📋 获取设备类型枚举 ")
+    url = f"{base_url}/api/monitor/enums/terminal-types"
+
+    resp = http.send_request(
+        method="get",
+        url=url,
+        headers=auth_headers,
+        case_name="获取设备类型枚举",
+        log_level="none"
+    )
+
+    json_data = resp.json()
+    code = _jsonpath_parse(json_data, "$.code")[0]
+
+    if code == 0:
+        # 返回字典列表: [{"name": "PN07", "value": "PN07设备"}, ...]
+        types = _jsonpath_parse(json_data, "$.data[*]")
+        if types:
+            key("设备类型列表", types)
+            return types
+        else:
+            key("设备类型列表", "未获取到类型")
+            return []
+    else:
+        msg = _jsonpath_parse(json_data, "$.msg")[0]
+        key("获取设备类型失败", f"code={code}, msg={msg}")
+        return []
 
 # ==================== 自动清理 ====================
 @pytest.fixture(scope="session", autouse=True)

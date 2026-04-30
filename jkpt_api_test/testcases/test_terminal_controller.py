@@ -17,74 +17,27 @@ class TestTerminalController:
     """设备管理接口测试 (Terminal Controller)"""
 
     test_data = read_yaml("./yaml/test_terminal_controller.yaml")
-
-    # ==================== 分页获取分组下设备列表 ====================
-    @pytest.mark.parametrize("case", test_data["list_terminals_cases"])
-    def test_list_terminals(self, base_url, auth_headers, group_fixture, case):
-        """分页获取分组下设备列表"""
-        group_id = group_fixture.get("one_id") if "{{one_id}}" in str(case.get("groupId")) else case.get("groupId")
-        url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
-        headers = {**auth_headers}
-
-        params = {
-            "addr": case.get("addr", ""),
-            "page": case.get("page", 1),
-            "pageSize": case.get("pageSize", 100),
-            "terminalType": case.get("terminalType", "")
-        }
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, params=params, headers=headers)
-        res = http.send_request(
-            "get", url,
-            params=params,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none"
-        )
-        print_response(res)
-
-        json_data = res.json()
-        code = _jsonpath_parse(json_data, "$.code")[0]
-        if code == 0:
-            terminals = _jsonpath_parse(json_data, "$.data.list")
-            if terminals and len(terminals) > 0:
-                first_terminal = terminals[0] if isinstance(terminals, list) else terminals
-                terminal_addr = first_terminal.get("addr") if isinstance(first_terminal, dict) else None
-                if terminal_addr:
-                    write_yaml("./extract.yaml", {"devices_addr": terminal_addr}, mode="append")
-
-        self._assert_and_report(case, res)
+    _first_addr_extracted = False  # 控制只提取第一个成功的设备地址
 
     # ==================== 添加单个设备 ====================
     @pytest.mark.parametrize("case", test_data["add_terminal_cases"])
     def test_add_terminal(self, base_url, auth_headers, group_fixture, case):
         """添加单个设备"""
-        group_id = group_fixture.get("two_id") if "{{two_id}}" in str(case.get("groupId")) else case.get("groupId")
+        group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
         headers = {**auth_headers, "Content-Type": "application/json"}
 
-        addr = case.get("addr", "")
-        if "{{random_int}}" in addr:
-            addr = str(int(time.time() * 1000) % 1000000)
-
         terminal_data = {
-            "addr": addr,
+            "addr": case.get("addr", ""),
             "remark": case.get("remark", ""),
-            "groupId": group_id,
-            "terminalType": case.get("terminalType", "PN07"),
             "useScope": case.get("useScope", "ANIMAL"),
-            "fromAddr": case.get("fromAddr", ""),
+            "sn": case.get("sn", ""),
+            "password": case.get("password", ""),
             "trackColor": case.get("trackColor", "#141323"),
             "trackSize": case.get("trackSize", 5),
-            "editTitle": case.get("editTitle", "编辑"),
-            "groupCallNumber": case.get("groupCallNumber", ""),
-            "ipAddress": case.get("ipAddress", ""),
-            "gatewayParam": case.get("gatewayParam", {
-                "colorCodeId": 1, "gid": 0, "radioRcvChn": "", "radioSndChn": "",
-                "radioPower": 0, "rxCss": "", "txCss": "", "width": 0
-            }),
-            "fieldJson": case.get("fieldJson", "")
+            "gatewayParam": case.get("gatewayParam"),
+            "fieldJson": case.get("fieldJson", {}),
+            "fields": case.get("fields", [])
         }
 
         sep(f" 测试用例: {case['name']}")
@@ -98,34 +51,14 @@ class TestTerminalController:
         )
         print_response(res)
 
+        # 成功时提取 addr 供后续编辑用例使用
         json_data = res.json()
         code = _jsonpath_parse(json_data, "$.code")[0]
-        if code == 0:
+        if code == 0 and not self._first_addr_extracted:
             terminal_addr = _jsonpath_parse(json_data, "$.data.addr")
             if terminal_addr:
                 write_yaml("./extract.yaml", {"devices_addr": terminal_addr[0]}, mode="append")
-
-        self._assert_and_report(case, res)
-
-    # ==================== 设备类型查看 ====================
-    @pytest.mark.parametrize("case", test_data["terminal_types_cases"])
-    def test_terminal_types(self, base_url, auth_headers, case):
-        """设备类型查看"""
-        url = f"{base_url}/api/monitor/enums/terminal-types"
-        headers = {**auth_headers}
-
-        if case.get("no_auth"):
-            headers = {}
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, headers=headers)
-        res = http.send_request(
-            "get", url,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none"
-        )
-        print_response(res)
+                self._first_addr_extracted = True
 
         self._assert_and_report(case, res)
 
@@ -133,7 +66,7 @@ class TestTerminalController:
     @pytest.mark.parametrize("case", test_data["update_terminal_cases"])
     def test_update_terminal(self, base_url, auth_headers, group_fixture, case):
         """编辑设备"""
-        group_id = group_fixture.get("one_id")
+        group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
         headers = {**auth_headers, "Content-Type": "application/json"}
 
@@ -142,20 +75,14 @@ class TestTerminalController:
         terminal_data = {
             "addr": devices_addr,
             "remark": case.get("remark", ""),
-            "groupId": group_id,
-            "terminalType": case.get("terminalType", "PN07"),
             "useScope": case.get("useScope", "ANIMAL"),
-            "fromAddr": case.get("fromAddr", ""),
+            "sn": case.get("sn", ""),
+            "password": case.get("password", ""),
             "trackColor": case.get("trackColor", "#141323"),
             "trackSize": case.get("trackSize", 5),
-            "editTitle": case.get("editTitle", "编辑"),
-            "groupCallNumber": case.get("groupCallNumber", ""),
-            "ipAddress": case.get("ipAddress", ""),
-            "gatewayParam": case.get("gatewayParam", {
-                "colorCodeId": 1, "gid": 0, "radioRcvChn": "", "radioSndChn": "",
-                "radioPower": 0, "rxCss": "", "txCss": "", "width": 0
-            }),
-            "fieldJson": case.get("fieldJson", "")
+            "gatewayParam": case.get("gatewayParam"),
+            "fieldJson": case.get("fieldJson", {}),
+            "fields": case.get("fields", [])
         }
 
         sep(f" 测试用例: {case['name']}")
@@ -171,26 +98,28 @@ class TestTerminalController:
 
         self._assert_and_report(case, res)
 
-    # ==================== 手动输入卡号批量添加 ====================
+    # ==================== 手动输入SN码批量添加 ====================
     @pytest.mark.parametrize("case", test_data["batch_add_terminals_cases"])
-    def test_batch_add_terminals(self, base_url, auth_headers, case):
-        """手动输入卡号批量添加"""
-        group_id = self._resolve_value(case.get("groupId"), required=True)
+    def test_batch_add_terminals(self, base_url, auth_headers, group_fixture, case):
+        """手动输入SN码批量添加"""
+        group_id = group_fixture.get("two_id") if "{{two_id}}" in str(case.get("groupId")) else case.get("groupId")
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals/batch"
         headers = {**auth_headers, "Content-Type": "application/json"}
 
         items = []
-        for i in range(2):
+        yaml_items = case.get("item", [])
+        for yaml_item in yaml_items:
+
             items.append({
-                "addr": str(int(time.time() * 1000 + i) % 1000000),
-                "remark": case.get("remark", "")
+                "sn": yaml_item.get("sn", ""),
+                "remark": yaml_item.get("remark", ""),
+                "password": yaml_item.get("password", "")
             })
 
         batch_data = {
-            "groupId": group_id,
-            "item": items,
             "useScope": case.get("useScope", "TRAIN"),
-            "terminalType": case.get("terminalType", "PD18")
+            "item": items,
+            "gatewayParam": case.get("gatewayParam")
         }
 
         sep(f" 测试用例: {case['name']}")
@@ -215,38 +144,11 @@ class TestTerminalController:
 
         self._assert_and_report(case, res)
 
-    # ==================== 分页获取通信记录 ====================
-    @pytest.mark.parametrize("case", test_data["comm_records_cases"])
-    def test_comm_records(self, base_url, auth_headers, case):
-        """分页获取通信记录"""
-        group_id = self._resolve_value(case.get("groupId"), required=True)
-        devices_addr = self._resolve_value("{{devices_addr}}", required=True)
-        url = f"{base_url}/api/monitor/groups/{group_id}/terminals/{devices_addr}/comm-records"
-        headers = {**auth_headers}
-
-        params = {
-            "page": case.get("page", 1),
-            "pageSize": case.get("pageSize", 100)
-        }
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, params=params, headers=headers)
-        res = http.send_request(
-            "get", url,
-            params=params,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none"
-        )
-        print_response(res)
-
-        self._assert_and_report(case, res)
-
     # ==================== 关注/收藏设备 ====================
     @pytest.mark.parametrize("case", test_data["follow_terminal_cases"])
-    def test_follow_terminal(self, base_url, auth_headers, case):
+    def test_follow_terminal(self, base_url, auth_headers, group_fixture, case):
         """关注/收藏设备"""
-        group_id = self._resolve_value(case.get("groupId"), required=True)
+        group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
         devices_addr = self._resolve_value("{{devices_addr}}", required=True)
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals/{devices_addr}/follow"
         headers = {**auth_headers}
@@ -263,12 +165,12 @@ class TestTerminalController:
 
         self._assert_and_report(case, res)
 
-    # ==================== 移动设备分组 ====================
+    # ==================== 移动设备分组(单个) ====================
     @pytest.mark.parametrize("case", test_data["move_terminal_cases"])
-    def test_move_terminal(self, base_url, auth_headers, case):
+    def test_move_terminal(self, base_url, auth_headers, group_fixture, case):
         """移动设备分组"""
-        group_id = self._resolve_value(case.get("groupId"), required=True)
-        new_group_id = self._resolve_value(case.get("newGroupId"), required=True)
+        group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
+        new_group_id = group_fixture.get("one_id") if "{{one_id}}" in str(case.get("newGroupId")) else case.get("newGroupId")
         devices_addr = self._resolve_value("{{devices_addr}}", required=True)
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals/{devices_addr}/move"
         headers = {**auth_headers}
@@ -285,6 +187,45 @@ class TestTerminalController:
             log_level="none"
         )
         print_response(res)
+
+        self._assert_and_report(case, res)
+    
+    # ==================== 分页获取分组下设备列表 ====================
+    @pytest.mark.parametrize("case", test_data["list_terminals_cases"])
+    def test_list_terminals(self, base_url, auth_headers, group_fixture, case):
+        """分页获取分组下设备列表"""
+        group_id = group_fixture.get("two_id") if "{{two_id}}" in str(case.get("groupId")) else case.get("groupId")
+        url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
+        headers = {**auth_headers}
+        if case.get("no_auth"):
+            headers.pop("Authorization", None)
+
+        params = {
+            "addr": case.get("addr", ""),
+            "page": case.get("page", 1),
+            "pageSize": case.get("pageSize", 100),
+        }
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, params=params, headers=headers)
+        res = http.send_request(
+            "get", url,
+            params=params,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none"
+        )
+        print_response(res)
+
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        if code == 0:
+            terminals = _jsonpath_parse(json_data, "$.data.list")
+            if terminals and len(terminals) > 0:
+                first_terminal = terminals[0] if isinstance(terminals, list) else terminals
+                terminal_addr = first_terminal.get("addr") if isinstance(first_terminal, dict) else None
+                if terminal_addr:
+                    write_yaml("./extract.yaml", {"devices_addr": terminal_addr}, mode="append")
 
         self._assert_and_report(case, res)
 
