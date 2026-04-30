@@ -219,14 +219,6 @@ class TestTerminalController:
 
         json_data = res.json()
         code = _jsonpath_parse(json_data, "$.code")[0]
-        if code == 0:
-            terminals = _jsonpath_parse(json_data, "$.data.list")
-            if terminals and len(terminals) > 0:
-                first_terminal = terminals[0] if isinstance(terminals, list) else terminals
-                terminal_addr = first_terminal.get("addr") if isinstance(first_terminal, dict) else None
-                if terminal_addr:
-                    write_yaml("./extract.yaml", {"devices_addr": terminal_addr}, mode="append")
-
         self._assert_and_report(case, res)
 
     # ==================== 辅助方法 ====================
