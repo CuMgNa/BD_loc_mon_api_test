@@ -1,0 +1,17 @@
+{
+  "case_name": "经纬度批量查询详情-负向-points为空",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/terminals/batch/lnglat-details",
+  "params": null,
+  "json": {
+    "points": [],
+    "page": 1,
+    "pageSize": 100
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

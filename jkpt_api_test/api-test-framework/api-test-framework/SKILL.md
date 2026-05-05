@@ -290,6 +290,8 @@ import pytest
 from common.requests_util import BaseRequest
 from common.yaml_util import read_yaml
 
+_jsonpath_parse = jsonpath.jsonpath   # ← 项目统一别名，用函数式API
+
 class Test_xxxAPI:
     test_data = read_yaml("./yaml/test_xxx.yaml")["xxx_cases"]
 
@@ -303,7 +305,7 @@ class Test_xxxAPI:
             case_name=case["name"], log_level="simple"
         )
         
-        code = jsonpath.JSONPath("$.code").parse(res.json())[0]
+        code = _jsonpath_parse(res.json(), "$.code")[0]
         if code == 0:
             assert code == case["expected"]["code"]
             # 成功时的额外断言...
@@ -328,6 +330,8 @@ from common.common_data import get_current_datetime
 from common.requests_util import BaseRequest
 from common.yaml_util import read_yaml
 
+_jsonpath_parse = jsonpath.jsonpath   # ← 项目统一别名，用函数式API
+
 class Test_crudAPI:
     created_id = None           # ← 类变量，跨方法共享
     
@@ -340,9 +344,10 @@ class Test_crudAPI:
             case["name_field"] = f"测试_{get_current_datetime()}"  # 保证唯一性
         
         res = BaseRequest().send_request(method="post", url=..., ...)
-        code = jsonpath.JSONPath("$.code").parse(res.json())[0]
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
         if code == 0:
-            Test_crudAPI.created_id = jsonpath.JSONPath("$.data.id").parse(res.json())[0]
+            Test_crudAPI.created_id = _jsonpath_parse(json_data, "$.data.id")[0]
             assert code == case["expected"]["code"]
         else:
             assert code == case["expected"]["code"]
@@ -369,6 +374,79 @@ class Test_crudAPI:
         # 断言同上...
 ```
 
+### 模式B′（本项目）：`conftest` fixture + `extract.yaml`
+
+上节为**通用教学示例**（类变量 + 改 `case` 字典）。本仓库真实用例（如 `test_group_controller.py`、`test_terminal_controller.py`）用**两条数据通道**达到同样的「有状态依赖」目标：**fixture 注入** 与 **`extract.yaml` + `{{占位符}}`**。
+
+下面先写**原则与扩展方式**，再给出**参照示例**（示例仅对齐现有风格，**不是**唯一命名或唯一写法；新模块可自行约定 fixture 名、`extract` 键名与 YAML 占位符）。
+
+#### 两条通道（原则）
+
+| 通道 | 用途 | 典型做法 |
+|------|------|----------|
+| **Fixture** | session / 模块级前置，跨文件复用 | 在 `conftest.py` 中 `@pytest.fixture`，测试方法**参数注入**，方法体内读取返回值 |
+| **`extract.yaml`** | 同文件内「接口 A 响应 → 接口 B 请求」 | 上游 `write_yaml("./extract.yaml", {"键": 值}, mode="append")`，下游 `_resolve_value` 解析 YAML 中的 `{{键}}` |
+
+**不要在 `conftest` 里写 `extract.yaml`**（与项目习惯、清理职责分离一致）。**不要在测试里重复创建**已有 fixture 已提供的**同类**资源（避免重复造数）。
+
+#### 方式一：Fixture（不固定 fixture 名与返回结构）
+
+- 任意 pytest fixture（如本仓库的 `group_fixture`、`terminal_types`，或你新增的 `order_fixture`）只要在方法签名中声明，即可在方法体内使用。
+- 返回值形态由项目约定（常见为 `dict`）；**fixture 名、字段名不由 SKILL 规定**。
+
+**YAML 里如何表达「值来自 fixture」**（两种常见做法，可并存）：
+
+- **做法 A（魔法串）**：YAML 某字段写 `{{three_id}}` 等，Python 中判断后从 fixture 取键，例如 `if "{{three_id}}" in str(case.get("groupId")): ... group_fixture.get("three_id")`。占位中的键名须与 fixture 返回结构一致。
+- **做法 B（不进 YAML）**：YAML 只写字面量或空，由测试方法根据 `case["name"]` 或路由，直接从 fixture 返回值取字段组装 URL/body。
+
+#### 方式二：`extract.yaml`（不固定键名）
+
+- **写入**：上游 `code == 0` 时 `write_yaml("./extract.yaml", {"变量名": 值}, mode="append")`；键名自定，须与 YAML 里 `{{变量名}}` 一致。
+- **读取**：`_resolve_value(case.get("某字段"), required=True)` 或 `_resolve_value("{{devices_addr}}", required=True)`。
+- **跳过**：`required=True` 且变量不存在时 `pytest.skip`。
+- **只写一次**：若需防止后续正向用例覆盖关键变量，可用类级布尔（如 `_first_addr_extracted`）。
+
+#### 分组 ID 也可走 extract
+
+「分组 ID」不一定只来自 fixture：例如 `test_group_controller` 在创建成功后把 `one_id` / `two_id` / `three_id` 写入 `extract.yaml`，下游 YAML 写 `{{one_id}}` 等并由 `_resolve_value` 解析。与「fixture 预置分组」是**并列手段**，按接口依赖选用或组合。
+
+#### 参照示例（后续 AI 对齐用；非强制）
+
+**示例 1：分组 ID（fixture 通道，与 `test_terminal_controller` 常见写法对齐）**
+
+- YAML（节选）：`groupId: "{{three_id}}"`（键名可换成你 fixture dict 中已有的任意一级，如 `two_id`）。
+- Python（节选）：
+
+```python
+def test_xxx(self, base_url, auth_headers, group_fixture, case):
+    gid = case.get("groupId")
+    if "{{three_id}}" in str(gid):
+        group_id = group_fixture.get("three_id")
+    else:
+        group_id = gid
+```
+
+**示例 2：设备 addr（extract 通道，与 `test_terminal_controller` 常见写法对齐）**
+
+- 写入（节选）：创建成功且 `code == 0` 时 `write_yaml("./extract.yaml", {"devices_addr": addr}, mode="append")`（可配合「只写第一次」的类级标志）。
+- 读取（节选）：`devices_addr = self._resolve_value("{{devices_addr}}", required=True)`。
+
+订单 ID、`addrList` 等其它链路变量：**同一模式**，替换键名与 JSONPath 即可。
+
+#### 新接口依赖：快速自检
+
+- 依赖来自**某次接口响应** → `write_yaml` + YAML `{{key}}` + `_resolve_value`。
+- 依赖来自**环境 / session 预置** → `conftest` 定义 fixture → 方法签名注入 → 方法体内取用。
+- 两者都要 → 方法体内分别组装；**仍不在 `conftest` 写 extract**。
+
+
+#### 编写新用例时的统一约定
+
+1. **session / 模块级环境数据** → 在 `conftest.py` 定义**对应 fixture** 并注入；名称与返回结构以项目为准。
+2. **同文件链路动态值** → `extract.yaml` + YAML `{{占位符}}`；避免重复创建与已有 fixture **同职责**的资源。
+3. **优先不修改** `parametrize` 注入的 `case` 字典，保持「方法体内组装参数」，与现有 `_assert_and_report` 一致。
+4. 「只保留第一次成功提取」→ 类级布尔或等价状态（与 `_first_addr_extracted` 同思路）。
+
 ### 模式C：框架驱动模式（纯YAML + run_case）
 
 **适用**: 标准CRUD接口，无需复杂条件分支。
@@ -391,8 +469,9 @@ def test_xxx(raw_case, base_url, auth_headers):
 
 ```python
 # 推荐：先提取核心断言字段
-code = jsonpath.JSONPath("$.code").parse(res.json())[0]
-msg = jsonpath.JSONPath("$.msg").parse(res.json())[0]
+json_data = res.json()
+code = _jsonpath_parse(json_data, "$.code")[0]
+msg = _jsonpath_parse(json_data, "$.msg")[0]
 
 # 推荐：调用公共断言工具，避免重复写失败上下文与Allure附件
 assert_api_result(
@@ -407,51 +486,109 @@ assert_api_result(
 
 ### JSONPath 提取常用写法
 
+项目使用 `jsonpath.jsonpath`（函数式 API），统一在文件顶部定义别名后使用，不使用 `jsonpath.JSONPath(...).parse(...)` 的 OOP 写法。
+
 ```python
 import jsonpath
 
-# 提取单个值
-token = jsonpath.JSONPath("$.data.token").parse(res.json())[0]
-user_id = jsonpath.JSONPath("$.data.userList[0].id").parse(res.json())[0]
+_jsonpath_parse = jsonpath.jsonpath   # ← 文件顶部声明一次，下面直接用
 
-# 提取列表
-addr_list = jsonpath.JSONPath("$.data.addr").parse(res.json())
-# addr_list可能是单个值或列表，统一处理:
-if addr_list:
-    result_ids = addr_list if isinstance(addr_list, list) else [addr_list]
+json_data = res.json()   # ← 只调用一次 .json()，避免重复解析
+
+# 提取单个值（结果是列表，取 [0]）
+token   = _jsonpath_parse(json_data, "$.data.token")[0]
+user_id = _jsonpath_parse(json_data, "$.data.userList[0].id")[0]
+
+# 提取列表（无匹配时返回 False，需判断）
+addr_list = _jsonpath_parse(json_data, "$.data.items[*].addr")
+if addr_list:                        # False 或空列表都视为"无结果"
+    addrs = addr_list                # 已经是列表，直接用
+
+# 安全取单值（防止路径不存在时报 IndexError）
+raw = _jsonpath_parse(json_data, "$.msg")
+msg = raw[0] if raw else "未知错误"
 ```
 
 ---
 
 ## 第5层：YAML 数据文件格式规范
 
+本节以仓库内 [yaml/test_group_controller.yaml](jkpt_api_test/yaml/test_group_controller.yaml) 为**参照**（非唯一文件名）：多段业务、多顶层 key、占位符与 `expected` 形态与当前项目一致即可。
+
 ### 标准结构
 
 ```yaml
 # yaml/test_xxx.yaml
-xxx_cases:                    # ← 顶层key，与read_yaml()中的键对应
-  - name: "用例名称（语义化，用于关键字匹配）"
-    field1: "value1"           # ← 直接做请求数据的字段
-    field2: "value2"
-    expected:                  # ← 预期结果（必填）
-      code: 0                  # 0=成功, 其他=业务错误码
-      error_msg: "错误信息"    # 仅负向用例填
+# 可选：首行注释写路径 + 本文件覆盖的接口/场景
 
-  - name: "负向用例—参数为空"
-    field1: ""                 # 空值测试
+# 按场景拆成多个顶层 key，各自对应 Python 里 read_yaml(...)["该key"] 与一组 @pytest.mark.parametrize
+add_xxx_l1_cases:
+  - name: "某模块-一级-正向"
+    groupName: "AUTO_GROUP_L1"
+    parentId: 0
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "某模块-一级-负向-名称为空"
+    groupName: ""
+    parentId: 0
     expected:
       code: 1001
-      error_msg: "xxx不能为空"
+      error_msg: "分组名称不能为空"
+
+add_xxx_l2_cases:
+  - name: "某模块-二级-正向"
+    groupName: "AUTO_GROUP_L2"
+    parentId: "{{one_id}}"     # 与 extract.yaml 中写入的键名一致
+    expected:
+      code: 0
+      error_msg: "成功"
+
+update_xxx_cases:
+  - name: "某模块-编辑-正向"
+    groupId: "{{one_id}}"
+    groupName: "Updated_{int(time.time())}"   # 由 Python 方法体内 replace，不在 YAML 执行代码
+    expected:
+      code: 0
+      error_msg: "成功"
+
+get_xxx_cases:
+  - name: "某模块-查询-正向"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "某模块-查询-负向-缺少Token"
+    no_auth: true               # 用例级开关：测试中分支处理 headers
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+delete_xxx_cases:
+
+  - name: "某模块-删除-正向"
+    groupId: "{{three_id}}"
+    expected:
+      code: 0
+      error_msg: "成功"
 ```
+
+说明：`delete_xxx_cases:` 后空一行再写列表项的写法合法，与现有分组 YAML 一致。
 
 ### 设计规则
 
 | 规则 | 说明 |
 |------|------|
-| `name` 必须语义化 | Python中用 `case["name"]` 做关键词匹配来走不同逻辑分支 |
-| `expected.code` 必填 | 作为主断言目标 |
-| 动态字段留空或占位 | 在Python中通过关键字匹配后用 `get_current_datetime()` 或注入ID覆盖 |
-| 正向用例在前，负向在后 | Python中用切片 `test_data[:N]` 分组参数化 |
+| 文件头注释 | 推荐写清路径与覆盖范围，便于检索 |
+| 多顶层 `*_cases` | 按场景分块；Python 中 `read_yaml("./yaml/...yaml")["某key"]` 与各 `@pytest.mark.parametrize` 一一对应；**不必**强行合并为单一 `xxx_cases` |
+| `name` | 语义化，建议含模块、行为、正向/负向；需要时供 Python 关键字分支 |
+| 业务字段 | 与真实接口参数名一致（如 `groupName`、`parentId`、`groupId`、`groupIds`） |
+| `expected` | 与当前断言工具、现有 YAML 保持一致；至少包含 `code`，其余字段按项目惯例编写 |
+| `{{变量名}}` | 与 `extract.yaml` 写入键一致；须为整段占位（如 `{{one_id}}`），由 `_resolve_value` 解析 |
+| 运行时占位串 | 如 `Updated_{int(time.time())}`，在测试代码里 `replace` 替换，**不要**在 YAML 中写可执行表达式 |
+| 开关字段 | 如 `no_auth: true`，用于分支构造请求头或鉴权 |
+| 用例顺序 | 正向在前、负向在后，便于按切片 `test_data[:N]` 分组参数化（若采用切片） |
 
 ---
 

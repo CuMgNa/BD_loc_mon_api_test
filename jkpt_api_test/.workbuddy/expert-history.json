@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "sessions": {
+    "da1bb76455d04af3ad3d27065bc5b225": [
+      {
+        "expertId": "ApiTestingExpert",
+        "name": "接口探",
+        "profession": "API测试专家",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/08-QualityAssurance/ApiTestingExpert/ApiTestingExpert.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/08-QualityAssurance/ApiTestingExpert/ApiTestingExpert_zh.md",
+        "usedAt": 1777564260452,
+        "industryId": "08-QualityAssurance"
+      }
+    ]
+  },
+  "lastUpdated": 1777564335299
+}

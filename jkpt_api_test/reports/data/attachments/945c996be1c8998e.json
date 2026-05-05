@@ -1,0 +1,14 @@
+{
+  "case_name": "编辑分组名称-正向",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/69f96ab8a6be4b76aefdff0e",
+  "params": {
+    "groupName": "Updated_1777953472"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

@@ -5,10 +5,13 @@ import random
 import logging
 import json
 import traceback
+import os
 from common.requests_util import BaseRequest, get_last_http_context
 from common.yaml_util import clear_yaml
 from common.captcha_util import CaptchaRecognizer
 from common.logger_util import sep, key, print_request, print_response
+from common.bd_protocol_client import BDProtocolClient
+from common.protocol_transport import BDProtocolTransport
 import jsonpath
 
 # 修复 jsonpath API 兼容性
@@ -33,6 +36,9 @@ logger = logging.getLogger(__name__)
 # ==================== 全局实例 ====================
 http = BaseRequest()
 ocr = CaptchaRecognizer()
+
+# ==================== 配置清理行为 ====================
+ENABLE_AUTO_CLEANUP = os.getenv("ENABLE_AUTO_CLEANUP", "true").lower() == "true"
 
 # ==================== 配置 ====================
 def pytest_configure(config):
@@ -185,11 +191,9 @@ def pytest_runtest_makereport(item, call):
 
 # ==================== 全局分组 Fixture ====================
 @pytest.fixture(scope="session")
-def group_fixture(base_url, auth_headers):
-    """自动创建分组数据，并写入 extract.yaml 供其他测试复用"""
+def group_fixture(base_url, auth_headers, pytestconfig):
+    """自动创建分组数据，供其他测试复用"""
     sep(" 📦 创建全局分组数据 ")
-
-    from common.yaml_util import write_yaml
 
     groups_url = f"{base_url}/api/monitor/groups"
     group_ids = {"one_id": None, "two_id": None, "three_id": None}
@@ -249,8 +253,8 @@ def group_fixture(base_url, auth_headers):
         msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
         pytest.fail(f"group_fixture创建三级分组失败: code={code}, msg={msg}")
 
-    # 将分组ID写入 extract.yaml
-    write_yaml("./extract.yaml", group_ids, mode="append")
+    # 存储到 stash，供 session 结束时清理使用
+    pytestconfig.stash["test_group_ids"] = group_ids.copy()
 
     return group_ids
 
@@ -286,10 +290,199 @@ def terminal_types(base_url, auth_headers):
         key("获取设备类型失败", f"code={code}, msg={msg}")
         return []
 
+# ==================== BD协议测试设备 Fixture ====================
+BD_TEST_ADDR = "20260430200104"
+
+
+@pytest.fixture(scope="session")
+def bd_test_terminal(base_url, auth_headers, group_fixture):
+    """在 group_fixture['one_id'] 下创建 BD 协议测试专用设备，返回 addr（即 fromAddr）
+
+    设备 SN 固定为 BD_TEST_ADDR；session 结束时由 cleanup_test_data 自动清理 one_id 下的所有设备。
+    若设备已存在（重复 session 或部分清理失败），create 接口失败也直接返回该 addr 复用。
+    """
+    sep(" 🛰️ 创建BD协议测试设备 ")
+    group_id = group_fixture["one_id"]
+    url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
+    body = {
+        "addr": BD_TEST_ADDR,
+        "remark": "bd协议测试",
+        "groupId": group_id,
+        "terminalType": "PD18",
+        "useScope": "STEAMER",
+        "fromAddr": "",
+        "trackColor": "#141323",
+        "trackSize": 5,
+        "groupCallNumber": "",
+        "ipAddress": "",
+        "gatewayParam": {
+            "colorCodeId": 1,
+            "gid": 0,
+            "radioRcvChn": "",
+            "radioSndChn": "",
+            "radioPower": 0,
+            "rxCss": "",
+            "txCss": "",
+            "width": 0,
+        },
+        "fieldJson": "",
+    }
+
+    resp = http.send_request(
+        method="post",
+        url=url,
+        json=body,
+        headers=auth_headers,
+        case_name="创建BD协议测试设备",
+        log_level="none",
+    )
+    json_data = resp.json()
+    code = _jsonpath_parse(json_data, "$.code")[0]
+    if code == 0:
+        key("BD协议测试设备", f"创建成功 addr={BD_TEST_ADDR}")
+    else:
+        msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+        # 设备已存在等情况不阻塞测试，仅日志提示
+        key("⚠️ BD协议测试设备创建失败(将复用)", f"code={code}, msg={msg}")
+    return BD_TEST_ADDR
+
+
+@pytest.fixture(scope="session")
+def bd_client(base_url, auth_headers):
+    """北斗协议客户端（11 种 content 一站式发送）"""
+    transport = BDProtocolTransport(base_url=base_url, headers=auth_headers, http=http)
+    return BDProtocolClient(transport=transport)
+
+
 # ==================== 自动清理 ====================
 @pytest.fixture(scope="session", autouse=True)
 def clear_data_per_session():
+    """在 session 开始和结束时清理临时数据文件"""
     sep(" 🚀 测试开始 ")
     clear_yaml()
     yield
     sep(" 🏁 测试结束 ")
+
+
+# ==================== 设备和分组清理 ====================
+def get_terminals_by_group(base_url, auth_headers, group_id):
+    """获取指定分组下的所有设备地址列表"""
+    url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
+    params = {"page": 1, "pageSize": 1000}
+
+    resp = http.send_request(
+        method="get",
+        url=url,
+        params=params,
+        headers=auth_headers,
+        case_name=f"获取分组 {group_id} 下的设备",
+        log_level="none"
+    )
+
+    json_data = resp.json()
+    code = _jsonpath_parse(json_data, "$.code")[0]
+
+    if code == 0:
+        terminals = _jsonpath_parse(json_data, "$.data.items[*].addr")
+        return terminals if terminals else []
+
+    key(f"获取分组 {group_id} 设备失败", "将返回空列表")
+    return []
+
+
+def cleanup_terminals_batch(base_url, auth_headers, group_id, addrs):
+    """批量删除指定分组下的设备"""
+    if not addrs:
+        key(f"分组 {group_id}", "无设备需要删除")
+        return 0, 0
+
+    url = f"{base_url}/api/monitor/terminals/batch"
+    data = {"addrs": ",".join(addrs)}
+
+    resp = http.send_request(
+        method="delete",
+        url=url,
+        json=data,
+        headers=auth_headers,
+        case_name=f"批量删除分组 {group_id} 下的设备",
+        log_level="none"
+    )
+
+    json_data = resp.json()
+    code = _jsonpath_parse(json_data, "$.code")[0]
+
+    if code == 0:
+        key(f"✅ 分组 {group_id} 设备删除", f"成功删除 {len(addrs)} 个设备")
+        return len(addrs), 0
+
+    msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+    key(f"❌ 分组 {group_id} 设备删除失败", f"code={code}, msg={msg}")
+    return 0, len(addrs)
+
+
+def delete_groups_in_order(base_url, auth_headers, group_ids):
+    """按顺序删除分组：三级 → 二级 → 一级"""
+    groups_url = f"{base_url}/api/monitor/groups"
+    success_count = 0
+    fail_count = 0
+
+    for level in ["three_id", "two_id", "one_id"]:
+        group_id = group_ids.get(level)
+        if group_id is None:
+            continue
+
+        delete_url = f"{groups_url}/{group_id}"
+        resp = http.send_request(
+            method="delete",
+            url=delete_url,
+            headers=auth_headers,
+            case_name=f"删除{level}分组 {group_id}",
+            log_level="none"
+        )
+
+        json_data = resp.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        if code == 0:
+            success_count += 1
+            key(f"✅ 删除{level}分组 {group_id}", "成功")
+        else:
+            fail_count += 1
+            msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+            key(f"❌ 删除{level}分组 {group_id} 失败", f"code={code}, msg={msg}")
+
+    return success_count, fail_count
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_test_data(base_url, auth_headers, group_fixture, pytestconfig):
+    """在 session 结束时自动清理测试数据和分组"""
+    yield
+
+    if not ENABLE_AUTO_CLEANUP:
+        sep(" ⚠️  自动清理已禁用 (ENABLE_AUTO_CLEANUP=false)")
+        return
+
+    sep(" 🧹 开始清理测试数据 ")
+    group_dict = pytestconfig.stash.get("test_group_ids", group_fixture)
+
+    sep(" 步骤1: 删除设备 ")
+    total_deleted_terminals = 0
+    total_failed_terminals = 0
+
+    for level in ["three_id", "two_id", "one_id"]:
+        group_id = group_dict.get(level)
+        if not group_id:
+            continue
+        addrs = get_terminals_by_group(base_url, auth_headers, group_id)
+        if addrs:
+            deleted, failed = cleanup_terminals_batch(base_url, auth_headers, group_id, addrs)
+            total_deleted_terminals += deleted
+            total_failed_terminals += failed
+
+    key("设备删除统计", f"成功: {total_deleted_terminals}, 失败: {total_failed_terminals}")
+
+    sep(" 步骤2: 删除分组 ")
+    group_success, group_fail = delete_groups_in_order(base_url, auth_headers, group_dict)
+    key("分组删除统计", f"成功: {group_success}, 失败: {group_fail}")
+
+    sep(" 🎉 清理完成 ")

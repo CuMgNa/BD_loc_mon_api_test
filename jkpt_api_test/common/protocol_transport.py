@@ -1,0 +1,97 @@
+# common/protocol_transport.py
+"""北斗协议 HTTP 传输层：POST /api/datas/bd"""
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from common.protocol_types import ProtocolSendResult
+from common.requests_util import BaseRequest
+
+
+def _now_cst_str() -> str:
+    """对应 JMX 中 ${__groovy(... TimeZone Asia/Shanghai ... yyyy-MM-dd HH:mm:ss)}"""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+class BDProtocolTransport:
+    """封装 /api/datas/bd 接口请求"""
+
+    DEFAULT_TO_ADDR = "110110110"
+    DEFAULT_PATH = "/api/datas/bd"
+
+    def __init__(
+        self,
+        base_url: str,
+        headers: Optional[Dict[str, str]] = None,
+        http: Optional[BaseRequest] = None,
+        to_addr: str = DEFAULT_TO_ADDR,
+    ):
+        self.base_url = base_url.rstrip("/")
+        self.headers = headers or {}
+        self.http = http or BaseRequest()
+        self.to_addr = to_addr
+
+    def send_bd_content(
+        self,
+        content_hex: str,
+        from_addr: str,
+        case_name: str = "",
+        to_addr: Optional[str] = None,
+    ) -> ProtocolSendResult:
+        """发送 bd 协议数据
+
+        Body 结构与 JMX 完全一致：
+        {
+            "commInfos": [{"commTime": "", "content": "...", "fromAddr": "...",
+                           "time": "yyyy-MM-dd HH:mm:ss", "toAddr": "110110110"}],
+            "receipts": [{...}]
+        }
+        """
+        body: Dict[str, Any] = {
+            "commInfos": [
+                {
+                    "commTime": "",
+                    "content": content_hex,
+                    "fromAddr": from_addr,
+                    "time": _now_cst_str(),
+                    "toAddr": to_addr or self.to_addr,
+                }
+            ],
+            "receipts": [
+                {
+                    "fromAddr": "string",
+                    "msg": "string",
+                    "msgId": "string",
+                    "sendTime": "string",
+                    "status": 0,
+                    "toAddr": "string",
+                }
+            ],
+        }
+
+        url = f"{self.base_url}{self.DEFAULT_PATH}"
+        # /api/datas/bd 不需要 Authorization
+        clean_headers = {
+            k: v for k, v in self.headers.items() if k.lower() != "authorization"
+        }
+        clean_headers.setdefault("Content-Type", "application/json")
+
+        resp = self.http.send_request(
+            method="post",
+            url=url,
+            json=body,
+            headers=clean_headers,
+            case_name=case_name or "发送BD协议",
+        )
+
+        try:
+            raw = resp.json()
+        except Exception:
+            raw = {}
+
+        return ProtocolSendResult(
+            status_code=resp.status_code,
+            code=int(raw.get("code", -1)) if isinstance(raw, dict) else -1,
+            msg=str(raw.get("msg", "")) if isinstance(raw, dict) else "",
+            raw_response=raw if isinstance(raw, dict) else {},
+            request_body=body,
+        )

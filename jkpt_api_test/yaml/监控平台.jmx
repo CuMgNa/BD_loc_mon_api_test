@@ -1,0 +1,1969 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="监控平台">
+      <intProp name="ThreadGroup.num_threads">1</intProp>
+      <intProp name="ThreadGroup.ramp_time">1</intProp>
+      <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="循环控制器">
+        <intProp name="LoopController.loops">-1</intProp>
+        <boolProp name="LoopController.continue_forever">false</boolProp>
+      </elementProp>
+    </ThreadGroup>
+    <hashTree>
+      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+        <collectionProp name="HeaderManager.headers">
+          <elementProp name="" elementType="Header">
+            <stringProp name="Header.name">Authorization</stringProp>
+            <stringProp name="Header.value">${__P(token1,)}</stringProp>
+          </elementProp>
+          <elementProp name="" elementType="Header">
+            <stringProp name="Header.name">Content-Type</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+        </collectionProp>
+      </HeaderManager>
+      <hashTree/>
+      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="文本语音" enabled="false">
+        <stringProp name="filename">E:/jmeter/jmeter短报文模拟/content.txt</stringProp>
+        <stringProp name="fileEncoding">UTF-8</stringProp>
+        <stringProp name="variableNames">content</stringProp>
+        <boolProp name="ignoreFirstLine">true</boolProp>
+        <stringProp name="delimiter">,</stringProp>
+        <boolProp name="quotedData">false</boolProp>
+        <boolProp name="recycle">true</boolProp>
+        <boolProp name="stopThread">false</boolProp>
+        <stringProp name="shareMode">shareMode.all</stringProp>
+      </CSVDataSet>
+      <hashTree/>
+      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="配置文件-测试环境" enabled="true">
+        <stringProp name="filename">D:/jmeterdata/监控平台配置文件/computerID.txt.txt</stringProp>
+        <stringProp name="fileEncoding">UTF-8</stringProp>
+        <stringProp name="variableNames">computerid,port</stringProp>
+        <boolProp name="ignoreFirstLine">true</boolProp>
+        <stringProp name="delimiter">,</stringProp>
+        <boolProp name="quotedData">false</boolProp>
+        <boolProp name="recycle">true</boolProp>
+        <boolProp name="stopThread">false</boolProp>
+        <stringProp name="shareMode">shareMode.all</stringProp>
+      </CSVDataSet>
+      <hashTree/>
+      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="配置文件-手机号配置" enabled="true">
+        <stringProp name="filename">D:/jmeterdata/监控平台配置文件/phone.txt.txt</stringProp>
+        <stringProp name="fileEncoding">UTF-8</stringProp>
+        <stringProp name="variableNames">phone</stringProp>
+        <boolProp name="ignoreFirstLine">true</boolProp>
+        <stringProp name="delimiter">,</stringProp>
+        <boolProp name="quotedData">false</boolProp>
+        <boolProp name="recycle">true</boolProp>
+        <boolProp name="stopThread">false</boolProp>
+        <stringProp name="shareMode">shareMode.all</stringProp>
+      </CSVDataSet>
+      <hashTree/>
+      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="配置文件-正式环境" enabled="false">
+        <stringProp name="filename">E:/jmeter/监控平台配置文件/computerID - online.txt</stringProp>
+        <stringProp name="fileEncoding">UTF-8</stringProp>
+        <stringProp name="variableNames">computerid,port</stringProp>
+        <boolProp name="ignoreFirstLine">true</boolProp>
+        <stringProp name="delimiter">,</stringProp>
+        <boolProp name="quotedData">false</boolProp>
+        <boolProp name="recycle">true</boolProp>
+        <boolProp name="stopThread">false</boolProp>
+        <stringProp name="shareMode">shareMode.all</stringProp>
+      </CSVDataSet>
+      <hashTree/>
+      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="设备地址" enabled="true">
+        <stringProp name="filename">D:/jmeterdata/监控平台配置文件/addr.txt.txt</stringProp>
+        <stringProp name="fileEncoding">UTF-8</stringProp>
+        <stringProp name="variableNames">addrid</stringProp>
+        <boolProp name="ignoreFirstLine">true</boolProp>
+        <stringProp name="delimiter">,</stringProp>
+        <boolProp name="quotedData">false</boolProp>
+        <boolProp name="recycle">true</boolProp>
+        <boolProp name="stopThread">false</boolProp>
+        <stringProp name="shareMode">shareMode.all</stringProp>
+      </CSVDataSet>
+      <hashTree/>
+      <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="循环控制器--时间点正常">
+        <boolProp name="LoopController.continue_forever">true</boolProp>
+        <intProp name="LoopController.loops">-1</intProp>
+      </LoopController>
+      <hashTree>
+        <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="同步定时器" enabled="false">
+          <intProp name="groupSize">7</intProp>
+          <longProp name="timeoutInMs">2000</longProp>
+        </SyncTimer>
+        <hashTree/>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="随机获取定位">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import java.util.Random
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import org.apache.jmeter.threads.JMeterContextService
+
+// ================== 坐标转换工具类 ==================
+class CoordinateConverter {
+    static double pi = Math.PI
+    static double a = 6378245.0
+    static double ee = 0.00669342162296594323
+
+    static def gcj02ToWgs84(double lng, double lat) {
+        def d = delta(lng, lat)
+        return [lng - d[0], lat - d[1]]
+    }
+
+    static def wgs84ToGcj02(double lng, double lat) {
+        def d = delta(lng, lat)
+        return [lng + d[0], lat + d[1]]
+    }
+
+    private static def delta(double lng, double lat) {
+        def dLng = transformLng(lng - 105.0, lat - 35.0)
+        def dLat = transformLat(lng - 105.0, lat - 35.0)
+        def radLat = lat / 180.0 * pi
+        def magic = Math.sin(radLat)
+        magic = 1 - ee * magic * magic
+        def sqrtMagic = Math.sqrt(magic)
+        dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * pi)
+        dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * pi)
+        return [dLng, dLat]
+    }
+
+    private static def transformLng(double x, double y) {
+        def ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x))
+        ret += (20.0 * Math.sin(6.0 * x * pi) + 20.0 * Math.sin(2.0 * x * pi)) * 2.0 / 3.0
+        ret += (20.0 * Math.sin(x * pi) + 40.0 * Math.sin(x / 3.0 * pi)) * 2.0 / 3.0
+        ret += (150.0 * Math.sin(x / 12.0 * pi) + 300.0 * Math.sin(x / 30.0 * pi)) * 2.0 / 3.0
+        return ret
+    }
+
+    private static def transformLat(double x, double y) {
+        def ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x))
+        ret += (20.0 * Math.sin(6.0 * x * pi) + 20.0 * Math.sin(2.0 * x * pi)) * 2.0 / 3.0
+        ret += (20.0 * Math.sin(y * pi) + 40.0 * Math.sin(y / 3.0 * pi)) * 2.0 / 3.0
+        ret += (160.0 * Math.sin(y / 12.0 * pi) + 320.0 * Math.sin(y * pi / 30.0)) * 2.0 / 3.0
+        return ret
+    }
+}
+
+// ================== 工具函数 ==================
+def decimalToDMS(decimal, isLatitude) {
+    def absDecimal = Math.abs(decimal)
+    int degrees = (int) absDecimal
+    double remaining = (absDecimal - degrees) * 60
+    int minutes = (int) remaining
+    double seconds = (remaining - minutes) * 60
+    def direction = isLatitude? (decimal &gt;= 0? &apos;N&apos; : &apos;S&apos;) : (decimal &gt;= 0? &apos;E&apos; : &apos;W&apos;)
+    return String.format(&quot;%d°%02d&apos;%06.3f\&quot;%s&quot;, degrees, minutes, seconds, direction)
+}
+
+def generateRandomPoint(centerLat, centerLon, radius) {
+    Random rand = new Random()
+    double angle = rand.nextDouble() * 2 * Math.PI
+    double distance = radius * Math.sqrt(rand.nextDouble())
+    
+    double deltaNorth = distance * Math.cos(angle)
+    double deltaEast = distance * Math.sin(angle)
+    
+    double latDelta = deltaNorth / 110574.0
+    double lonDelta = deltaEast / (111320.0 * Math.cos(Math.toRadians(centerLat)))
+    
+    return [centerLon + lonDelta, centerLat + latDelta]
+}
+
+def generateTrajectory(startLon, startLat, steps, distance) {
+    def points = []
+    Random rand = new Random()
+    double angle = rand.nextDouble() * 2 * Math.PI
+    
+    double deltaX = distance * Math.cos(angle)
+    double deltaY = distance * Math.sin(angle)
+    
+    double lonDelta = deltaX / (111320.0 * Math.cos(Math.toRadians(startLat)))
+    double latDelta = deltaY / 110574.0
+    
+    (steps + 1).times { i -&gt;
+        def newLon = startLon + lonDelta * i
+        def newLat = startLat + latDelta * i
+        points &lt;&lt; [newLon, newLat]
+    }
+    return points
+}
+
+def calculateDistance(lon1, lat1, lon2, lat2) {
+    double R = 6371000 // 地球半径（米）
+    double dLat = Math.toRadians(lat2 - lat1)
+    double dLon = Math.toRadians(lon2 - lon1)
+    double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+               Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+               Math.sin(dLon/2) * Math.sin(dLon/2)
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return R * c
+}
+
+def convertToSpecialHex(double value, int bytes) {
+    int scaled = (value * 1e6).toInteger()
+    ByteBuffer buffer = ByteBuffer.allocate(bytes)
+    buffer.order(ByteOrder.BIG_ENDIAN)
+    if (bytes == 4) {
+        buffer.putInt(scaled)
+    } else if (bytes == 2) {
+        buffer.putShort((short)scaled)
+    }
+    return buffer.array().encodeHex().toString().toUpperCase()
+}
+
+def convertToHex(double lon, double lat) {
+    return [
+        lon: convertToSpecialHex(lon, 4),
+        lat: convertToSpecialHex(lat, 4)
+    ]
+}
+
+def dmsToHexComponents(double decimal, boolean isLongitude) {
+    def directionChar = isLongitude? (decimal &gt;= 0? &apos;E&apos; : &apos;W&apos;) : (decimal &gt;= 0? &apos;N&apos; : &apos;S&apos;)
+    def dms = decimalToDMS(decimal, isLongitude? false : true)
+    def pattern = ~/(\d+)°(\d+)&apos;(\d+\.\d+)&quot;([NSWE])/
+    def matcher = pattern.matcher(dms)
+    if (!matcher.find()) throw new IllegalArgumentException(&quot;无效的DMS格式: ${dms}&quot;)
+
+    int degrees = matcher.group(1).toInteger()
+    int minutes = matcher.group(2).toInteger()
+    double seconds = matcher.group(3).toDouble()
+
+    // 处理方向（通过分的最高位表示）
+    if (isLongitude) { // 经度
+        if (directionChar == &apos;W&apos;) {
+            minutes |= 0x80 // 最高位设为1（西经）
+        } else {
+            minutes &amp;= 0x7F // 最高位设为0（东经）
+        }
+    } else { // 纬度
+        if (directionChar == &apos;S&apos;) {
+            minutes |= 0x80 // 最高位设为1（南纬）
+        } else {
+            minutes &amp;= 0x7F // 最高位设为0（北纬）
+        }
+    }
+
+    // 度（两位16进制）
+    String degHex = String.format(&quot;%02X&quot;, degrees)
+    // 分（两位16进制，含方向标志）
+    String minHex = String.format(&quot;%02X&quot;, minutes)
+    // 秒（两位16进制）
+    int secInt = (int) seconds
+    String secHex = String.format(&quot;%02X&quot;, secInt)
+    // 小秒（取小数点后两位，转两位16进制）
+    int subsecInt = ((seconds - secInt) * 100).toInteger()
+    String subsecHex = String.format(&quot;%02X&quot;, subsecInt)
+
+    return [
+        deg: degHex,
+        min: minHex,
+        sec: secHex,
+        subsec: subsecHex,
+        full: degHex + minHex + secHex + subsecHex
+    ]
+}
+
+// ================== 主逻辑 ==================
+def vars = JMeterContextService.getContext().getVariables()
+def threadId = Thread.currentThread().getId()
+
+// 初始化坐标中心点
+def centerLat = 23.170439
+def centerLon = 113.466203
+
+// 初始化或获取起始点
+def gcjStartPoint = vars.getObject(&quot;gcjStartPoint_${threadId}&quot;)
+if (!gcjStartPoint) {
+    def randomPoint = generateRandomPoint(centerLat, centerLon, 100)
+    gcjStartPoint = [lon: randomPoint[0], lat: randomPoint[1]]
+    vars.putObject(&quot;gcjStartPoint_${threadId}&quot;, gcjStartPoint)
+}
+
+// 坐标转换
+def (wgsLon, wgsLat) = CoordinateConverter.gcj02ToWgs84(gcjStartPoint.lon, gcjStartPoint.lat)
+
+// 生成轨迹（18个点，间隔10米）
+def trajectory = generateTrajectory(wgsLon, wgsLat, 17, 10)
+
+// 处理每个轨迹点
+trajectory.eachWithIndex { wgsPoint, index -&gt;
+    def pointNumber = index + 1
+    def isSpecialPoint = (pointNumber &gt;= 5 &amp;&amp; pointNumber &lt;= 10) || (pointNumber &gt;= 16 &amp;&amp; pointNumber &lt;= 18)
+
+    // 转换为GCJ02
+    def (gcjLon, gcjLat) = CoordinateConverter.wgs84ToGcj02(wgsPoint[0], wgsPoint[1])
+    
+    // GCJ-02坐标的度分秒格式
+    def gcjLonDms = decimalToDMS(gcjLon, false)
+    def gcjLatDms = decimalToDMS(gcjLat, true)
+
+    // 存储基础坐标
+    vars.put(&quot;loc${pointNumber}_wgs_lon&quot;, String.format(&quot;%.6f&quot;, wgsPoint[0]))
+    vars.put(&quot;loc${pointNumber}_wgs_lat&quot;, String.format(&quot;%.6f&quot;, wgsPoint[1]))
+
+    if (isSpecialPoint) {
+        // 处理经度
+        def lonDms = dmsToHexComponents(wgsPoint[0], true)
+        vars.put(&quot;loc${pointNumber}_lon_deg_hex&quot;, lonDms.deg)
+        vars.put(&quot;loc${pointNumber}_lon_min_hex&quot;, lonDms.min)
+        vars.put(&quot;loc${pointNumber}_lon_sec_hex&quot;, lonDms.sec)
+        vars.put(&quot;loc${pointNumber}_lon_subsec_hex&quot;, lonDms.subsec)
+
+        // 处理纬度
+        def latDms = dmsToHexComponents(wgsPoint[1], false)
+        vars.put(&quot;loc${pointNumber}_lat_deg_hex&quot;, latDms.deg)
+        vars.put(&quot;loc${pointNumber}_lat_min_hex&quot;, latDms.min)
+        vars.put(&quot;loc${pointNumber}_lat_sec_hex&quot;, latDms.sec)
+        vars.put(&quot;loc${pointNumber}_lat_subsec_hex&quot;, latDms.subsec)
+
+        // 完整HEX
+        def lonFullHex = lonDms.full
+        def latFullHex = latDms.full
+
+        vars.put(&quot;loc${pointNumber}_lon_dms_full_hex&quot;, lonFullHex)
+        vars.put(&quot;loc${pointNumber}_lat_dms_full_hex&quot;, latFullHex)
+
+        // 日志输出
+        log.info(&quot;┌────────────── 点位${pointNumber} ──────────────&quot;)
+        log.info(&quot;│ 经度组件: 度=${lonDms.deg} 分=${lonDms.min} 秒=${lonDms.sec} 小秒=${lonDms.subsec}&quot;)
+        log.info(&quot;│ 纬度组件: 度=${latDms.deg} 分=${latDms.min} 秒=${latDms.sec} 小秒=${latDms.subsec}&quot;)
+        log.info(&quot;│ 经度完整HEX: ${lonFullHex}&quot;)
+        log.info(&quot;│ 纬度完整HEX: ${latFullHex}&quot;)
+        log.info(&quot;│ GCJ02坐标: ${String.format(&quot;%.6f, %.6f&quot;, gcjLon, gcjLat)}&quot;)
+        log.info(&quot;│ GCJ02度分秒: ${gcjLonDms} ${gcjLatDms}&quot;)  // 新增GCJ-02度分秒
+    } else {
+        // 其他点保持原有逻辑
+        def hexData = convertToHex(wgsPoint[0], wgsPoint[1])
+        vars.put(&quot;loc${pointNumber}_hex_lon&quot;, hexData.lon)
+        vars.put(&quot;loc${pointNumber}_hex_lat&quot;, hexData.lat)
+        log.info(&quot;┌────────────── 点位${pointNumber} ──────────────&quot;)
+        log.info(&quot;│ 十六进制: 经度=${hexData.lon} 纬度=${hexData.lat}&quot;)
+        log.info(&quot;│ GCJ02坐标: ${String.format(&quot;%.6f, %.6f&quot;, gcjLon, gcjLat)}&quot;)
+        log.info(&quot;│ GCJ02度分秒: ${gcjLonDms} ${gcjLatDms}&quot;)  // 新增GCJ-02度分秒
+    }
+
+    // 公共日志输出
+    log.info(&quot;│ WGS84坐标: ${String.format(&quot;%.6f, %.6f&quot;, wgsPoint[0], wgsPoint[1])}&quot;)
+    log.info(&quot;│ WGS84度分秒: ${decimalToDMS(wgsPoint[0], false)} ${decimalToDMS(wgsPoint[1], true)}&quot;)
+    log.info(&quot;│ GCJ02度分秒: ${gcjLonDms} ${gcjLatDms}&quot;)  // 公共部分重复添加（可根据需要调整）
+
+    if (index &gt; 0) {
+        def prevPoint = trajectory[index - 1]
+        double distance = calculateDistance(prevPoint[0], prevPoint[1], wgsPoint[0], wgsPoint[1])
+        log.info(&quot;│ 与上一点距离: ${distance.round(2)}米&quot;)
+    }
+    log.info(&quot;└──────────────────────────────────────&quot;)
+}
+
+// 更新下一轮起点
+def lastPoint = trajectory.last()
+def (nextGcjLon, nextGcjLat) = CoordinateConverter.wgs84ToGcj02(lastPoint[0], lastPoint[1])
+vars.putObject(&quot;gcjStartPoint_${threadId}&quot;, [lon: nextGcjLon, lat: nextGcjLat])</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="文本（92,93）-语音（A5，A6）-文本（90,91）">
+          <stringProp name="LoopController.loops">1</stringProp>
+        </LoopController>
+        <hashTree>
+          <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="获取当前时间转换成时间戳（16进制）" enabled="true">
+            <stringProp name="BeanShellSampler.query">// 获取当前系统时间的时间戳（毫秒）
+long currentTimeMillis = System.currentTimeMillis() / 1000;
+
+// 八小时对应的秒数
+long eightHoursInSeconds = 8 * 60 * 60;
+ 
+// 计算减去八小时后的时间戳（秒）
+long adjustedTimeSeconds = currentTimeMillis - eightHoursInSeconds;
+ 
+// 输出调整后的时间戳（秒）
+print(&quot;当前系统时间减去八小时后的时间戳（秒）: &quot; + adjustedTimeSeconds);
+
+// 将时间戳转换为十六进制字符串
+// 注意：Java中的Long.toHexString()方法返回的是不带&quot;0x&quot;前缀的十六进制字符串
+String hexTimestamp = Long.toHexString(currentTimeMillis);
+
+String hexTimestamp_utc = Long.toHexString(adjustedTimeSeconds);
+
+String hexTimestamp_up = Long.toHexString(currentTimeMillis).toUpperCase();
+
+// 如果需要加上&quot;0x&quot;前缀，可以手动添加
+//String hexTimestampWithPrefix = &quot;0x&quot; + hexTimestamp;
+
+// 将十六进制字符串设置为JMeter变量
+// vars是JMeter提供的内置变量，用于存储和获取JMeter变量
+vars.put(&quot;hexTimestamp&quot;, hexTimestamp);
+vars.put(&quot;hexTimestamp_utc&quot;, hexTimestamp_utc);
+vars.put(&quot;hexTimestamp_up&quot;, hexTimestamp_up);
+
+// 打印变量到JMeter日志（可选，用于调试）
+log.info(&quot;Current hex timestamp: &quot; + hexTimestamp);
+log.info(&quot;Current hex hexTimestamp_utc: &quot; + hexTimestamp_utc);
+log.info(&quot;Current hex hexTimestamp_up: &quot; + hexTimestamp_up);
+
+</stringProp>
+          </BeanShellSampler>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="false">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="文本---92--无位置">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;92000690259E${hexTimestamp_up}C2E9B7B3B8F7CEBBB6D3D3D1B1A8D2BBCFC2D7D4BCBAB5C4CEBBD6C3&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+      &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+            <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+              <doubleProp>
+                <name>throughput</name>
+                <value>1.0</value>
+                <savedValue>1.0</savedValue>
+              </doubleProp>
+              <intProp name="calcMode">0</intProp>
+            </ConstantThroughputTimer>
+            <hashTree/>
+          </hashTree>
+          <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="获取当前时间转换成时间戳（16进制）" enabled="true">
+            <stringProp name="BeanShellSampler.query">// 获取当前系统时间的时间戳（毫秒）
+long currentTimeMillis = System.currentTimeMillis() / 1000;
+
+// 八小时对应的秒数
+long eightHoursInSeconds = 8 * 60 * 60;
+ 
+// 计算减去八小时后的时间戳（秒）
+long adjustedTimeSeconds = currentTimeMillis - eightHoursInSeconds;
+ 
+// 输出调整后的时间戳（秒）
+print(&quot;当前系统时间减去八小时后的时间戳（秒）: &quot; + adjustedTimeSeconds);
+
+// 将时间戳转换为十六进制字符串
+// 注意：Java中的Long.toHexString()方法返回的是不带&quot;0x&quot;前缀的十六进制字符串
+String hexTimestamp = Long.toHexString(currentTimeMillis);
+
+String hexTimestamp_utc = Long.toHexString(adjustedTimeSeconds);
+
+String hexTimestamp_up = Long.toHexString(currentTimeMillis).toUpperCase();
+
+// 如果需要加上&quot;0x&quot;前缀，可以手动添加
+//String hexTimestampWithPrefix = &quot;0x&quot; + hexTimestamp;
+
+// 将十六进制字符串设置为JMeter变量
+// vars是JMeter提供的内置变量，用于存储和获取JMeter变量
+vars.put(&quot;hexTimestamp&quot;, hexTimestamp);
+vars.put(&quot;hexTimestamp_utc&quot;, hexTimestamp_utc);
+vars.put(&quot;hexTimestamp_up&quot;, hexTimestamp_up);
+
+// 打印变量到JMeter日志（可选，用于调试）
+log.info(&quot;Current hex timestamp: &quot; + hexTimestamp);
+log.info(&quot;Current hex hexTimestamp_utc: &quot; + hexTimestamp_utc);
+log.info(&quot;Current hex hexTimestamp_up: &quot; + hexTimestamp_up);
+
+</stringProp>
+          </BeanShellSampler>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="false">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="文本---93--有位置" enabled="true">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;93000690259E${hexTimestamp_up}${loc1_hex_lon}${loc1_hex_lat}0017C2E9B7B3B8F7CEBBB6D3D3D1B1A8D2BBCFC2D7D4BCBAB5C4CEBBD6C3&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+     &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+            <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+              <doubleProp>
+                <name>throughput</name>
+                <value>1.0</value>
+                <savedValue>1.0</savedValue>
+              </doubleProp>
+              <intProp name="calcMode">0</intProp>
+            </ConstantThroughputTimer>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="神经--A6-终端与指挥中心" enabled="true">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;A60454CF920FD5B384C75F68BCEC8A4A46E6D2D3534F3D194A6BCC31C7FCC59F3DF5649B461ABD615B4B2DADB6E86A7FFEF927B07FF687279E78E6D218810456462794509AA1E700E544A402855453AD6677BDA8A0C29F3137B4C1C96060D3ECA0ACF852E45660A0124F463D35D96253F9DC92116BCEED534E39861A3A0BD586EA21DAA251454841078951AD5293BE305399CCC0DC82EA36DBA0FA67CC4D9613DE73CF6D5B69A5613456696DD34CC15E0645D03767626F52BD4A934D0663A82030C2382DB8F418EA4B93451461A38D36DA68A38D7FD2538E2F10BDFA2A&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+            <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+              <doubleProp>
+                <name>throughput</name>
+                <value>1.0</value>
+                <savedValue>1.0</savedValue>
+              </doubleProp>
+              <intProp name="calcMode">0</intProp>
+            </ConstantThroughputTimer>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="报警-报平安-位置上报-图片">
+          <stringProp name="LoopController.loops">1</stringProp>
+        </LoopController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="13-EE推送报警--13--有定位">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;1300${phone}${loc3_hex_lon}${loc3_hex_lat}0024000001CED2C3D4C2B7C1CBA3ACC7EBC7F3B0EFD6FAA1A3&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+      &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="推送报平安--14--有定位">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;140000${phone}${loc4_hex_lon}${loc4_hex_lat}0034CED2D2D1C6BDB0B2B5BDB4EFA3ACC7EBB7C5D0C4A3A1&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="随机获取方向">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="script">import java.util.Random
+
+Random random = new Random()
+
+// 获取用户定义的变量，默认生成4个方位变量
+int count = vars.get(&quot;direction_count&quot;) as Integer ?: 5
+
+// 生成指定数量的方位变量
+(1..count).each { index -&gt;
+    // 1. 生成0-360度的随机角度
+    int angle = random.nextInt(361)  // 0-360
+    
+    // 2. 直接使用角度值（因为360 &lt; 65535，所以不会超过2字节范围）
+    int value = angle
+    
+    // 3. 转换为2字节(4位)16进制
+    String hexValue = String.format(&quot;%04X&quot;, value)
+    
+    // 4. 设置JMeter变量
+    vars.put(&quot;direction_angle_${index}&quot;, angle.toString())  // 原始角度值(0-360)
+    vars.put(&quot;angle_hex_${index}&quot;, hexValue)                // 2字节16进制值
+    
+    // 5. 输出日志
+    log.info(&quot;生成方位变量 #${index}:&quot;)
+    log.info(&quot;原始角度: ${angle}度&quot;)
+    log.info(&quot;16进制表示: 0x${hexValue} (${value}十进制)&quot;)
+}
+
+// 返回摘要信息
+return &quot;&quot;&quot;
+已生成 ${count} 个方位变量。变量命名规则:
+- direction_angle_X: 原始角度值(0-360度)
+- angle_hex_X: 2字节16进制值
+(X为1-${count})
+
+注意: 角度值直接转换为16进制，范围0x0000-0x0168，确保不超过2字节。
+&quot;&quot;&quot;</stringProp>
+          </JSR223Sampler>
+          <hashTree/>
+          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="获取时间（16进制）">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="script">// 导入必要的类
+import java.util.Calendar;
+import java.util.Date;
+
+// 获取当前日期
+Date currentDate = new Date();
+
+// 使用Calendar类获取当前月份和时间
+Calendar calendar = Calendar.getInstance();
+calendar.setTime(currentDate);
+
+// 获取年、月、日、时、分、秒
+int year = calendar.get(Calendar.YEAR) % 100;
+int currentMonth = calendar.get(Calendar.MONTH) + 1; // 月份从0开始，所以需要+1
+int day = calendar.get(Calendar.DAY_OF_MONTH);
+int hour = calendar.get(Calendar.HOUR_OF_DAY); // 24小时制
+int hour_8 = calendar.get(Calendar.HOUR_OF_DAY) - 8; // 24小时制
+int minute = calendar.get(Calendar.MINUTE);
+int second = calendar.get(Calendar.SECOND);
+
+// 转换成16进制
+String hexyear = Long.toHexString(year).toUpperCase();
+String hexMonth = Long.toHexString(currentMonth).toUpperCase();
+String hexday = Long.toHexString(day).toUpperCase();
+String hexhour = Long.toHexString(hour).toUpperCase();
+String hexhour_8 = Long.toHexString(hour_8).toUpperCase();
+String hexminute = Long.toHexString(minute).toUpperCase();
+String hexsecond = Long.toHexString(second).toUpperCase();
+
+// 补零至两位
+while (hexyear.length() &lt; 2) {
+    hexyear = &quot;0&quot; + hexyear;
+}
+while (hexMonth.length() &lt; 2) {
+    hexMonth = &quot;0&quot; + hexMonth;
+}
+while (hexday.length() &lt; 2) {
+    hexday = &quot;0&quot; + hexday;
+}
+while (hexhour.length() &lt; 2) {
+    hexhour = &quot;0&quot; + hexhour;
+}
+while (hexminute.length() &lt; 2) {
+    hexminute = &quot;0&quot; + hexminute;
+}
+while (hexsecond.length() &lt; 2) {
+    hexsecond = &quot;0&quot; + hexsecond;
+}
+
+// 计算异或校验和函数
+def calculateXorChecksum(String hexString) {
+    // 移除可能存在的空格并转换为大写
+    hexString = hexString.replaceAll(&quot;\\s&quot;, &quot;&quot;).toUpperCase()
+    
+    // 检查是否为合法的十六进制字符串
+    if (!(hexString =~ /^[0-9A-F]+$/)) {
+        throw new IllegalArgumentException(&quot;无效的十六进制字符串: ${hexString}&quot;)
+    }
+    
+    // 确保字符串长度为偶数（每两个字符代表一个字节）
+    if (hexString.length() % 2 != 0) {
+        throw new IllegalArgumentException(&quot;十六进制字符串长度必须为偶数&quot;)
+    }
+    
+    // 分割字符串为字节数组
+    def bytes = []
+    for (int i = 0; i &lt; hexString.length(); i += 2) {
+        bytes.add(Integer.parseInt(hexString.substring(i, i + 2), 16))
+    }
+    
+    // 计算异或校验和
+    int xor = 0
+    bytes.each { byteValue -&gt;
+        xor = xor ^ byteValue
+    }
+    
+    // 转换为两位十六进制字符串（大写）
+    return String.format(&quot;%02X&quot;, xor)
+}
+
+// 构建待计算的十六进制字符串（从第2字节到第12字节）
+def hexData = &quot;00A4${hexyear}${hexMonth}${hexday}${hexhour}${hexminute}${hexsecond}00050545&quot;
+
+// 提取从第2字节到第12字节的部分进行计算
+def dataToCalculate = hexData.substring(2, 24)  // 索引2到23，共11字节（22字符）
+
+// 计算异或校验和
+def xorChecksum = calculateXorChecksum(dataToCalculate)
+
+// 存储为变量
+vars.put(&quot;hexyear&quot;, hexyear)
+vars.put(&quot;hexMonth&quot;, hexMonth)
+vars.put(&quot;hexday&quot;, hexday)
+vars.put(&quot;hexhour&quot;, hexhour)
+vars.put(&quot;hexhour_8&quot;, hexhour_8)
+vars.put(&quot;hexminute&quot;, hexminute)
+vars.put(&quot;hexsecond&quot;, hexsecond)
+vars.put(&quot;xor_checksum&quot;, xorChecksum)
+
+// 输出变量到JMeter日志
+log.info(&quot;当前时间: ${year}-${currentMonth}-${day} ${hour}:${minute}:${second}&quot;)
+log.info(&quot;十六进制时间: ${hexyear}-${hexMonth}-${hexday} ${hexhour}:${hexminute}:${hexsecond}&quot;)
+log.info(&quot;待计算数据: ${dataToCalculate}&quot;)
+log.info(&quot;异或校验和: ${xorChecksum}&quot;)</stringProp>
+          </JSR223Sampler>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">60000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="推送定位--A4--有定位">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;00A4${hexyear}${hexMonth}${hexday}${hexhour}${hexminute}${hexsecond}00050545${loc5_lon_dms_full_hex}4E${loc5_lat_dms_full_hex}0005${angle_hex_1}0145${loc6_lon_dms_full_hex}4E${loc6_lat_dms_full_hex}002C${angle_hex_2}0145${loc7_lon_dms_full_hex}4E${loc7_lat_dms_full_hex}001C${angle_hex_3}0145${loc8_lon_dms_full_hex}4E${loc8_lat_dms_full_hex}001C${angle_hex_4}0145${loc9_lon_dms_full_hex}4E${loc9_lat_dms_full_hex}003A${angle_hex_5}01${xor_checksum}&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+      &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+            <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="true">
+              <doubleProp>
+                <name>throughput</name>
+                <value>1.0</value>
+                <savedValue>1.0</savedValue>
+              </doubleProp>
+              <intProp name="calcMode">0</intProp>
+            </ConstantThroughputTimer>
+            <hashTree/>
+          </hashTree>
+          <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="图片（AA）">
+            <boolProp name="LoopController.continue_forever">true</boolProp>
+            <stringProp name="LoopController.loops">1</stringProp>
+          </LoopController>
+          <hashTree>
+            <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="获取当前时间转换成时间戳（16进制）" enabled="true">
+              <stringProp name="BeanShellSampler.query">// 获取当前系统时间的时间戳（毫秒）
+long currentTimeMillis = System.currentTimeMillis() / 1000;
+
+// 八小时对应的秒数
+long eightHoursInSeconds = 8 * 60 * 60;
+ 
+// 计算减去八小时后的时间戳（秒）
+long adjustedTimeSeconds = currentTimeMillis - eightHoursInSeconds;
+ 
+// 输出调整后的时间戳（秒）
+print(&quot;当前系统时间减去八小时后的时间戳（秒）: &quot; + adjustedTimeSeconds);
+
+// 将时间戳转换为十六进制字符串
+// 注意：Java中的Long.toHexString()方法返回的是不带&quot;0x&quot;前缀的十六进制字符串
+String hexTimestamp = Long.toHexString(currentTimeMillis);
+
+String hexTimestamp_utc = Long.toHexString(adjustedTimeSeconds);
+
+String hexTimestamp_up = Long.toHexString(currentTimeMillis).toUpperCase();
+
+// 如果需要加上&quot;0x&quot;前缀，可以手动添加
+//String hexTimestampWithPrefix = &quot;0x&quot; + hexTimestamp;
+
+// 将十六进制字符串设置为JMeter变量
+// vars是JMeter提供的内置变量，用于存储和获取JMeter变量
+vars.put(&quot;hexTimestamp&quot;, hexTimestamp);
+vars.put(&quot;hexTimestamp_utc&quot;, hexTimestamp_utc);
+vars.put(&quot;hexTimestamp_up&quot;, hexTimestamp_up);
+
+// 打印变量到JMeter日志（可选，用于调试）
+log.info(&quot;Current hex timestamp: &quot; + hexTimestamp);
+log.info(&quot;Current hex hexTimestamp_utc: &quot; + hexTimestamp_utc);
+log.info(&quot;Current hex hexTimestamp_up: &quot; + hexTimestamp_up);
+
+</stringProp>
+            </BeanShellSampler>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="图片1" enabled="true">
+              <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;AA000690259E${hexTimestamp_up}00000106000000000C6A5020200D0A870A00000014667479706A703220000000006A7032200000002D6A703268000000166968647200000281000001E00003070700000000000F636F6C7201000000000010000003AF6A703263FF4FFF51002F0000000001E0000002810000000000000000000001E00000028100000000000000000003070101070101070101FF52000C00000001010504040001FF5C00134040484850484850484850484850484850FF640025000143726561746564206279204F70656E4A50454720766572&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+      &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+                <doubleProp>
+                  <name>throughput</name>
+                  <value>1.0</value>
+                  <savedValue>1.0</savedValue>
+                </doubleProp>
+                <intProp name="calcMode">0</intProp>
+              </ConstantThroughputTimer>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="图片1" enabled="true">
+              <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;AA000690259E${hexTimestamp_up}00000106000000000C6A5020200D0A870A00000014667479706A703220000000006A7032200000002D6A703268000000166968647200000281000001E00003070700000000000F636F6C7201000000000010000003AF6A703263FF4FFF51002F0000000001E0000002810000000000000000000001E00000028100000000000000000003070101070101070101FF52000C00000001010504040001FF5C00134040484850484850484850484850484850FF640025000143726561746564206279204F70656E4A50454720766572&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+                <doubleProp>
+                  <name>throughput</name>
+                  <value>1.0</value>
+                  <savedValue>1.0</savedValue>
+                </doubleProp>
+                <intProp name="calcMode">0</intProp>
+              </ConstantThroughputTimer>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="图片2" enabled="true">
+              <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;AA000690259E${hexTimestamp_up}000001060173696F6E20322E352E30FF90000A0000000003280001FF93DF4688874024364A549C098A472414757C1971E19858F34E4B8A8FDB86E49BB3B227E3A7CB508C51B3F9CCDDDFE9360B640C3306EAFA0AD6961441768433ED6D516299D0A3E169796D12FD1B4ED40F17FCC366D0BB89CC5217589146A6EA8A02A0281F1D40B9B2F3B2D5A6C4C7BC4054599D5822A9AD26FC84504C54633213D8703FE8F2DA8E7FB1B421DFC7C3A080062FD5E0FA5D18143D0E01511FB4DF5310503DD39337F71656F4A8E2C98DA12B92&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+                <doubleProp>
+                  <name>throughput</name>
+                  <value>1.0</value>
+                  <savedValue>1.0</savedValue>
+                </doubleProp>
+                <intProp name="calcMode">0</intProp>
+              </ConstantThroughputTimer>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="图片3" enabled="true">
+              <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;AA000690259E${hexTimestamp_up}00000106026A3B6EC3CAB3316D80A88B11321B83ACCF7E8286C7A6E5F9237C29C6113D3157C79D08DFDDE0FA1E714BC3519847818B11D47964168DA9EEABE6FB5A9DD006C7C94C8F928D1F23104A30319E7AB1BA72C3EC6D2269E4F31176F9B5374D77F470A82FE739DA78B93EDE7043F0AA306F13CD836DBBB3835B6DA165C34514BBD8111908BE73AFF4AC43CD22AB6A2637E3E5DF65B11116A3F541E792F62B214AD951794EC6B239AFB10EE8E03368DD0B40464AB35F9A6E4C61A7FDFF7D820C574797C415E7E795165543&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+                <doubleProp>
+                  <name>throughput</name>
+                  <value>1.0</value>
+                  <savedValue>1.0</savedValue>
+                </doubleProp>
+                <intProp name="calcMode">0</intProp>
+              </ConstantThroughputTimer>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="图片4" enabled="true">
+              <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;AA000690259E${hexTimestamp_up}00000106039C5FF6B84FF71B92B11238BB36C58B7831F48A051BC176F423A77637F3230E06AC92CAC277D081D35055503E816280A7C31CA6C206739ED4BBE5548D67FC3C4DC25B25A1C30015FF40AA2A1980C7C3B2CF92DD1F0340CAB10E2E099DC2D3323A35A0925B2386714A7BFD0997B1C47F3E6612846FA16EA86EF273C67387F7CE2A632A2E83D15E9C440848D4D58F3D22F888554AD81774B5A6602F32DB7A1F4061B28AA10F983B5BA67ACAAA84BD2E24A9E31744BA2BB28F5C04F886CA92CDCE911299FC8F98C7C493&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+                <doubleProp>
+                  <name>throughput</name>
+                  <value>1.0</value>
+                  <savedValue>1.0</savedValue>
+                </doubleProp>
+                <intProp name="calcMode">0</intProp>
+              </ConstantThroughputTimer>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="图片5" enabled="true">
+              <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;AA000690259E${hexTimestamp_up}0000010604D376D2E81DD43B85E2A528947FBD61DE1FB29B46227EBD3C9D587BAFBCB5C9E8E914603BD13DC99E213730FB71A07784073ECAC1D1F9E0C7724D25B34530BA86A152CBEAA0DA06D1950A5BC983AABF74DB6C31CD92A99E9069067557EC1BEC3394CA717D3CAF520942F60598130249E29F27BAB51CEA0FB867C2518080E7E0A2B171D4FC4E3C40F1B8649A89FEA47450C3EB9C7A6271B51185455F7D20118B3DBB18719A1320CB105CE1C568A188E10E7FD6F1D72B155D96AEBA3F19B4DB593DCA8AEA5BD991687B&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+                <doubleProp>
+                  <name>throughput</name>
+                  <value>1.0</value>
+                  <savedValue>1.0</savedValue>
+                </doubleProp>
+                <intProp name="calcMode">0</intProp>
+              </ConstantThroughputTimer>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="图片6" enabled="true">
+              <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;AA000690259E${hexTimestamp_up}00000106055DAFF16F0D66F3A1A55F8080808080808080FFD9&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+                <stringProp name="ConstantTimer.delay">10000</stringProp>
+              </ConstantTimer>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+                <doubleProp>
+                  <name>throughput</name>
+                  <value>1.0</value>
+                  <savedValue>1.0</savedValue>
+                </doubleProp>
+                <intProp name="calcMode">0</intProp>
+              </ConstantThroughputTimer>
+              <hashTree/>
+            </hashTree>
+          </hashTree>
+        </hashTree>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="报警-位置上报-报平安">
+          <stringProp name="LoopController.loops">1</stringProp>
+        </LoopController>
+        <hashTree>
+          <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="获取当前时间转换成时间戳（16进制）-15" enabled="true">
+            <stringProp name="BeanShellSampler.query">// 获取当前时间戳（秒级）
+long currentSeconds = System.currentTimeMillis() / 1000;
+
+// 生成5个递减时间点（每步10秒）
+long[] deltas = new long[5];
+for (int i = 0; i &lt; 5; i++) {
+    deltas[i] = currentSeconds - (5 * (i + 1));
+}
+
+// 存储基准时间变量
+vars.put(&quot;hexNow&quot;, Long.toHexString(currentSeconds).toUpperCase());
+
+// 存储各时间点变量（兼容BeanShell语法）
+vars.put(&quot;hexMin1&quot;, Long.toHexString(deltas[0]).toUpperCase());
+vars.put(&quot;hexMin2&quot;, Long.toHexString(deltas[1]).toUpperCase());
+vars.put(&quot;hexMin3&quot;, Long.toHexString(deltas[2]).toUpperCase());
+vars.put(&quot;hexMin4&quot;, Long.toHexString(deltas[3]).toUpperCase());
+vars.put(&quot;hexMin5&quot;, Long.toHexString(deltas[4]).toUpperCase());
+
+// 验证日志输出（使用字符串拼接）
+log.info(&quot;===== 时间校验 =====&quot;);
+log.info(&quot;基准时间(秒): &quot; + currentSeconds);
+log.info(&quot;HEX基准值  : 0x&quot; + vars.get(&quot;hexNow&quot;));
+
+for (int i = 0; i &lt; 5; i++) {
+    String logMsg = &quot;前&quot; + (i + 1) + &quot;个10秒变量: hexMin&quot; + (i + 1)
+            + &quot;=0x&quot; + vars.get(&quot;hexMin&quot; + (i + 1))
+            + &quot; → 差值=&quot; + (currentSeconds - deltas[i]) + &quot;秒&quot;;
+    log.info(logMsg);
+}</stringProp>
+          </BeanShellSampler>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">30000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="推送定位--15-有定位" enabled="true">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;1500000000000505${loc11_hex_lon}${loc11_hex_lat}0022${hexMin5}${loc12_hex_lon}${loc12_hex_lat}0022${hexMin4}${loc13_hex_lon}${loc13_hex_lat}0020${hexMin3}${loc14_hex_lon}${loc14_hex_lat}0021${hexMin2}${loc15_hex_lon}${loc15_hex_lat}0021${hexMin1}&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">5000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="获取时间（16进制）" enabled="true">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="script">import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
+// 获取当前日期
+Date currentDate = new Date();
+
+// ✅ 关键改动：强制指定时区为 UTC+8
+TimeZone tz = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;);
+Calendar calendar = Calendar.getInstance(tz);
+calendar.setTime(currentDate);
+
+// 获取年、月、日、时、分、秒（已经是 UTC+8 时间，无需手动减8）
+int year = calendar.get(Calendar.YEAR) % 100;
+int currentMonth = calendar.get(Calendar.MONTH) + 1;
+int day = calendar.get(Calendar.DAY_OF_MONTH);
+int hour = calendar.get(Calendar.HOUR_OF_DAY);  // 已经是 UTC+8 的小时
+int minute = calendar.get(Calendar.MINUTE);
+int second = calendar.get(Calendar.SECOND);
+
+// 如果还需要 UTC+0 的时间
+TimeZone utcTz = TimeZone.getTimeZone(&quot;UTC&quot;);
+Calendar utcCalendar = Calendar.getInstance(utcTz);
+utcCalendar.setTime(currentDate);
+int hour_utc = utcCalendar.get(Calendar.HOUR_OF_DAY);
+
+// 补零函数
+def padHex(int num) {
+    num = num &lt; 0 ? (num &amp; 0xFF) : num;
+    return String.format(&quot;%02X&quot;, num);
+}
+
+// 生成十六进制字符串
+def hexyear = padHex(year);
+def hexMonth = padHex(currentMonth);
+def hexday = padHex(day);
+def hexhour = padHex(hour);         // UTC+8 小时
+def hexhour_utc = padHex(hour_utc); // UTC+0 小时
+def hexminute = padHex(minute);
+def hexsecond = padHex(second);
+
+// 存储为 JMeter 变量
+vars.put(&quot;hexyear&quot;, hexyear);
+vars.put(&quot;hexMonth&quot;, hexMonth);
+vars.put(&quot;hexday&quot;, hexday);
+vars.put(&quot;hexhour&quot;, hexhour);
+vars.put(&quot;hexhour_utc&quot;, hexhour_utc);
+vars.put(&quot;hexminute&quot;, hexminute);
+vars.put(&quot;hexsecond&quot;, hexsecond);
+
+// 日志输出
+log.info(&quot;UTC+8 -&gt; hexyear: ${hexyear}, hexMonth: ${hexMonth}, hexday: ${hexday}&quot;);
+log.info(&quot;UTC+8 -&gt; hexhour: ${hexhour}, hexminute: ${hexminute}, hexsecond: ${hexsecond}&quot;);
+log.info(&quot;UTC+0 -&gt; hexhour_utc: ${hexhour_utc}&quot;);</stringProp>
+          </JSR223Sampler>
+          <hashTree/>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="报警---EE--有定位--北京时间">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;01EE${hexyear}${hexMonth}${hexday}${hexhour}${hexminute}${hexsecond}45${loc17_lon_dms_full_hex}4E${loc17_lat_dms_full_hex}0012011A001741AF&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="获取时间（16进制）">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="script">import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
+// 获取当前日期
+Date currentDate = new Date();
+
+// ✅ 关键改动：强制指定时区为 UTC+8
+TimeZone tz = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;);
+Calendar calendar = Calendar.getInstance(tz);
+calendar.setTime(currentDate);
+
+// 获取年、月、日、时、分、秒（已经是 UTC+8 时间，无需手动减8）
+int year = calendar.get(Calendar.YEAR) % 100;
+int currentMonth = calendar.get(Calendar.MONTH) + 1;
+int day = calendar.get(Calendar.DAY_OF_MONTH);
+int hour = calendar.get(Calendar.HOUR_OF_DAY);  // 已经是 UTC+8 的小时
+int minute = calendar.get(Calendar.MINUTE);
+int second = calendar.get(Calendar.SECOND);
+
+// 如果还需要 UTC+0 的时间
+TimeZone utcTz = TimeZone.getTimeZone(&quot;UTC&quot;);
+Calendar utcCalendar = Calendar.getInstance(utcTz);
+utcCalendar.setTime(currentDate);
+int hour_utc = utcCalendar.get(Calendar.HOUR_OF_DAY);
+
+// 补零函数
+def padHex(int num) {
+    num = num &lt; 0 ? (num &amp; 0xFF) : num;
+    return String.format(&quot;%02X&quot;, num);
+}
+
+// 生成十六进制字符串
+def hexyear = padHex(year);
+def hexMonth = padHex(currentMonth);
+def hexday = padHex(day);
+def hexhour = padHex(hour);         // UTC+8 小时
+def hexhour_utc = padHex(hour_utc); // UTC+0 小时
+def hexminute = padHex(minute);
+def hexsecond = padHex(second);
+
+// 存储为 JMeter 变量
+vars.put(&quot;hexyear&quot;, hexyear);
+vars.put(&quot;hexMonth&quot;, hexMonth);
+vars.put(&quot;hexday&quot;, hexday);
+vars.put(&quot;hexhour&quot;, hexhour);
+vars.put(&quot;hexhour_utc&quot;, hexhour_utc);
+vars.put(&quot;hexminute&quot;, hexminute);
+vars.put(&quot;hexsecond&quot;, hexsecond);
+
+// 日志输出
+log.info(&quot;UTC+8 -&gt; hexyear: ${hexyear}, hexMonth: ${hexMonth}, hexday: ${hexday}&quot;);
+log.info(&quot;UTC+8 -&gt; hexhour: ${hexhour}, hexminute: ${hexminute}, hexsecond: ${hexsecond}&quot;);
+log.info(&quot;UTC+0 -&gt; hexhour_utc: ${hexhour_utc}&quot;);</stringProp>
+          </JSR223Sampler>
+          <hashTree/>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="推送报平安--E1--有定位--北京时间">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;01E1${hexhour}${hexminute}${hexsecond}00${loc16_lon_dms_full_hex}${loc16_lat_dms_full_hex}00160000CED2D2D1C6BDB0B2A3A1&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+  	 &quot;time&quot;: &quot;${__groovy(new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).with { it.timeZone = TimeZone.getTimeZone(&quot;Asia/Shanghai&quot;); it.format(new Date()) },)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="平台下发" enabled="false">
+          <stringProp name="LoopController.loops">1</stringProp>
+        </LoopController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="微信传输协议：*终端到用户带位置：0x97" enabled="true">
+            <stringProp name="HTTPSampler.domain">back.monitor.beidou.online</stringProp>
+            <stringProp name="HTTPSampler.port">443</stringProp>
+            <stringProp name="HTTPSampler.protocol">https</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/monitor/platform-chats/4194399/text?content=1</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="用户定义的变量">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b25nbWVpbmEiLCJyb2xlIjoiV2ViQWRtaW4iLCJleHAiOjE3NzExNTM5NDIsImlhdCI6MTc2Mzk1Mzk0Mn0.wmXsL9JlxVSV13wdvv-tY0Tf8pNuPTxOPDRWwRSxEOsBXiSeIy6id6TL_t_3NNmYYhcnH-S9OplrSNJMl3T52g</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+            <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+              <doubleProp>
+                <name>throughput</name>
+                <value>1.0</value>
+                <savedValue>1.0</savedValue>
+              </doubleProp>
+              <intProp name="calcMode">0</intProp>
+            </ConstantThroughputTimer>
+            <hashTree/>
+            <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="查看结果树" enabled="true">
+              <boolProp name="ResultCollector.error_logging">false</boolProp>
+              <objProp>
+                <name>saveConfig</name>
+                <value class="SampleSaveConfiguration">
+                  <time>true</time>
+                  <latency>true</latency>
+                  <timestamp>true</timestamp>
+                  <success>true</success>
+                  <label>true</label>
+                  <code>true</code>
+                  <message>true</message>
+                  <threadName>true</threadName>
+                  <dataType>true</dataType>
+                  <encoding>false</encoding>
+                  <assertions>true</assertions>
+                  <subresults>true</subresults>
+                  <responseData>false</responseData>
+                  <samplerData>false</samplerData>
+                  <xml>false</xml>
+                  <fieldNames>true</fieldNames>
+                  <responseHeaders>false</responseHeaders>
+                  <requestHeaders>false</requestHeaders>
+                  <responseDataOnError>false</responseDataOnError>
+                  <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                  <assertionsResultsToSave>0</assertionsResultsToSave>
+                  <bytes>true</bytes>
+                  <sentBytes>true</sentBytes>
+                  <url>true</url>
+                  <threadCounts>true</threadCounts>
+                  <idleTime>true</idleTime>
+                  <connectTime>true</connectTime>
+                </value>
+              </objProp>
+              <stringProp name="filename"></stringProp>
+            </ResultCollector>
+            <hashTree/>
+          </hashTree>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+            <stringProp name="ConstantTimer.delay">60010</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="循环控制器" enabled="false">
+          <stringProp name="LoopController.loops">1</stringProp>
+        </LoopController>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Authorization</stringProp>
+                <stringProp name="Header.value">eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0bW4iLCJyb2xlIjoiV2ViQWRtaW4iLCJleHAiOjE3Njg3MzAyOTEsImlhdCI6MTc2MTUzMDI5MX0.HeADyKpqlb7YqRBZAa-aDCIr-Vqh-Q5zMb95LnHsKqLUMvyfNDa16wKsxZkqQOAKj3LHLHOiU7WHp0x-gvSSbQ</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV 数据文件设置" enabled="true">
+            <stringProp name="filename">E:/jmeter/监控平台配置文件/groupID.txt</stringProp>
+            <stringProp name="fileEncoding">UTF-8</stringProp>
+            <stringProp name="variableNames">groupid</stringProp>
+            <boolProp name="ignoreFirstLine">true</boolProp>
+            <stringProp name="delimiter">,</stringProp>
+            <boolProp name="quotedData">false</boolProp>
+            <boolProp name="recycle">true</boolProp>
+            <boolProp name="stopThread">false</boolProp>
+            <stringProp name="shareMode">shareMode.all</stringProp>
+          </CSVDataSet>
+          <hashTree/>
+          <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV 数据文件设置" enabled="true">
+            <stringProp name="filename">E:/jmeter/监控平台配置文件/addr.txt</stringProp>
+            <stringProp name="fileEncoding">UTF-8</stringProp>
+            <stringProp name="variableNames">addr</stringProp>
+            <boolProp name="ignoreFirstLine">true</boolProp>
+            <stringProp name="delimiter">,</stringProp>
+            <boolProp name="quotedData">false</boolProp>
+            <boolProp name="recycle">true</boolProp>
+            <boolProp name="stopThread">false</boolProp>
+            <stringProp name="shareMode">shareMode.all</stringProp>
+          </CSVDataSet>
+          <hashTree/>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP请求" enabled="true">
+            <stringProp name="HTTPSampler.domain">back.tdwtv2.pg8.ink</stringProp>
+            <stringProp name="HTTPSampler.port">80</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/monitor/groups/${groupid}/terminals</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+	&quot;addr&quot;:&quot;${addr}&quot;,&#xd;
+	&quot;remark&quot;:&quot;&quot;,&#xd;
+	&quot;groupId&quot;:&quot;${groupid}&quot;,&#xd;
+	&quot;terminalType&quot;:&quot;PD18&quot;,&#xd;
+	&quot;useScope&quot;:&quot;STEAMER&quot;,&#xd;
+	&quot;fromAddr&quot;:&quot;&quot;,&#xd;
+	&quot;trackColor&quot;:&quot;#141323&quot;,&#xd;
+	&quot;trackSize&quot;:5,&#xd;
+	&quot;editTitle&quot;:&quot;编辑&quot;,&#xd;
+	&quot;groupCallNumber&quot;:&quot;&quot;,&#xd;
+	&quot;ipAddress&quot;:&quot;&quot;,&#xd;
+	&quot;gatewayParam&quot;:{&quot;colorCodeId&quot;:1,&quot;gid&quot;:0,&quot;radioRcvChn&quot;:&quot;&quot;,&quot;radioSndChn&quot;:&quot;&quot;,&quot;radioPower&quot;:0,&quot;rxCss&quot;:&quot;&quot;,&quot;txCss&quot;:&quot;&quot;,&quot;width&quot;:0},&#xd;
+	&quot;fieldJson&quot;:&quot;&quot;&#xd;
+	}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree/>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="高级短信：终端到用户：0x94" enabled="false">
+            <stringProp name="HTTPSampler.domain">${computerid}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">/api/datas/bd</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+  &quot;commInfos&quot;: [&#xd;
+    {&#xd;
+      &quot;commTime&quot;: &quot;&quot;,&#xd;
+      &quot;content&quot;: &quot;94${phone}${hexTimestamp_up}B8DFBCB6B6CCD0C5&quot;,&#xd;
+      &quot;fromAddr&quot;: &quot;${addrid}&quot;,&#xd;
+      &quot;time&quot;: &quot;${__time(yyyy-MM-dd HH:mm:ss,)}&quot;,&#xd;
+      &quot;toAddr&quot;: &quot;110110110&quot;&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;receipts&quot;: [&#xd;
+    {&#xd;
+      &quot;fromAddr&quot;: &quot;string&quot;,&#xd;
+      &quot;msg&quot;: &quot;string&quot;,&#xd;
+      &quot;msgId&quot;: &quot;string&quot;,&#xd;
+      &quot;sendTime&quot;: &quot;string&quot;,&#xd;
+      &quot;status&quot;: 0,&#xd;
+      &quot;toAddr&quot;: &quot;string&quot;&#xd;
+    }&#xd;
+  ]&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="固定定时器" enabled="true">
+              <stringProp name="ConstantTimer.delay">10000</stringProp>
+            </ConstantTimer>
+            <hashTree/>
+            <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="常数吞吐量定时器" enabled="false">
+              <doubleProp>
+                <name>throughput</name>
+                <value>1.0</value>
+                <savedValue>1.0</savedValue>
+              </doubleProp>
+              <intProp name="calcMode">0</intProp>
+            </ConstantThroughputTimer>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+      </hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="查看结果树" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="聚合报告" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

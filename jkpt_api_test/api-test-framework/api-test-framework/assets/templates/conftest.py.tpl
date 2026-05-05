@@ -8,12 +8,25 @@ conftest.py — API自动化测试项目标准模板
 from common.ipconfig import get_local_ips
 import jsonpath
 from common.yaml_util import clear_yaml
-from common.requests_util import BaseRequest
-import json, allure, requests, pytest
-from logs import get_logger
-import traceback
+from common.requests_util import BaseRequest, get_last_http_context
+import json, requests, pytest
 
-_test_logger = get_logger(name="test_case", log_level="INFO")
+try:
+    import allure
+except Exception:  # pragma: no cover
+    allure = None
+
+try:
+    from logs import get_logger
+    _test_logger = get_logger(name="test_case", log_level="INFO")
+except ImportError:
+    import logging
+    _test_logger = logging.getLogger("test_case")
+    if not _test_logger.handlers:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+        _test_logger = logging.getLogger("test_case")
+
+_jsonpath_parse = jsonpath.jsonpath   # ← 项目统一别名，使用函数式API
 
 # ==================== 第二部分：全局数据管理器（推荐保留）====================
 class GlobalData:
@@ -39,12 +52,12 @@ def pytest_configure(config):
     # 【修改点1】改成你的服务端口号和协议
     ip = config.getoption("--host") or get_local_ips()[0]
     base_url = f"http://{ip}:9004"          # ← 改端口号
-    config.doubao_base_url = base_url
+    config.api_base_url = base_url
     print(f"\n\033[92m[配置] base_url: {base_url}\033[0m", flush=True)
 
 @pytest.fixture(scope="session")
 def base_url(pytestconfig):
-    return pytestconfig.doubao_base_url
+    return pytestconfig.api_base_url
 
 # ==================== 第四部分：【必须定制】认证Fixture ====================
 @pytest.fixture(scope="session")
@@ -57,10 +70,38 @@ def auth_token(base_url):
         "password": "your_password_here",   # ← 你的密码(建议放环境变量)
     }
     res = BaseRequest().send_request(method="post", url=url, params=payload)
-    token = jsonpath.JSONPath("$.data.token").parse(res.json())[0]
+    token = _jsonpath_parse(res.json(), "$.data.token")[0]
     if not token:
         pytest.fail("登录失败，无法获取token")
     return token
+
+# --- 可选（SKILL 2.7）：验证码登录 + 重试 — 需要 common.captcha_util 时取消注释并改用下方 fixture 替代上面的 auth_token ---
+# import time, random
+# from common.captcha_util import CaptchaRecognizer
+#
+# def generate_captcha_id():
+#     timestamp = str(int(time.time() * 1000))
+#     random_5 = str(random.randint(10000, 99999))
+#     return timestamp + random_5
+#
+# @pytest.fixture(scope="session")
+# def auth_token(base_url):
+#     ocr = CaptchaRecognizer()
+#     max_attempts = 5
+#     for attempt in range(1, max_attempts + 1):
+#         captcha_id = generate_captcha_id()
+#         captcha_url = f"{base_url}/api/xxx/captcha?captchaId={captcha_id}"
+#         resp = BaseRequest().send_request(method="get", url=captcha_url, case_name="获取验证码", log_level="none")
+#         captcha_text = ocr.recognize_from_response(resp)
+#         login_url = f"{base_url}/api/xxx/login"
+#         login_data = {"account": "admin", "password": "xxx", "captcha": captcha_text, "captchaId": captcha_id}
+#         login_resp = BaseRequest().send_request(method="post", url=login_url, params=login_data, case_name="登录", log_level="none")
+#         json_data = login_resp.json()
+#         if _jsonpath_parse(json_data, "$.code")[0] == 0:
+#             return _jsonpath_parse(json_data, "$.data.token")[0]
+#         if attempt < max_attempts:
+#             time.sleep(1)
+#     pytest.fail("登录失败，已重试仍未成功")
 
 @pytest.fixture(scope="session")
 def auth_headers(auth_token):
@@ -80,7 +121,7 @@ def auth_headers(auth_token):
 #     res = BaseRequest().send_request(method="post", url=url,
 #                                       params={"groupName": "测试分组"},
 #                                       headers=auth_headers)
-#     return jsonpath.JSONPath("$.data.id").parse(res.json())[0]
+#     return _jsonpath_parse(res.json(), "$.data.id")[0]
 
 # ==================== 第六部分：自动钩子（直接复制，不用改）====================
 @pytest.fixture(scope="session", autouse=True)
@@ -90,7 +131,11 @@ def clear_data_per_session():
 
 @pytest.fixture(autouse=True)
 def log_all_requests_and_responses():
-    """全局自动记录请求/响应到Allure报告（monkey-patch）"""
+    """
+    全局 monkey-patch：每个 HTTP 请求/响应各打一份 Allure JSON（全量流水）。
+    与下方 pytest_runtest_makereport 中「失败时附加 get_last_http_context()」分工不同：
+    后者依赖 BaseRequest.send_request 写入的最后一条请求上下文，便于失败用例快速对齐业务现场。
+    """
     original_request = requests.Session.request
 
     def wrapped_request(session, method, url, **kwargs):
@@ -103,10 +148,11 @@ def log_all_requests_and_responses():
             "headers": sanitize_data(kwargs.get('headers', {})),
             "body": extract_body(kwargs),
         }
-        allure.attach(
-            json.dumps(request_info, indent=2, ensure_ascii=False),
-            name="Request", attachment_type=allure.attachment_type.JSON
-        )
+        if allure:
+            allure.attach(
+                json.dumps(request_info, indent=2, ensure_ascii=False),
+                name="Request", attachment_type=allure.attachment_type.JSON
+            )
 
         response = original_request(session, method, url, **kwargs)
 
@@ -124,10 +170,11 @@ def log_all_requests_and_responses():
             "body": {"type": body_type, "data": body_data},
             "time_ms": response.elapsed.total_seconds() * 1000,
         }
-        allure.attach(
-            json.dumps(response_info, indent=2, ensure_ascii=False),
-            name="Response", attachment_type=allure.attachment_type.JSON
-        )
+        if allure:
+            allure.attach(
+                json.dumps(response_info, indent=2, ensure_ascii=False),
+                name="Response", attachment_type=allure.attachment_type.JSON
+            )
         return response
 
     requests.Session.request = wrapped_request
@@ -137,7 +184,7 @@ def log_all_requests_and_responses():
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """记录每个测试的执行结果到日志"""
+    """记录每个测试的执行结果到日志；call 失败时附加 BaseRequest 最后上下文到 Allure。"""
     outcome = yield
     rep = outcome.get_result()
     test_name = item.name
@@ -165,6 +212,41 @@ def pytest_runtest_makereport(item, call):
     if rep.when == "teardown":
         _test_logger.info(f"结束 | {test_file} | {test_class} | {test_name}")
         _test_logger.info(f"{'='*60}")
+
+    # 失败时：附加 BaseRequest 记录的最后请求/响应/错误（与 SKILL「pytest_runtest_makereport」一致）
+    if rep.when == "call" and rep.failed and allure:
+        context = get_last_http_context()
+        if context:
+            if "request" in context:
+                allure.attach(
+                    json.dumps(context["request"], indent=2, ensure_ascii=False),
+                    name="【失败】请求信息",
+                    attachment_type=allure.attachment_type.JSON
+                )
+            if "response" in context:
+                allure.attach(
+                    json.dumps(context["response"], indent=2, ensure_ascii=False),
+                    name="【失败】响应信息",
+                    attachment_type=allure.attachment_type.JSON
+                )
+            if "error" in context:
+                allure.attach(
+                    json.dumps(context["error"], indent=2, ensure_ascii=False),
+                    name="【失败】错误信息",
+                    attachment_type=allure.attachment_type.JSON
+                )
+        failure_msg = ""
+        if rep.longrepr:
+            if hasattr(rep.longrepr, "reprcrash") and rep.longrepr.reprcrash:
+                failure_msg = str(rep.longrepr.reprcrash.message)
+            else:
+                failure_msg = str(rep.longrepr)
+        if failure_msg:
+            allure.attach(
+                failure_msg,
+                name="【失败】断言详情",
+                attachment_type=allure.attachment_type.TEXT
+            )
 
     return rep
 
@@ -196,6 +278,8 @@ def extract_body(kwargs):
     分步提取请求body。
     返回: {"type": "json/form/binary/raw", "data": ...}
     """
+    from urllib.parse import parse_qsl
+
     if 'json' in kwargs:
         return {"type": "json", "data": sanitize_data(kwargs['json'])}
     if 'data' not in kwargs:

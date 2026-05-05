@@ -1,0 +1,72 @@
+# yaml/test_field_template_controller.yaml
+# 字段模板管理 — 执行顺序依赖 test_ft_a ~ test_ft_e 方法名前缀；field_template_id 由创建正向写入 extract.yaml
+
+list_field_templates_cases:
+  - name: "字段模板-列表-正向"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "字段模板-列表-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+add_field_template_cases:
+  - name: "字段模板-创建-正向"
+    templateName: "AUTO_FT_{int(time.time())}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "字段模板-创建-负向-名称为空"
+    templateName: ""
+    expected:
+      code: 1001
+      error_msg: "模板名称不能为空"
+
+update_field_template_cases:
+  - name: "字段模板-编辑-正向"
+    templateId: "{{field_template_id}}"
+    templateName: "AUTO_FT_UPD_{int(time.time())}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "字段模板-编辑-负向-名称为空"
+    templateId: "{{field_template_id}}"
+    templateName: ""
+    expected:
+      code: 1001
+      error_msg: "模板名称不能为空"
+  
+save_fields_cases:
+  - name: "字段模板-保存字段-正向"
+    templateId: "{{field_template_id}}"
+    fields:
+      - "fieldA"
+      - "fieldB"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "字段模板-保存字段-负向-fields为空"
+    templateId: "{{field_template_id}}"
+    omit_fields_query: true
+    expected:
+      code: 1001
+      error_msg: "字段列表不能为空"
+
+delete_field_template_cases:
+  - name: "字段模板-删除-正向"
+    templateId: "{{field_template_id}}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "字段模板-删除-负向-非法id"
+    templateId: "00000000-0000-0000-0000-000000000000"
+    expected:
+      code: 999
+      error_msg: "失败"

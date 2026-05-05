@@ -6,6 +6,7 @@ test_xxx.py — 纯YAML驱动模式（模式C）
 
 import pytest
 from api_test_framework.runner import run_case
+# 模式C使用框架层 read_yaml；手写用例模式A/B优先 common.yaml_util.read_yaml
 from api_test_framework.data import read_yaml, VariableStore
 from api_test_framework.schema import ApiCase
 

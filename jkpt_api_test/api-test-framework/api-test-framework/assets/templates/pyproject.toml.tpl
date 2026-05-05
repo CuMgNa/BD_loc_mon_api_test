@@ -10,13 +10,13 @@ requires-python = ">=3.9"
 dependencies = [
     "requests>=2.0",
     "PyYAML>=6.0",
-    "jsonpath-ng>=1.5",
+    "jsonpath>=0.82",
     "allure-pytest>=2.0",
+    "pytest>=7.0",  # run.py 直接 import pytest，主依赖默认可用
 ]
 
 [project.optional-dependencies]
 pytest = [
-    "pytest>=7.0",
     "allure-pytest>=2.0",
     "pytest-ordering>=0.6",
 ]

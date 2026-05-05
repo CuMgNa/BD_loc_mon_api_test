@@ -1,0 +1,17 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Tue, 05 May 2026 03:57:46 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 1001,
+    "msg": "分组名称不能超过20个字符",
+    "data": null
+  },
+  "elapsed_ms": 836
+}

@@ -1,0 +1,17 @@
+{
+  "case_name": "账号为空",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/web-user/login",
+  "params": {
+    "account": "",
+    "password": "******",
+    "captcha": "mysye",
+    "captchaId": "177795347972178492"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

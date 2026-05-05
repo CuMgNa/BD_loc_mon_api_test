@@ -1,0 +1,12 @@
+{
+  "case_name": "字段模板-保存字段-负向-fields为空",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/field-templates/69f96aaea6be4b76aefdff0a/fields",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

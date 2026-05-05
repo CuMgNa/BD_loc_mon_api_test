@@ -1,0 +1,30 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Tue, 05 May 2026 03:58:09 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "addedTerminals": [],
+      "failedTerminals": [
+        {
+          "addr": "20260430200101",
+          "errorMsg": "该设备已绑定"
+        },
+        {
+          "addr": "20260430200102",
+          "errorMsg": "该设备已绑定"
+        }
+      ],
+      "hasFailed": true
+    }
+  },
+  "elapsed_ms": 1502
+}

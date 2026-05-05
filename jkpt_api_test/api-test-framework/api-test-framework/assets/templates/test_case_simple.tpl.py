@@ -10,11 +10,13 @@ from common.requests_util import BaseRequest
 from common.yaml_util import read_yaml
 from common.allure_assert_util import assert_api_result
 
+_jsonpath_parse = jsonpath.jsonpath   # ← 项目统一别名，使用函数式API
+
 
 class Test_xxxAPI:
     """
     XXX接口测试
-    
+
     接口信息:
       - 路径: /api/your/endpoint
       - 方法: POST
@@ -34,19 +36,27 @@ class Test_xxxAPI:
             "field2": case["field2"],
         }
 
+        # 用例级鉴权开关：若 YAML 有 no_auth: true，不传 auth_headers
+        headers = None
+        if not case.get("no_auth"):
+            # 需要认证时取消下行注释并注入 fixture
+            # headers=auth_headers
+            pass
+
         # 5️⃣ 发送请求
         res = BaseRequest().send_request(
             method="post",
             url=url,
             params=payload,              # query参数风格；或用 json=payload 发JSON
-            # headers=auth_headers,       # 需要认证时取消注释并注入fixture
+            headers=headers,             # 根据 no_auth 决定是否传认证头
             case_name=case["name"],       # 用于日志标识
             log_level="simple"            # full=调试 / simple=日常 / none=静默
         )
 
         # 6️⃣ 统一断言（自动处理成功/失败分支 + Allure附件）
-        code = jsonpath.JSONPath("$.code").parse(res.json())[0]
-        msg = jsonpath.JSONPath("$.msg").parse(res.json())[0]
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        msg = _jsonpath_parse(json_data, "$.msg")[0]
 
         assert_api_result(
             case_name=case["name"],
