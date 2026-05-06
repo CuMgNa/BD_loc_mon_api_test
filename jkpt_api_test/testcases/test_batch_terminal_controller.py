@@ -14,7 +14,7 @@ _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
 
 _FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
-_TEMPLATE_XLSX = r"C:\Users\33606\Desktop\jkpt_api_test\jkpt_api_test\yaml\import-device-template2026_5_1.xlsx"
+_TEMPLATE_XLSX = r"C:\Users\33606\Desktop\BD_loc_mon_api_test\jkpt_api_test\yaml\import-device-template2026_5_1.xlsx"
 
 
 class TestBatchTerminalController:

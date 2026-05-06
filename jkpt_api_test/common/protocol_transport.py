@@ -1,6 +1,6 @@
 # common/protocol_transport.py
 """北斗协议 HTTP 传输层：POST /api/datas/bd"""
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from common.protocol_types import ProtocolSendResult
@@ -8,8 +8,13 @@ from common.requests_util import BaseRequest
 
 
 def _now_cst_str() -> str:
-    """对应 JMX 中 ${__groovy(... TimeZone Asia/Shanghai ... yyyy-MM-dd HH:mm:ss)}"""
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    """对应 JMX 中 ${__groovy(... TimeZone Asia/Shanghai ... yyyy-MM-dd HH:mm:ss)}
+
+    无论系统在什么时区，都返回北京时间（UTC+8）的格式化字符串
+    """
+    # 北京时区 (UTC+8)
+    cst_timezone = timezone(timedelta(hours=8))
+    return datetime.now(cst_timezone).strftime("%Y-%m-%d %H:%M:%S")
 
 
 class BDProtocolTransport:

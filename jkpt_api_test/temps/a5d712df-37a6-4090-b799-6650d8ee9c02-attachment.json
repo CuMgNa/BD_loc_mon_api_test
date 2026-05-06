@@ -1,0 +1,14 @@
+{
+  "case_name": "字段模板-创建-正向",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/field-templates",
+  "params": {
+    "name": "AUTO_FT_1778046550"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

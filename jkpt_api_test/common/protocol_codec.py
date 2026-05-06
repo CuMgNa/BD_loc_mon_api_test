@@ -124,25 +124,31 @@ class ProtocolCodec:
     def phone_hex(phone: str) -> str:
         """手机号 → HEX
 
-        规则（与 JMX 行为对齐）：
-        - 空字符串 / None → 用 DEFAULT_PHONE 的 ASCII HEX
-        - 纯数字字符串（任意长度，奇数也按 ASCII 编码）→ ASCII 编码为 HEX
-        - 合法 HEX 串（包含字母 A-F，长度偶数）→ 大写返回（兼容 phone.txt 已是 HEX 的场景）
+        规则：
+        - 空字符串 / None → 用 DEFAULT_PHONE 的数字转换HEX
+        - 纯数字字符串 → 作为数字转换为5字节HEX，不足前面补零
+        - 合法 HEX 串（包含字母 A-F，长度为10）→ 大写返回
         - 其他非法字符 → 回退到 DEFAULT_PHONE
         """
         if phone is None or phone == "":
-            return DEFAULT_PHONE.encode("ascii").hex().upper()
+            return ProtocolCodec._phone_to_int_hex(DEFAULT_PHONE)
 
-        # 纯数字 → 按 ASCII 编码（11 位手机号最常见路径）
+        # 纯数字 → 作为数字转换为5字节HEX
         if phone.isdigit():
-            return phone.encode("ascii").hex().upper()
+            return ProtocolCodec._phone_to_int_hex(phone)
 
-        # 含字母但全为合法 HEX 字符且长度偶数 → 视为已 HEX
-        if all(c in "0123456789abcdefABCDEF" for c in phone) and len(phone) % 2 == 0:
+        # 合法 HEX 串且长度为10（5字节）→ 大写返回
+        if all(c in "0123456789abcdefABCDEF" for c in phone) and len(phone) == 10:
             return phone.upper()
 
-        # 其他非法（含字母 G+ 或长度奇数）→ 回退默认
-        return DEFAULT_PHONE.encode("ascii").hex().upper()
+        # 其他非法 → 回退默认
+        return ProtocolCodec._phone_to_int_hex(DEFAULT_PHONE)
+
+    @staticmethod
+    def _phone_to_int_hex(phone: str) -> str:
+        """手机号作为数字转换为5字节HEX，不足前面补零"""
+        phone_num = int(phone)
+        return format(phone_num, '010X')  # 5字节=10个16进制字符，前面补零
 
     # ========== 方向角 HEX ==========
 
@@ -222,9 +228,9 @@ class ProtocolCodec:
 def resolve_phone_hex(phone: str | None, default_phone: str = DEFAULT_PHONE) -> str:
     """解析 phone 入参为 HEX
 
-    - 空 → 返回 default_phone 的 ASCII HEX
+    - 空 → 返回 default_phone 的数字转换HEX
     - 否则交给 ProtocolCodec.phone_hex 处理
     """
     if phone is None or phone == "":
-        return default_phone.encode("ascii").hex().upper()
+        return ProtocolCodec._phone_to_int_hex(default_phone)
     return ProtocolCodec.phone_hex(phone)
