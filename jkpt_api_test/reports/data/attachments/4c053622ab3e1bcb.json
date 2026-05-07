@@ -1,0 +1,15 @@
+{
+  "case_name": "创建三级分组",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups",
+  "params": {
+    "groupName": "L3_67792382",
+    "parentId": "69fcaff0464853773f4859d0"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "case_name": "字段模板-删除-正向",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/field-templates/69fcb034464853773f485e7e",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

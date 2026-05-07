@@ -1,0 +1,21 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Thu, 07 May 2026 15:31:00 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "id": "69fcb034464853773f485e7e",
+      "name": "AUTO_FT_1778167859",
+      "fields": []
+    }
+  },
+  "elapsed_ms": 198
+}

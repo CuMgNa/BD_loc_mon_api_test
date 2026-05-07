@@ -1,0 +1,12 @@
+---
+description: Plan 文档生成路径规范
+alwaysApply: true
+---
+
+# Plan 路径规则
+
+- 所有 plan / 计划 / 方案 / 大纲类文档**必须**生成到：
+C:\Users\33606\Desktop\jkpt_api_test\jkpt_api_test\plan
+- **禁止**写入 `.cursor/plan/` 或其他默认路径。
+- 若目录不存在，先创建再写入。
+- 若用户在当前对话中显式指定了其他路径，以用户指定为准。
