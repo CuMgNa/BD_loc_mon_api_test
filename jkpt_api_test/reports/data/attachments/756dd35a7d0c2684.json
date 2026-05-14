@@ -1,0 +1,100 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Thu, 14 May 2026 16:04:14 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "addedTerminals": [
+        {
+          "addr": "20260430200101",
+          "remark": "批量添加测试1",
+          "scope": "TRAIN",
+          "type": "OTHER",
+          "follow": false,
+          "lastCommTime": 0,
+          "status": "NOT",
+          "listeningStatus": null,
+          "trackColor": "#141323",
+          "trackSize": 5,
+          "belongTo": 2,
+          "belongToDesc": "我的",
+          "followByShareNum": null,
+          "showAoWeiBtn": true,
+          "stopPort": false,
+          "password": "",
+          "gatewayParam": {
+            "radioRcvChn": 0.0,
+            "radioSndChn": 0.0,
+            "radioPower": 0,
+            "colorCodeId": 1,
+            "rxCss": "",
+            "txCss": "",
+            "width": 0,
+            "gid": 0
+          },
+          "onlineFlag": "UNKNOWN",
+          "ipAddress": null,
+          "groupCallNumber": null,
+          "parentAddr": "",
+          "dialSwitch": false,
+          "silenceSwitch": false,
+          "silenceThreshold": 0,
+          "webAccount": null,
+          "loc": null,
+          "infos": [],
+          "fields": []
+        },
+        {
+          "addr": "20260430200102",
+          "remark": "批量添加测试2",
+          "scope": "TRAIN",
+          "type": "OTHER",
+          "follow": false,
+          "lastCommTime": 0,
+          "status": "NOT",
+          "listeningStatus": null,
+          "trackColor": "#141323",
+          "trackSize": 5,
+          "belongTo": 2,
+          "belongToDesc": "我的",
+          "followByShareNum": null,
+          "showAoWeiBtn": true,
+          "stopPort": false,
+          "password": "",
+          "gatewayParam": {
+            "radioRcvChn": 0.0,
+            "radioSndChn": 0.0,
+            "radioPower": 0,
+            "colorCodeId": 1,
+            "rxCss": "",
+            "txCss": "",
+            "width": 0,
+            "gid": 0
+          },
+          "onlineFlag": "UNKNOWN",
+          "ipAddress": null,
+          "groupCallNumber": null,
+          "parentAddr": "",
+          "dialSwitch": false,
+          "silenceSwitch": false,
+          "silenceThreshold": 0,
+          "webAccount": null,
+          "loc": null,
+          "infos": [],
+          "fields": []
+        }
+      ],
+      "failedTerminals": [],
+      "hasFailed": false
+    }
+  },
+  "elapsed_ms": 63
+}

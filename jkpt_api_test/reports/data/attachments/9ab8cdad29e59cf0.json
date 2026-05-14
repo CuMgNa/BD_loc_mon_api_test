@@ -1,0 +1,17 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Thu, 14 May 2026 16:03:09 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 3003,
+    "msg": "分组不存在",
+    "data": null
+  },
+  "elapsed_ms": 58
+}

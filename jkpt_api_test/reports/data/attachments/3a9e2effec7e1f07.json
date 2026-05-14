@@ -1,0 +1,16 @@
+{
+  "case_name": "批量移动分组-负向-目标分组不存在",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/terminals/batch/move-group",
+  "params": null,
+  "json": {
+    "addrs": "20260428001,20260428002,20260428003,20260428004,20260428005,20260428006,20260428007,20260428008,20260428009,20260428010",
+    "newGroupId": "NONEXIST_GROUP_ID"
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

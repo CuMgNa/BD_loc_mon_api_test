@@ -1,0 +1,15 @@
+{
+  "case_name": "分页获取分组下设备列表-负向-缺少Token",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a05f23c099c5e0becc79788/terminals",
+  "params": {
+    "addr": "",
+    "page": 1,
+    "pageSize": 100
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "case_name": "编辑分组名称-负向-分组名称为空",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a05f27b099c5e0becc798e1",
+  "params": {},
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}
