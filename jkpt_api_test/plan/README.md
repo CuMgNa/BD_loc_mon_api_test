@@ -1,5 +1,13 @@
 # API 自动化测试框架搭建计划（方案B）
 
+## 相关计划索引
+
+- 本文：原始搭建计划（保留作历史参照）
+- [api-test-framework 技能同步计划](./api-test-framework-skill-sync.plan.md) — **当前主线**，将 `common/` + `conftest` 沉淀到仓库技能，分通用层 / 适配层
+- 其他模块计划见同目录 `*.plan.md` 文件
+
+---
+
 ## 目标
 
 基于 api-test-framework 搭建监控平台 API 自动化测试框架，以用户登录接口为例实现验证码识别和循环重试机制。

@@ -1,0 +1,32 @@
+{
+  "case_name": "协议-AA图片-分包7",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/datas/bd",
+  "params": null,
+  "json": {
+    "commInfos": [
+      {
+        "commTime": "",
+        "content": "AA000690259E6A06DC7C00000106055DAFF16F0D66F3A1A55F8080808080808080FFD9",
+        "fromAddr": "20260430200104",
+        "time": "2026-05-15 16:43:40",
+        "toAddr": "110110110"
+      }
+    ],
+    "receipts": [
+      {
+        "fromAddr": "string",
+        "msg": "string",
+        "msgId": "string",
+        "sendTime": "string",
+        "status": 0,
+        "toAddr": "string"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

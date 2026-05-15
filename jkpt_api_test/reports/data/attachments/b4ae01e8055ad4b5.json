@@ -1,0 +1,37 @@
+{
+  "case_name": "手动输入SN码批量添加-正向",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a06dc6b099c5e0becd2a687/terminals/batch",
+  "params": null,
+  "json": {
+    "useScope": "TRAIN",
+    "item": [
+      {
+        "sn": "20260430200101",
+        "remark": "批量添加测试1",
+        "password": ""
+      },
+      {
+        "sn": "20260430200102",
+        "remark": "批量添加测试2",
+        "password": ""
+      }
+    ],
+    "gatewayParam": {
+      "colorCodeId": 1,
+      "gid": 0,
+      "radioRcvChn": "",
+      "radioSndChn": "",
+      "radioPower": 0,
+      "rxCss": "",
+      "txCss": "",
+      "width": 0
+    }
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

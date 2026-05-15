@@ -12,6 +12,31 @@ description: >
 
 # API自动化测试框架 — AI编码参考规范
 
+## jkpt 标准栈声明（生成约束）
+
+**通用层**（跨项目可复用，本 SKILL 主体描述）：
+
+- HTTP 客户端：`from common.requests_util import BaseRequest`
+- 断言：`from common.allure_assert_util import assert_api_result`
+- 日志：`from common.logger_util import sep, key, print_request, print_response`
+- 数据：`from common.yaml_util import read_yaml, write_yaml, clear_yaml`
+- 用例模式：模式 A（无状态）/ 模式 B（CRUD/有状态）
+- 协议层（如项目使用）：`bd_client` + `bd_test_terminal`（详见 [conftest-jkpt.md](references/conftest-jkpt.md)）
+
+**适配层**（仅 jkpt，其他项目参考格式自建）：
+
+- [references/conftest-jkpt.md](references/conftest-jkpt.md) — jkpt 专属 fixture 与依赖链
+- [references/yaml-conventions.md](references/yaml-conventions.md) — jkpt YAML 命名约定
+- `.cursor/rules/jkpt-api-test.mdc` — 生成约束
+
+**禁止生成**（不在 jkpt 真实运行栈中）：
+
+- `from api_test_framework.runner import run_case` / 模式 C
+- `pytest_plugins = ["api_test_framework.pytest_plugin"]`（文件不存在）
+- 全局 Cursor 技能的 YAML `version: "1.0"` + `assertions[]` 格式
+
+---
+
 ## 框架概述
 
 基于 pytest + requests + YAML 的5层分层API自动化测试框架。AI在编写测试用例时，必须严格遵循以下层级调用约定和编码模式。
@@ -19,7 +44,7 @@ description: >
 ### 层级依赖关系
 
 ```
-yaml/*.py(测试数据) → test_*.py(用例) → common/(公共工具) → api_test_framework/(核心引擎)
+yaml/*.py(测试数据) → test_*.py(用例) → common/(公共工具) → api_test_framework/(核心引擎 [可选/未使用])
                                            ↑
                                       conftest.py(fixture配置)
 ```
@@ -27,13 +52,13 @@ yaml/*.py(测试数据) → test_*.py(用例) → common/(公共工具) → api_
 **调用规则**：
 - 用例层 → 调用 `common/` 的方法（不直接调用 `api_test_framework/`）
 - `common/requests_util.py` 是手写用例的**唯一入口**
-- `api_test_framework/runner.py` 仅用于纯YAML驱动模式
+- `api_test_framework/runner.py` 仅用于纯YAML驱动模式（**jkpt 未使用，勿生成**）
 
 ---
 
 ## 第1层：核心引擎 (`api_test_framework/`) — 方法速查
 
-> ⚠️ 用例代码通常不直接导入此层。此层的类通过 `common/` 间接使用，或仅在框架驱动模式(`run_case`)下直接调用。
+> ⚠️ **jkpt 项目不使用本层**。本节仅作历史归档；用例代码通过 `common/` 间接使用。请勿生成 `from api_test_framework.* import ...`。
 
 | 类/函数 | 文件 | 用途 | 调用场景 |
 |---------|------|------|---------|
@@ -227,6 +252,39 @@ captcha_text = ocr.recognize_from_response(resp)
 **建议**:
 - 验证码登录场景通过 fixture（如 `auth_token`）统一处理，不在每个测试重复识别逻辑
 - 当识别失败导致登录失败时，使用重试机制而非直接失败
+
+---
+
+### 2.8 协议层（北斗 / 自定义二进制协议）— 可选
+
+> 适用项目：仓库中存在 `common/bd_protocol_client.py` 等协议模块。**HTTP 项目可跳过本节**。
+
+| 模块 | 用途 |
+|------|------|
+| `common/bd_protocol_client.py` | `BDProtocolClient` + 11 个 `send_*` 协议方法 |
+| `common/protocol_transport.py` | `BDProtocolTransport`：POST `/api/datas/bd` 底层传输 |
+| `common/protocol_codec.py` | `ProtocolCodec` HEX 编解码 + 随机坐标 / 轨迹 |
+| `common/protocol_types.py` | `GeoPoint`、`ProtocolSendResult` 数据类 |
+
+**何时用协议层**：
+
+- 用例需要向后端发**二进制协议**，验证服务侧解码 / 持久化 / 联动业务
+- HTTP 用例只关心 `assert_api_result`；协议用例只关心 `ProtocolSendResult.success`
+
+**用例最小骨架**（详细方法签名见 [methods-reference.md §16-19](references/methods-reference.md)；fixture 见 [conftest-jkpt.md](references/conftest-jkpt.md)）：
+
+```python
+class TestProtocolXXX:
+    def test_send_alarm(self, bd_client, bd_test_terminal):
+        result = bd_client.send_alarm_13(from_addr=bd_test_terminal)
+        assert result.success, f"协议发送失败: code={result.code}, msg={result.msg}"
+```
+
+**约定**：
+
+- 仅注入 `bd_client` 与 `bd_test_terminal`，**不要**再注入 `auth_headers`（transport 已剥离 Authorization）
+- 坐标 / 手机号 / 时间戳缺省时由 codec 自动生成；只在明确测试边界场景才传入
+- 模板：[assets/templates/test_case_protocol.tpl.py](assets/templates/test_case_protocol.tpl.py)
 
 ---
 
@@ -447,7 +505,9 @@ def test_xxx(self, base_url, auth_headers, group_fixture, case):
 3. **优先不修改** `parametrize` 注入的 `case` 字典，保持「方法体内组装参数」，与现有 `_assert_and_report` 一致。
 4. 「只保留第一次成功提取」→ 类级布尔或等价状态（与 `_first_addr_extracted` 同思路）。
 
-### 模式C：框架驱动模式（纯YAML + run_case）
+### 模式C：框架驱动模式（纯YAML + run_case）[可选/jkpt 未使用]
+
+> ⚠️ jkpt 仓库**未使用**该模式，请勿在 jkpt 用例中生成。本节保留用于其他独立项目参考。
 
 **适用**: 标准CRUD接口，无需复杂条件分支。
 
@@ -615,12 +675,16 @@ delete_xxx_cases:
 ### Step 4: 检查清单
 - [ ] 导入是否正确（`BaseRequest` from `common.requests_util`）
 - [ ] `read_yaml` 路径是否正确（`./yaml/test_xxx.yaml`）
-- [ ] `@pytest.mark.parametrize` 数据源是否匹配YAML顶层key
-- [ ] fixture注入是否完整（`base_url`, `auth_headers`, 业务fixture）
-- [ ] 断言是否优先使用 `assert_api_result(...)`
-- [ ] 关键字匹配逻辑是否覆盖了所有case name
+- [ ] `@pytest.mark.parametrize` 数据源是否匹配 YAML 顶层 key（以 `_cases` 结尾）
+- [ ] fixture 注入是否完整（`base_url`、`auth_headers`、业务 fixture）
+- [ ] 断言是否优先使用 `assert_api_result(...)` 并传 `biz_context`
+- [ ] 关键字匹配逻辑是否覆盖了所有 case name
 - [ ] 有动态数据的场景是否用了 `get_current_datetime()`
 - [ ] `case_name` 和 `log_level` 参数是否传入 `send_request`
+- [ ] **协议用例**：注入 `bd_client` + `bd_test_terminal`，**不**注入 `auth_headers`；断言 `result.success`
+- [ ] **YAML 约定**：顶层 key 以 `_cases` 结尾；占位符 `{{xxx}}` 与解析路径一一对应（见 [yaml-conventions.md](references/yaml-conventions.md)）
+- [ ] **禁止**：未生成 `run_case` / `pytest_plugin` / `assertions[]` 数组
+- [ ] 没有硬编码生产 URL、明文密码、真实手机号 / 身份证
 
 ---
 
@@ -628,25 +692,31 @@ delete_xxx_cases:
 
 ```
 project-root/
-├── api_test_framework/     # 核心引擎（100%不动）
-├── common/                 # 公共工具（删CoordinateConverter.py）
-│   ├── requests_util.py    # ⭐ 主要调用入口
-│   ├── allure_assert_util.py # ⭐ 统一断言+Allure附件
+├── api_test_framework/        # [历史归档] jkpt 不使用，勿生成 import
+├── common/                    # 公共工具（通用层，跨项目可复用）
+│   ├── requests_util.py       # ⭐ 主要调用入口
+│   ├── allure_assert_util.py  # ⭐ 统一断言+Allure附件
 │   ├── logger_util.py
 │   ├── captcha_util.py
 │   ├── yaml_util.py
 │   ├── ipconfig.py
-│   └── common_data.py
-├── conftest.py             # ⭐ 唯一需要定制的配置文件
+│   ├── common_data.py
+│   ├── bd_protocol_client.py  # 协议层（可选，依项目）
+│   ├── protocol_transport.py  # 协议层（可选）
+│   ├── protocol_codec.py      # 协议层（可选）
+│   └── protocol_types.py      # 协议层（可选）
+├── conftest.py                # ⭐ 项目专属适配（fixture、清理）
 ├── pytest.ini
 ├── pyproject.toml
-├── run.py                  # 一键运行入口
-├── extract.yaml            # 空文件，运行时变量存储
-├── testcases/              # 测试用例（你来写）
+├── run.py                     # 一键运行入口
+├── extract.yaml               # 运行时变量存储（空文件占位）
+├── testcases/                 # 测试用例
 │   └── test_*.py
-└── yaml/                   # 测试数据（你来写）
+└── yaml/                      # 测试数据
     └── test_*.yaml
 ```
+
+> jkpt 适配层文档：[references/conftest-jkpt.md](references/conftest-jkpt.md) · [references/yaml-conventions.md](references/yaml-conventions.md)
 
 ---
 

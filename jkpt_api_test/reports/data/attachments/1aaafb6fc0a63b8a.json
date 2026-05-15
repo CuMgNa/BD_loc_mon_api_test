@@ -1,0 +1,12 @@
+{
+  "case_name": "删除two_id分组 6a06dc6b099c5e0becd2a687",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a06dc6b099c5e0becd2a687",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

@@ -1,0 +1,68 @@
+---
+description: jkpt API 自动化测试用例生成约束（强制以仓库技能为唯一真相源）
+globs: testcases/**, yaml/**, common/**, conftest.py, api-test-framework/**
+---
+
+# jkpt 接口测试生成规则
+
+本仓库的接口自动化生成 **必须** 遵循以下约束。技能来源 = 仓库内：
+
+- 主文档：[api-test-framework/api-test-framework/SKILL.md](mdc:api-test-framework/api-test-framework/SKILL.md)
+- 方法字典：[api-test-framework/api-test-framework/references/methods-reference.md](mdc:api-test-framework/api-test-framework/references/methods-reference.md)
+- 适配层 Fixture：[api-test-framework/api-test-framework/references/conftest-jkpt.md](mdc:api-test-framework/api-test-framework/references/conftest-jkpt.md)
+- 适配层 YAML：[api-test-framework/api-test-framework/references/yaml-conventions.md](mdc:api-test-framework/api-test-framework/references/yaml-conventions.md)
+- 变更跟踪：[api-test-framework/api-test-framework/CHANGELOG.md](mdc:api-test-framework/api-test-framework/CHANGELOG.md)
+
+> 同时存在的 Cursor 全局 `~/.cursor/skills/api-test-framework/` 与本仓库**不一致**，**禁止**作为生成依据。
+
+## 必须
+
+- HTTP 请求入口：`from common.requests_util import BaseRequest`
+- 统一断言：`from common.allure_assert_util import assert_api_result`
+- YAML 读取：`from common.yaml_util import read_yaml, write_yaml, clear_yaml`
+- 日志：`from common.logger_util import sep, key, print_request, print_response`
+- 数据驱动：`@pytest.mark.parametrize("case", read_yaml("./yaml/test_xxx.yaml")["xxx_cases"])`
+- 用例模式：**模式 A**（无状态）或 **模式 B / B′**（CRUD / `extract.yaml` 链路）
+- jsonpath 风格：`_jsonpath_parse = jsonpath.jsonpath`（函数式 API）
+- 鉴权头：注入 `auth_headers` fixture；`no_auth: true` 用例**方法体内** strip Authorization
+- 协议用例：注入 `bd_client` + `bd_test_terminal`，断言 `result.success`
+
+## 禁止
+
+- `from api_test_framework.runner import run_case`（jkpt 未使用）
+- `from api_test_framework.<anything> import ...`（仅 common/ 进入用例层）
+- `pytest_plugins = ["api_test_framework.pytest_plugin"]`（文件不存在）
+- 模式 C（纯 YAML + `run_case`）
+- 全局技能的 YAML 结构：`version: "1.0"`、`assertions: [{type: ..., expected: ...}]`、`api-test-generate` CLI
+- YAML 中写可执行表达式（`!python`、`eval` 等）
+- 在用例中硬编码生产 URL、明文密码、真实手机号 / 身份证
+- 在 `conftest.py` 写 `extract.yaml`（清理职责单独，写入由 testcase 完成）
+- 自创 `headers_no_auth` 等同义 fixture（用 `auth_headers` + 方法体内剥离）
+
+## 命名与文件
+
+- testcase：`testcases/test_<controller>.py`
+- YAML：`yaml/test_<controller>.yaml`，顶层 key 以 `_cases` 结尾
+- YAML 占位符：`{{变量名}}`；jkpt 特例 `{{bd_test_terminal}}`、`{{one_id}}`/`{{two_id}}`/`{{three_id}}`
+
+## 决策树（生成时）
+
+1. 接口无依赖 → 模式 A
+2. 接口有 CRUD 链路 → 模式 B（类变量）或 B′（fixture + extract.yaml）
+3. 二进制协议 → 协议层 + `bd_client.send_*`
+4. 任何场景断言 → `assert_api_result(...)` 优先
+5. 失败上下文 → 已由 `pytest_runtest_makereport` 自动附 Allure，不重复实现
+
+## 生成后自检
+
+- 仅引用 `common.*` 与 `pytest`、`jsonpath`、标准库
+- YAML 顶层 key 与 `parametrize` 一一对应
+- `no_auth` 路径与正向路径在同一方法内分支
+- 协议用例不出现 `auth_headers`
+- 没有 `run_case` / `pytest_plugin` / `version: "1.0"`
+
+## 公共能力提取规则
+
+- ≥2 个 testcase 重复 ≥5 行同样逻辑 → 抽到 `common/<topic>_util.py`
+- 同步更新 [methods-reference.md](mdc:api-test-framework/api-test-framework/references/methods-reference.md) + [CHANGELOG.md](mdc:api-test-framework/api-test-framework/CHANGELOG.md)
+- 详细流程：[api-test-framework/api-test-framework/CONTRIBUTING.md](mdc:api-test-framework/api-test-framework/CONTRIBUTING.md)

@@ -1,13 +1,10 @@
 # API测试框架 — 完整方法签名参考
 
+> jkpt 项目实际只使用 `common/*` 工具层；`api_test_framework/*` 章节作为历史归档保留。生成代码时**仅引用 common 模块**。
+
 ## 目录
-- [1. api_test_framework/client.py](#1-apitest_frameworkclientpy)
-- [2. api_test_framework/config.py](#2-apitest_frameworkconfigpy)
-- [3. api_test_framework/data.py](#3-apitest_framewordatapy)
-- [4. api_test_framework/assertions.py](#4-apitest_frameworkassertionspy)
-- [5. api_test_framework/schema.py](#5-apitest_frameworkschemapy)
-- [6. api_test_framework/runner.py](#6-apitest_frameworkrunnerpy)
-- [7. api_test_framework/pytest_plugin.py](#7-apitest_frameworkpytest_pluginpy)
+
+### 通用层（jkpt 实际使用 — 跨项目可复用）
 - [8. common/requests_util.py](#8-commonrequests_utilpy)
 - [9. common/yaml_util.py](#9-commonyaml_utilpy)
 - [10. common/ipconfig.py](#10-commonipconfigpy)
@@ -15,7 +12,22 @@
 - [12. common/allure_assert_util.py](#12-commonallure_assert_utilpy)
 - [13. common/logger_util.py](#13-commonlogger_utilpy)
 - [14. common/captcha_util.py](#14-commoncaptcha_utilpy)
-- [15. conftest.py 常用fixture和hook](#15-conftestpy-常用fixture和hook)
+- [16. common/bd_protocol_client.py（北斗协议客户端）](#16-commonbd_protocol_clientpy)
+- [17. common/protocol_transport.py](#17-commonprotocol_transportpy)
+- [18. common/protocol_codec.py](#18-commonprotocol_codecpy)
+- [19. common/protocol_types.py](#19-commonprotocol_typespy)
+
+### 适配层（仅 jkpt）
+- [15. conftest.py 常用fixture和hook](#15-conftestpy-常用fixture和hook)（详细见 [conftest-jkpt.md](conftest-jkpt.md)）
+
+### 核心引擎（[历史归档] jkpt 不使用 — 勿生成）
+- [1. api_test_framework/client.py](#1-apitest_frameworkclientpy)
+- [2. api_test_framework/config.py](#2-apitest_frameworkconfigpy)
+- [3. api_test_framework/data.py](#3-apitest_framewordatapy)
+- [4. api_test_framework/assertions.py](#4-apitest_frameworkassertionspy)
+- [5. api_test_framework/schema.py](#5-apitest_frameworkschemapy)
+- [6. api_test_framework/runner.py](#6-apitest_frameworkrunnerpy)
+- [7. api_test_framework/pytest_plugin.py — 未实现（勿生成）](#7-apitest_frameworkpytest_pluginpy)
 
 ---
 
@@ -228,25 +240,9 @@ store.resolve("{{unknown_key}}")             # → "{{unknown_key}}" （不替�
 
 ## 7. api_test_framework/pytest_plugin.py
 
-### 命令行参数
-| 参数 | 说明 |
-|------|------|
-| `--api-config` | 配置文件路径(YAML) |
-| `--api-base-url` | 直接指定base_url |
-| `--api-host` | 指定主机 |
-| `--api-port` | 指定端口(int) |
-| `--api-no-allure` | 禁用Allure附件 |
+> ⚠️ **未实现（勿生成）**：`api_test_framework/pytest_plugin.py` 文件在 jkpt 仓库**不存在**。AI 不得生成 `pytest_plugins = ["api_test_framework.pytest_plugin"]`，也不得引用以下 fixture 名（`api_config`/`api_client`/`api_variables`/`api_headers`/`clear_extract_file`/`attach_requests_to_allure`）。
 
-### 提供的Fixture
-| Fixture名 | 作用域 | 返回类型 | 说明 |
-|-----------|--------|---------|------|
-| `api_config` | session | ApiTestConfig | 配置对象 |
-| `base_url` | session | str | 解析后的完整URL |
-| `api_client` | session | BaseRequest | 预配置客户端 |
-| `api_variables` | session | VariableStore | 变量存储 |
-| `api_headers` | session | dict | 空header字典(可覆写) |
-| `clear_extract_file` | session autouse | None | 清空extract.yaml |
-| `attach_requests_to_allure` | function autouse | None | Allure monkey-patch |
+历史设想（仅作参考，不可作为生成依据）：命令行参数 `--api-config / --api-base-url / --api-host / --api-port / --api-no-allure`；session 级 fixture `api_config`、`base_url`、`api_client`、`api_variables`、`api_headers`、`clear_extract_file`、`attach_requests_to_allure`。
 
 ---
 
@@ -438,3 +434,194 @@ captcha_text = ocr.recognize_from_response(resp)
 
 ### `clear_data_per_session()` (fixture, session, autouse)
 测试会话前清理 `extract.yaml`，会话结束收尾日志输出。
+
+> jkpt 项目的完整 fixture / hook 适配清单（含 `group_fixture`、`bd_test_terminal`、`bd_client`、`pytest_runtest_makereport` 等）见 [conftest-jkpt.md](conftest-jkpt.md)。
+
+---
+
+## 16. common/bd_protocol_client.py
+
+> 北斗协议客户端层（属 `common/`，跨项目可复用；本项目通过 `bd_client` fixture 注入，详见 [conftest-jkpt.md](conftest-jkpt.md)）。
+
+源文件：[../../../common/bd_protocol_client.py](../../../common/bd_protocol_client.py)
+
+### class `BDProtocolClient`
+
+```python
+class BDProtocolClient:
+    def __init__(
+        self,
+        transport: BDProtocolTransport,
+        default_phone: str = "13250703582",
+    ) -> None: ...
+```
+
+11 个 `send_*` 方法的统一签名约定：
+
+- 第一个必填参数 `from_addr: str`（设备 SN / addr）
+- 坐标 `lon` / `lat` 缺省 → 中心点 (113.466203, 23.170439) 半径 100m 随机
+- 5 点轨迹 `points` 缺省 → 中心附近随机起点 + 等距 10m
+- `phone` 缺省 → `default_phone`
+- 返回 `ProtocolSendResult`（status_code / code / msg / raw_response / request_body / `.success`）
+
+### `send_text_92(from_addr, case_name="协议-92短文本无位置") -> ProtocolSendResult`
+0x92 短文本（无位置）。
+
+### `send_text_93(from_addr, lon=None, lat=None, case_name="协议-93短文本有位置") -> ProtocolSendResult`
+0x93 短文本（INT 坐标）。
+
+### `send_voice_a6(from_addr, case_name="协议-A6神经语音") -> ProtocolSendResult`
+0xA6 神经语音（固定 HEX 尾，无变量）。
+
+### `send_alarm_13(from_addr, lon=None, lat=None, phone=None, case_name="协议-13报警") -> ProtocolSendResult`
+0x13 EE 推送报警（INT 坐标 + phone HEX）。
+
+### `send_safe_14(from_addr, lon=None, lat=None, phone=None, case_name="协议-14报平安") -> ProtocolSendResult`
+0x14 报平安（INT 坐标 + phone HEX）。
+
+### `send_location_a4(from_addr, points=None, case_name="协议-A4定位轨迹") -> ProtocolSendResult`
+0xA4 推送定位（5 点 DMS 轨迹 + 各点独立随机方向角 + XOR 校验）。
+
+### `send_image_aa(from_addr, case_name="协议-AA图片", interval_seconds=10) -> list[ProtocolSendResult]`
+0xAA 图片分 7 包顺序发送（第 1 包按 JMX 重复一次）。**返回列表**，每包一个结果。`interval_seconds` 控制包间隔。
+
+### `send_location_15(from_addr, points=None, case_name="协议-15多点定位") -> ProtocolSendResult`
+0x15 多点定位（5 点 INT 坐标 + 各自时间戳 delta，每步 5 秒）。
+
+### `send_alarm_ee(from_addr, lon=None, lat=None, case_name="协议-EE报警") -> ProtocolSendResult`
+0xEE 报警（北京时间各分量 + DMS 坐标）。
+
+### `send_safe_e1(from_addr, lon=None, lat=None, case_name="协议-E1报平安") -> ProtocolSendResult`
+0xE1 报平安（北京时间 hh/mi/ss + DMS 坐标）。
+
+### `send_sms_94(from_addr, phone=None, case_name="协议-94高级短信") -> ProtocolSendResult`
+0x94 高级短信（phone HEX + 时间戳 HEX）。
+
+### `resolve_phone_hex(phone) -> str`
+便捷封装，等价于模块级 `resolve_phone_hex(phone, default_phone=self.default_phone)`。
+
+### 最小用例片段
+
+```python
+def test_send_alarm(self, bd_client, bd_test_terminal):
+    result = bd_client.send_alarm_13(from_addr=bd_test_terminal)
+    assert result.success, f"code={result.code}, msg={result.msg}"
+```
+
+---
+
+## 17. common/protocol_transport.py
+
+源文件：[../../../common/protocol_transport.py](../../../common/protocol_transport.py)
+
+### class `BDProtocolTransport`
+
+```python
+class BDProtocolTransport:
+    DEFAULT_TO_ADDR = "110110110"
+    DEFAULT_PATH = "/api/datas/bd"
+
+    def __init__(
+        self,
+        base_url: str,
+        headers: dict[str, str] | None = None,
+        http: BaseRequest | None = None,
+        to_addr: str = DEFAULT_TO_ADDR,
+    ) -> None: ...
+
+    def send_bd_content(
+        self,
+        content_hex: str,
+        from_addr: str,
+        case_name: str = "",
+        to_addr: str | None = None,
+    ) -> ProtocolSendResult: ...
+```
+
+**行为约定**：
+
+- 请求体严格按 JMX 结构组装：`commInfos[0]` + `receipts[0]`
+- `time` 字段使用北京时区 `YYYY-MM-DD HH:MM:SS`
+- 接口 `/api/datas/bd` **不需要 Authorization**，发送前自动剥离
+- 默认 `Content-Type: application/json`
+
+通常无需直接调用，由 `BDProtocolClient` 各 `send_*` 内部使用。
+
+### `_now_cst_str() -> str`
+模块函数，返回当前北京时间字符串。
+
+---
+
+## 18. common/protocol_codec.py
+
+源文件：[../../../common/protocol_codec.py](../../../common/protocol_codec.py)
+
+### 常量
+
+| 常量 | 值 |
+|------|----|
+| `DEFAULT_CENTER_LON` | `113.466203` |
+| `DEFAULT_CENTER_LAT` | `23.170439` |
+| `DEFAULT_RADIUS_M` | `100` |
+| `DEFAULT_TRAJECTORY_STEP_M` | `10` |
+| `DEFAULT_PHONE` | `"13250703582"` |
+
+### class `ProtocolCodec`（全部 staticmethod）
+
+```python
+ProtocolCodec.hex_timestamp_up() -> str                         # 当前秒级 HEX (大写)
+ProtocolCodec.hex_datetime_cst() -> dict                        # {yy, mm, dd, hh, mi, ss} 各 2 位 HEX
+ProtocolCodec.hex_ts_deltas(count=5, step_sec=5) -> list[str]   # 过去 N 个点的 HEX，最近→最早
+ProtocolCodec.lon_int_hex(lon) -> str                           # INT4 大端 HEX
+ProtocolCodec.lat_int_hex(lat) -> str
+ProtocolCodec.lon_dms_hex(lon) -> str                           # DMS 8 字符 HEX
+ProtocolCodec.lat_dms_hex(lat) -> str
+ProtocolCodec.phone_hex(phone) -> str                           # 5 字节 HEX；非法回退 DEFAULT_PHONE
+ProtocolCodec.angle_hex(angle_deg) -> str                       # 4 字符 HEX
+ProtocolCodec.calc_xor(hex_str) -> str                          # 异或校验，返 2 字符 HEX
+ProtocolCodec.random_point(center_lon=..., center_lat=..., radius_m=...) -> (lon, lat)
+ProtocolCodec.random_trajectory(count=5, ...) -> (points, angle_deg)
+```
+
+### `resolve_phone_hex(phone, default_phone="13250703582") -> str`
+模块函数，空入参回退 `default_phone`。
+
+---
+
+## 19. common/protocol_types.py
+
+源文件：[../../../common/protocol_types.py](../../../common/protocol_types.py)
+
+### dataclass `GeoPoint`
+
+```python
+@dataclass
+class GeoPoint:
+    lon: float
+    lat: float
+    def as_tuple(self) -> tuple[float, float]: ...
+```
+
+### dataclass `ProtocolSendResult`
+
+```python
+@dataclass
+class ProtocolSendResult:
+    status_code: int
+    code: int
+    msg: str
+    raw_response: dict = field(default_factory=dict)
+    request_body: dict = field(default_factory=dict)
+
+    @property
+    def success(self) -> bool:
+        # 仅当 HTTP 200 且业务 code == 0
+        return self.status_code == 200 and self.code == 0
+```
+
+用例断言推荐：
+
+```python
+result = bd_client.send_xxx(...)
+assert result.success, f"协议发送失败: code={result.code}, msg={result.msg}"
+```

@@ -1,0 +1,21 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Fri, 15 May 2026 08:43:52 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "id": "6a06dcc6099c5e0becd2ab0d",
+      "name": "AUTO_FT_UPD_1778834628",
+      "fields": []
+    }
+  },
+  "elapsed_ms": 775
+}

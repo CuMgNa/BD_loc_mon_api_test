@@ -1,0 +1,32 @@
+{
+  "case_name": "协议-AA图片-分包4",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/datas/bd",
+  "params": null,
+  "json": {
+    "commInfos": [
+      {
+        "commTime": "",
+        "content": "AA000690259E6A06DC7C00000106026A3B6EC3CAB3316D80A88B11321B83ACCF7E8286C7A6E5F9237C29C6113D3157C79D08DFDDE0FA1E714BC3519847818B11D47964168DA9EEABE6FB5A9DD006C7C94C8F928D1F23104A30319E7AB1BA72C3EC6D2269E4F31176F9B5374D77F470A82FE739DA78B93EDE7043F0AA306F13CD836DBBB3835B6DA165C34514BBD8111908BE73AFF4AC43CD22AB6A2637E3E5DF65B11116A3F541E792F62B214AD951794EC6B239AFB10EE8E03368DD0B40464AB35F9A6E4C61A7FDFF7D820C574797C415E7E795165543",
+        "fromAddr": "20260430200104",
+        "time": "2026-05-15 16:43:08",
+        "toAddr": "110110110"
+      }
+    ],
+    "receipts": [
+      {
+        "fromAddr": "string",
+        "msg": "string",
+        "msgId": "string",
+        "sendTime": "string",
+        "status": 0,
+        "toAddr": "string"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

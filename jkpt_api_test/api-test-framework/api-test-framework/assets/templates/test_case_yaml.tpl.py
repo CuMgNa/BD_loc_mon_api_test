@@ -1,7 +1,11 @@
 """
 test_xxx.py — 纯YAML驱动模式（模式C）
-适用场景: 标准CRUD接口，无需复杂条件分支，一行run_case搞定
-从 api-test-framework Skill 生成
+
+⚠️ jkpt 项目未使用本模板，请勿复制到 jkpt 仓库。
+   jkpt 用例统一使用模式 A（test_case_simple.tpl.py）或模式 B（test_case_crud.tpl.py）。
+   协议用例使用 test_case_protocol.tpl.py。
+
+本文件仅为其他独立项目参考保留。
 """
 
 import pytest
