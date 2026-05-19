@@ -1,0 +1,154 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Tue, 19 May 2026 10:22:26 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": [
+      {
+        "name": "PN07",
+        "value": "4G太阳能报位设备(二代)"
+      },
+      {
+        "name": "PD22",
+        "value": "北三车载"
+      },
+      {
+        "name": "PD20",
+        "value": "北三手持机"
+      },
+      {
+        "name": "PD18",
+        "value": "北三盒子"
+      },
+      {
+        "name": "OTHER",
+        "value": "北斗设备"
+      },
+      {
+        "name": "NTN",
+        "value": "NTN设备"
+      },
+      {
+        "name": "TIAN_TONG",
+        "value": "天通终端"
+      },
+      {
+        "name": "BD_IMG_TRAN",
+        "value": "北斗哨兵"
+      },
+      {
+        "name": "TT_IMG_TRAN",
+        "value": "天通哨兵"
+      },
+      {
+        "name": "FY_IMG_TRAN",
+        "value": "风云哨兵"
+      },
+      {
+        "name": "JILI_IMG_TRAN",
+        "value": "吉利星座哨兵"
+      },
+      {
+        "name": "PN06",
+        "value": "4G太阳能报位设备"
+      },
+      {
+        "name": "PD14",
+        "value": "北二手持机"
+      },
+      {
+        "name": "PD13",
+        "value": "北斗盒子四代"
+      },
+      {
+        "name": "PD11",
+        "value": "北斗盒子三代"
+      },
+      {
+        "name": "PD05",
+        "value": "北斗车载终端"
+      },
+      {
+        "name": "PD03",
+        "value": "北斗盒子二代"
+      },
+      {
+        "name": "T808",
+        "value": "808定位终端"
+      },
+      {
+        "name": "PL01",
+        "value": "LoRa示位标"
+      },
+      {
+        "name": "PD15",
+        "value": "北斗太阳能报位终端"
+      },
+      {
+        "name": "RTK",
+        "value": "RTK定位终端"
+      },
+      {
+        "name": "PL02",
+        "value": "LoRa通信终端"
+      },
+      {
+        "name": "YX",
+        "value": "铱星车载"
+      },
+      {
+        "name": "TT_RESCUE_STICK",
+        "value": "天通救援棒"
+      },
+      {
+        "name": "GB",
+        "value": "国标设备"
+      },
+      {
+        "name": "SIP",
+        "value": "SIP设备"
+      },
+      {
+        "name": "APP",
+        "value": "APP设备"
+      },
+      {
+        "name": "PDT_VOICE_GATEWAY",
+        "value": "PDT语音网关"
+      },
+      {
+        "name": "SIMULATED_VOICE_GATEWAY",
+        "value": "模拟语音网关"
+      },
+      {
+        "name": "DMR_VOICE_GATEWAY",
+        "value": "DMR语音网关"
+      },
+      {
+        "name": "NARROWBAND_VOICE_AD_HOC_BASE_STATION",
+        "value": "窄带语音自组网基站"
+      },
+      {
+        "name": "BROADBAND_AD_HOC_BASE_STATION",
+        "value": "宽带自组网基站"
+      },
+      {
+        "name": "INTERPHONE",
+        "value": "对讲机"
+      },
+      {
+        "name": "XDT",
+        "value": "星地通"
+      }
+    ]
+  },
+  "elapsed_ms": 804
+}

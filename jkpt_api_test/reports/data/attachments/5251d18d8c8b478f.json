@@ -1,0 +1,32 @@
+{
+  "case_name": "协议-15多点定位",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/datas/bd",
+  "params": null,
+  "json": {
+    "commInfos": [
+      {
+        "commTime": "",
+        "content": "150000000000050506C35E9601618F4300226A0C397E06C35E6E01618EF100226A0C398306C35E4601618E9E00206A0C398806C35E1F01618E4B00216A0C398D06C35DF701618DF900216A0C3992",
+        "fromAddr": "20260430200104",
+        "time": "2026-05-19 18:21:11",
+        "toAddr": "110110110"
+      }
+    ],
+    "receipts": [
+      {
+        "fromAddr": "string",
+        "msg": "string",
+        "msgId": "string",
+        "sendTime": "string",
+        "status": 0,
+        "toAddr": "string"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

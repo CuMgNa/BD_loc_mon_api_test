@@ -1,0 +1,17 @@
+{
+  "case_name": "账号不存在",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/web-user/login",
+  "params": {
+    "account": "nonexist",
+    "password": "******",
+    "captcha": "v7jgt",
+    "captchaId": "177918612786531766"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

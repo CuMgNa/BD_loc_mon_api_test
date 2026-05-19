@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Tue, 19 May 2026 10:26:18 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "sn": "202605196350012",
+      "addr": "202605196350012",
+      "name": "4G太阳能报位设备",
+      "remark": "4G太阳能报位设备",
+      "terminalType": "PN06",
+      "useScope": "CAR"
+    }
+  },
+  "elapsed_ms": 857
+}

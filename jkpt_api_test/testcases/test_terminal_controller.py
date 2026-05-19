@@ -3,7 +3,7 @@ import jsonpath
 import pytest
 import time
 import re
-from common.requests_util import BaseRequest
+from common.requests_util import BaseRequest, NonJsonResponseError, parse_response_json
 from common.yaml_util import read_yaml, write_yaml
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
@@ -221,6 +221,79 @@ class TestTerminalController:
         code = _jsonpath_parse(json_data, "$.code")[0]
         self._assert_and_report(case, res)
 
+    # ==================== 枚举类型入库并添加 ====================
+    def test_add_terminal_by_enum(self, base_url, auth_headers, group_fixture, terminal_type_enum_cases):
+        """每种 terminalType 入库 -> 正式添加（循环遍历枚举用例）"""
+        group_id = group_fixture["three_id"]
+        auth = auth_headers["Authorization"]
+
+        for case in terminal_type_enum_cases:
+            sep(f" 入库: {case['terminalType']} SN={case['sn']}")
+            r_storage = http.send_request(
+                "get",
+                f"{base_url}/api/monitor/mock-in-storage",
+                params={
+                    "Authorization": auth,
+                    "addr": case["sn"],
+                    "sn": case["sn"],
+                    "name": case["remark"],
+                    "remark": case["remark"],
+                    "terminalType": case["terminalType"],
+                    "useScope": case["useScope"],
+                },
+                log_level="none",
+            )
+            print_response(r_storage)
+            try:
+                storage_json = parse_response_json(
+                    r_storage, context=f"入库 {case['terminalType']} SN={case['sn']}"
+                )
+            except NonJsonResponseError as e:
+                pytest.fail(str(e))
+            storage_code = _jsonpath_parse(storage_json, "$.code")[0]
+            if storage_code != 0:
+                storage_msg = _jsonpath_parse(storage_json, "$.msg")[0]
+                pytest.fail(
+                    f"入库失败 [{case['terminalType']} SN={case['sn']}]: "
+                    f"code={storage_code}, msg={storage_msg}"
+                )
+
+            sep(f" 添加: {case['terminalType']} SN={case['sn']}")
+            r_add = http.send_request(
+                "post",
+                f"{base_url}/api/monitor/groups/{group_id}/terminals",
+                json={
+                    "addr": "",
+                    "remark": case["remark"],
+                    "useScope": case["useScope"],
+                    "sn": case["sn"],
+                    "password": "",
+                    "terminalType": case["terminalType"],
+                    "trackColor": "#141323",
+                    "trackSize": 5,
+                    "gatewayParam": {
+                        "colorCodeId": 1,
+                        "gid": 0,
+                        "radioRcvChn": "",
+                        "radioSndChn": "",
+                        "radioPower": 0,
+                        "rxCss": "",
+                        "txCss": "",
+                        "width": 0,
+                    },
+                    "fieldJson": "",
+                    "fields": [
+                        {"name": "自定义字段1", "value": "自定义值1"},
+                        {"name": "自定义字段2", "value": "自定义值2"},
+                    ],
+                },
+                headers={**auth_headers, "Content-Type": "application/json"},
+                case_name=f"枚举添加-{case['terminalType']}",
+                log_level="none",
+            )
+            print_response(r_add)
+            self._assert_and_report_res(r_add, f"枚举添加-{case['terminalType']}")
+
     # ==================== 辅助方法 ====================
     def _resolve_value(self, yaml_value, required=False):
         """
@@ -240,6 +313,25 @@ class TestTerminalController:
                 return value
 
         return yaml_value
+
+    def _assert_and_report_res(self, res, case_name):
+        """接受 Response 对象的断言（枚举用例无 YAML expected）"""
+        try:
+            json_data = parse_response_json(res, context=case_name)
+        except NonJsonResponseError as e:
+            pytest.fail(str(e))
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        msg = _jsonpath_parse(json_data, "$.msg")[0]
+        sep(" 断言结果 ")
+        key("实际 code", code)
+        key("实际 msg", msg)
+        assert_api_result(
+            case_name=case_name,
+            expected_code=0,
+            expected_msg="成功",
+            actual_code=code,
+            actual_msg=msg,
+        )
 
     def _assert_and_report(self, case, res):
         """统一断言并输出报告"""

@@ -1,12 +1,13 @@
 # conftest.py
 import pytest
 import time
+import datetime
 import random
 import logging
 import json
 import traceback
 import os
-from common.requests_util import BaseRequest, get_last_http_context
+from common.requests_util import BaseRequest, get_last_http_context, NonJsonResponseError, parse_response_json
 from common.yaml_util import clear_yaml
 from common.captcha_util import CaptchaRecognizer
 from common.logger_util import sep, key, print_request, print_response
@@ -208,7 +209,10 @@ def group_fixture(base_url, auth_headers, pytestconfig):
         case_name="创建一级分组",
         log_level="none"
     )
-    json_data = resp.json()
+    try:
+        json_data = parse_response_json(resp, context="group_fixture创建一级分组")
+    except NonJsonResponseError as e:
+        pytest.fail(str(e))
     code = _jsonpath_parse(json_data, "$.code")[0]
     if code == 0:
         group_ids["one_id"] = _jsonpath_parse(json_data, "$.data.id")[0]
@@ -226,7 +230,10 @@ def group_fixture(base_url, auth_headers, pytestconfig):
         case_name="创建二级分组",
         log_level="none"
     )
-    json_data = resp.json()
+    try:
+        json_data = parse_response_json(resp, context="group_fixture创建二级分组")
+    except NonJsonResponseError as e:
+        pytest.fail(str(e))
     code = _jsonpath_parse(json_data, "$.code")[0]
     if code == 0:
         group_ids["two_id"] = _jsonpath_parse(json_data, "$.data.id")[0]
@@ -244,7 +251,10 @@ def group_fixture(base_url, auth_headers, pytestconfig):
         case_name="创建三级分组",
         log_level="none"
     )
-    json_data = resp.json()
+    try:
+        json_data = parse_response_json(resp, context="group_fixture创建三级分组")
+    except NonJsonResponseError as e:
+        pytest.fail(str(e))
     code = _jsonpath_parse(json_data, "$.code")[0]
     if code == 0:
         group_ids["three_id"] = _jsonpath_parse(json_data, "$.data.id")[0]
@@ -289,6 +299,54 @@ def terminal_types(base_url, auth_headers):
         msg = _jsonpath_parse(json_data, "$.msg")[0]
         key("获取设备类型失败", f"code={code}, msg={msg}")
         return []
+
+
+@pytest.fixture(scope="session")
+def terminal_use_scopes(base_url, auth_headers):
+    """获取所有使用范围枚举，session级别只调用一次"""
+    sep(" 📋 获取使用范围枚举 ")
+    url = f"{base_url}/api/monitor/enums/terminal-use-scopes"
+    resp = http.send_request(
+        method="get",
+        url=url,
+        headers=auth_headers,
+        case_name="获取使用范围枚举",
+        log_level="none",
+    )
+    json_data = resp.json()
+    code = _jsonpath_parse(json_data, "$.code")[0]
+    if code == 0:
+        scopes = _jsonpath_parse(json_data, "$.data[*]")
+        if scopes:
+            key("使用范围列表", scopes)
+            return scopes
+        key("使用范围列表", "未获取到")
+        return []
+    msg = _jsonpath_parse(json_data, "$.msg")[0]
+    key("获取使用范围失败", f"code={code}, msg={msg}")
+    return []
+
+
+@pytest.fixture(scope="session")
+def terminal_type_enum_cases(terminal_types, terminal_use_scopes):
+    """生成 N 条枚举用例（useScope 循环选取，SN 防碰撞）"""
+    if not terminal_types or not terminal_use_scopes:
+        pytest.skip("terminal_types 或 terminal_use_scopes 为空，跳过枚举用例")
+    base_sn = datetime.datetime.now().strftime("%Y%m%d")
+    salt = str(int(time.time()) % 10000).zfill(4)
+    cases = []
+    for i, t in enumerate(terminal_types, start=1):
+        scope = terminal_use_scopes[i % len(terminal_use_scopes)]
+        sn = f"{base_sn}{salt}{i:03d}"
+        cases.append({
+            "sn": sn,
+            "terminalType": t["name"],
+            "remark": t["value"],
+            "useScope": scope["name"],
+        })
+    key("枚举用例数量", len(cases))
+    return cases
+
 
 # ==================== BD协议测试设备 Fixture ====================
 BD_TEST_ADDR = "20260430200104"

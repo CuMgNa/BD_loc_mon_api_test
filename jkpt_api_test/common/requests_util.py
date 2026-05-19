@@ -19,6 +19,38 @@ def get_last_http_context() -> Dict[str, Any]:
     return _LAST_HTTP_CONTEXT.copy()
 
 
+class NonJsonResponseError(ValueError):
+    """HTTP 响应体为空或无法解析为 JSON"""
+
+    def __init__(self, response: requests.Response, context: str = "", cause: Exception | None = None):
+        self.response = response
+        self.context = context
+        text = (response.text or "").strip()
+        preview = repr(text[:300]) if text else "(empty)"
+        label = f"{context}：" if context else ""
+        msg = (
+            f"{label}响应非 JSON（status={response.status_code}, "
+            f"content-type={response.headers.get('content-type', '')}, body={preview}）"
+        )
+        if cause is not None:
+            msg = f"{msg}，解析错误: {cause}"
+        super().__init__(msg)
+
+
+def parse_response_json(response: requests.Response, context: str = "") -> Dict[str, Any]:
+    """解析响应 JSON；空体或非 JSON 时抛出 NonJsonResponseError"""
+    text = (response.text or "").strip()
+    if not text:
+        raise NonJsonResponseError(response, context)
+    try:
+        data = response.json()
+    except ValueError as e:
+        raise NonJsonResponseError(response, context, cause=e) from e
+    if not isinstance(data, dict):
+        raise NonJsonResponseError(response, context)
+    return data
+
+
 class BaseRequest:
     """增强版请求类，手写用例首选入口"""
 
