@@ -13,8 +13,9 @@ def add_memory(text: str, user_id: str = "tongmeina") -> str:
 
 @mcp.tool()
 def search_memory(query: str, user_id: str = "tongmeina", limit: int = 5) -> list:
-    results = client.search(query, user_id=user_id, limit=limit)
-    return [r.get("memory", str(r)) for r in results]
+    response = client.search(query, filters={"user_id": user_id}, limit=limit)
+    items = response.get("results", response) if isinstance(response, dict) else response
+    return [r.get("memory", str(r)) for r in items]
 
 if __name__ == "__main__":
     mcp.run()

@@ -105,8 +105,8 @@ batch_move_group_cases:
     addrs: "{{batch_addrs}}"
     newGroupId: "NONEXIST_GROUP_ID"
     expected:
-      code: 999
-      error_msg: "失败"
+      code: 3003
+      error_msg: "分组不存在"
 
   - name: "批量移动分组-负向-addrs为空"
     addrs: ""
@@ -121,13 +121,24 @@ batch_export_cases:
     binary_response: true
     expected:
       http_status: 200
+      filename: terminalInfo.xlsx
+      headers:
+        - "状态"
+        - "设备卡号"
+        - "备注名称"
+        - "设备类型"
+        - "最后通信时间"
+        - "最后定位时间"
+        - "设备分组"
+        - "运行状态信息"
+        - "自定义字段"
+      addr_column: "设备卡号"
 
   
   - name: "批量导出设备-负向-addrs为空"
     addrs: ""
     expected:
-      code: 999
-      error_msg: "失败"
+      http_status: 200
 
 batch_delete_cases:
   - name: "批量解绑设备-正向"

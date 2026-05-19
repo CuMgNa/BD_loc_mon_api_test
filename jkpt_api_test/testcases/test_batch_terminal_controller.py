@@ -9,12 +9,13 @@ from common.requests_util import BaseRequest
 from common.yaml_util import read_yaml, write_yaml
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
+from common.export_assert_util import assert_xlsx_export_structure
 
 _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
 
 _FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
-_TEMPLATE_XLSX = r"C:\Users\33606\Desktop\jkpt_api_test\jkpt_api_test\yaml\import-device-template2026_5_1.xlsx"
+_TEMPLATE_XLSX = r"C:\Users\33606\Desktop\BD_loc_mon_api_test\jkpt_api_test\yaml\import-device-template2026_5_1.xlsx"
 
 
 class TestBatchTerminalController:
@@ -227,7 +228,7 @@ class TestBatchTerminalController:
     def test_batch_g_export(self, base_url, auth_headers, case):
         """批量导出设备信息（成功为二进制流或 JSON 错误）"""
         url = f"{base_url}/api/monitor/terminals/batch/export"
-        headers = {**auth_headers, "Content-Type": "application/json", "Time-Zone": "Asia/Shanghai"}
+        headers = {**auth_headers, "Content-Type": "application/json", "Time-Zone": "Asia/Shanghai","time-zone-utc": "+08:00"}
         addrs_raw = case.get("addrs")
         addrs = self._resolve_batch_addrs(addrs_raw)
         addr_list = [a.strip() for a in str(addrs).split(",") if a.strip()] if addrs else []
@@ -246,7 +247,7 @@ class TestBatchTerminalController:
             log_level="none",
         )
         print_response(res)
-        self._assert_export_response(case, res)
+        self._assert_export_response(case, res, addr_list=addr_list)
 
     # ---------- h. 批量解绑设备（DELETE /api/monitor/terminals/batch） ----------
     @pytest.mark.parametrize("case", test_data["batch_delete_cases"])
@@ -312,7 +313,7 @@ class TestBatchTerminalController:
             biz_context={"请求用例": case["name"]},
         )
 
-    def _assert_export_response(self, case, res):
+    def _assert_export_response(self, case, res, addr_list=None):
         """导出接口：正文以 UTF-8 JSON 对象/数组起头时断言业务 code/msg，否则断言 HTTP + 二进制正文。
 
         分支只看 body 前缀，不因 Content-Type: application/json 就走 JSON（网关/网关错标时仍可下载文件）。"""
@@ -335,6 +336,7 @@ class TestBatchTerminalController:
         key("预期 HTTP 状态码", expected_http)
         key("实际 HTTP 状态码", res.status_code)
         key("Content-Type", res.headers.get("Content-Type"))
+        key("Content-Disposition", res.headers.get("Content-Disposition"))
         body = raw
         key("响应体字节数", len(body))
 
@@ -342,3 +344,12 @@ class TestBatchTerminalController:
             f"[{case['name']}] HTTP 状态码不匹配: 预期={expected_http}, 实际={res.status_code}"
         )
         assert len(body) > 0, f"[{case['name']}] 导出正文为空"
+
+        if case.get("binary_response") and exp.get("headers"):
+            assert_xlsx_export_structure(
+                case_name=case["name"],
+                content=body,
+                expected=exp,
+                addr_count=len(addr_list) if addr_list else None,
+                content_disposition=res.headers.get("Content-Disposition"),
+            )

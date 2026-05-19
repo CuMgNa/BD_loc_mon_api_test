@@ -16,6 +16,7 @@
 - [17. common/protocol_transport.py](#17-commonprotocol_transportpy)
 - [18. common/protocol_codec.py](#18-commonprotocol_codecpy)
 - [19. common/protocol_types.py](#19-commonprotocol_typespy)
+- [20. common/export_assert_util.py（xlsx 导出断言）](#20-commonexport_assert_utilpy)
 
 ### 适配层（仅 jkpt）
 - [15. conftest.py 常用fixture和hook](#15-conftestpy-常用fixture和hook)（详细见 [conftest-jkpt.md](conftest-jkpt.md)）
@@ -625,3 +626,37 @@ class ProtocolSendResult:
 result = bd_client.send_xxx(...)
 assert result.success, f"协议发送失败: code={result.code}, msg={result.msg}"
 ```
+
+---
+
+## 20. common/export_assert_util.py
+
+二进制导出（xlsx）响应解析与结构断言，供 `test_batch_terminal_controller` 等设备/轨迹导出用例使用。
+
+### dataclass `XlsxSheetSnapshot`
+
+```python
+@dataclass
+class XlsxSheetSnapshot:
+    sheet_name: str
+    headers: list[str]
+    data_row_count: int
+    first_data_row: tuple[Any, ...] | None
+    addr_column_values: list[str] | None = None
+```
+
+### `parse_xlsx(content: bytes) -> XlsxSheetSnapshot`
+
+用 `openpyxl` 解析 xlsx 首 sheet：首行为表头，跳过全空行后统计数据行。
+
+### `assert_xlsx_export_structure(...) -> XlsxSheetSnapshot`
+
+| 参数 | 说明 |
+|------|------|
+| `case_name` | 用例名（失败消息前缀） |
+| `content` | `res.content` 原始字节 |
+| `expected` | YAML `expected` 块，支持 `headers`、`filename`、`addr_column`、`min_rows` |
+| `addr_count` | 请求 addr 数量，未配 `min_rows` 时作为最小行数 |
+| `content_disposition` | 响应头，校验 `filename` |
+
+断言顺序：正文大小 → `PK` 魔数 → 文件名 → 表头完全一致 → 数据行数 → `addr_column` 非空行数。

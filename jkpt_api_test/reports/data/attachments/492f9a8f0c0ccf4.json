@@ -1,0 +1,16 @@
+{
+  "case_name": "分页获取分组下设备列表-正向",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a0c1cf4099c5e0bec1d1a6f/terminals",
+  "params": {
+    "addr": "",
+    "page": 1,
+    "pageSize": 100
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}
