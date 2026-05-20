@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202605200098012",
+    "sn": "202605200098012",
+    "name": "4G太阳能报位设备",
+    "remark": "4G太阳能报位设备",
+    "terminalType": "PN06",
+    "useScope": "CAR"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

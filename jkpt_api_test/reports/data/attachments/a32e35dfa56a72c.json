@@ -1,9 +1,0 @@
-{
-  "status_code": 502,
-  "headers": {
-    "Connection": "close",
-    "Content-Length": "0"
-  },
-  "body": "",
-  "elapsed_ms": 5023
-}

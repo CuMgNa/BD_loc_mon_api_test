@@ -544,3 +544,119 @@ def cleanup_test_data(base_url, auth_headers, group_fixture, pytestconfig):
     key("分组删除统计", f"成功: {group_success}, 失败: {group_fail}")
 
     sep(" 🎉 清理完成 ")
+
+
+# ==================== glht 管理员系统清理（独立运转） ====================
+GLHT_BASE_URL_DEFAULT = "http://back.tdwt.admin.pg8.ink"
+
+
+def _glht_cleanup_inventory(glht_token: str, glht_base_url: str, date_str: str) -> int:
+    """循环查询并删除 glht 入库记录，返回总删除条数（内部函数）
+
+    使用 seen_ids 去重防止删除最终一致性延迟导致的重复计数。
+    """
+    seen_ids: set[str] = set()
+    max_loops = 50
+    for _ in range(max_loops):
+        resp = http.send_request(
+            method="get",
+            url=f"{glht_base_url}/api/admin/inventory",
+            params={
+                "Authorization": glht_token,
+                "content": date_str,
+                "index": 0,
+                "specifyTime": "false",
+                "startTimeStr": "",
+                "endTimeStr": "",
+                "page": 1,
+                "pageSize": 100,
+            },
+            case_name=f"glht查询入库记录 {date_str}",
+            log_level="none",
+        )
+        json_data = parse_response_json(resp, context="glht查询入库记录")
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        if code != 0:
+            key("glht查询失败", f"code={code}")
+            break
+
+        ids_raw = _jsonpath_parse(json_data, "$.data.items[*].id")
+        if not ids_raw:
+            if not seen_ids:
+                key(f"glht {date_str}", "无入库记录")
+            break
+
+        new_ids = [str(i) for i in ids_raw if i and str(i) not in seen_ids]
+        if not new_ids:
+            break
+
+        del_resp = http.send_request(
+            method="delete",
+            url=f"{glht_base_url}/api/admin/inventory",
+            params={"Authorization": glht_token},
+            json={"ids": ",".join(new_ids)},
+            case_name="glht批量删除入库记录",
+            log_level="none",
+        )
+        del_json = parse_response_json(del_resp, context="glht删除入库记录")
+        del_code = _jsonpath_parse(del_json, "$.code")[0]
+        if del_code != 0:
+            msg_list = _jsonpath_parse(del_json, "$.msg")
+            del_msg = msg_list[0] if msg_list else "未知"
+            key("glht删除失败", f"code={del_code}, msg={del_msg}")
+            break
+
+        seen_ids.update(new_ids)
+        key(f"glht清理 {date_str}", f"本批删除 {len(new_ids)} 条")
+
+    return len(seen_ids)
+
+
+@pytest.fixture(scope="session")
+def glht_base_url():
+    """glht 管理员系统 base URL"""
+    import os
+    return os.environ.get("GLHT_BASE_URL", GLHT_BASE_URL_DEFAULT)
+
+
+@pytest.fixture(scope="session")
+def glht_token(glht_base_url):
+    """glht 管理员系统登录，获取 glht token"""
+    import hashlib
+    sep(" 🔐 glht 管理员登录 ")
+    password_md5 = hashlib.md5("123abc!!".encode()).hexdigest()
+    resp = http.send_request(
+        method="post",
+        url=f"{glht_base_url}/api/admin/login",
+        json={"account": "admin", "password": password_md5},
+        case_name="glht管理员登录",
+        log_level="none",
+    )
+    json_data = parse_response_json(resp, context="glht管理员登录")
+    code = _jsonpath_parse(json_data, "$.code")[0]
+    assert code == 0, f"glht 登录失败: code={code}, msg={_jsonpath_parse(json_data, '$.msg')[0]}"
+    token = _jsonpath_parse(json_data, "$.data.token")[0]
+    key("glht token", f"{token[:20]}...")
+    return token
+
+
+@pytest.fixture(scope="session", autouse=True)
+def glht_cleanup_test_data(glht_token, glht_base_url):
+    """glht 入库记录清理（session 结束时自动执行，独立于 jkpt cleanup_test_data）"""
+    from datetime import datetime, timezone, timedelta
+
+    yield
+
+    if not ENABLE_AUTO_CLEANUP:
+        sep(" ⚠️  glht 自动清理已禁用 (ENABLE_AUTO_CLEANUP=false)")
+        return
+
+    sep(" 🧹 glht 入库记录清理 ")
+    today = datetime.now(timezone(timedelta(hours=8))).strftime("%Y%m%d")
+    try:
+        deleted = _glht_cleanup_inventory(glht_token, glht_base_url, today)
+        key("glht清理结果", f"删除 {deleted} 条入库记录")
+    except Exception as e:
+        key("glht清理异常", str(e))
+
+    sep(" 🎉 glht 清理完成 ")

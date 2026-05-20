@@ -1,0 +1,43 @@
+{
+  "case_name": "枚举添加-PD11",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a0d3372099c5e0bec2c0bd4/terminals",
+  "params": null,
+  "json": {
+    "addr": "",
+    "remark": "北斗盒子三代",
+    "useScope": "STEAMER",
+    "sn": "202605200098015",
+    "password": "******",
+    "terminalType": "PD11",
+    "trackColor": "#141323",
+    "trackSize": 5,
+    "gatewayParam": {
+      "colorCodeId": 1,
+      "gid": 0,
+      "radioRcvChn": "",
+      "radioSndChn": "",
+      "radioPower": 0,
+      "rxCss": "",
+      "txCss": "",
+      "width": 0
+    },
+    "fieldJson": "",
+    "fields": [
+      {
+        "name": "自定义字段1",
+        "value": "自定义值1"
+      },
+      {
+        "name": "自定义字段2",
+        "value": "自定义值2"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

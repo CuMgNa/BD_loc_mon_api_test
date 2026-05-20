@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 20 May 2026 04:08:23 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "sn": "202605200098033",
+      "addr": "202605200098033",
+      "name": "对讲机",
+      "remark": "对讲机",
+      "terminalType": "INTERPHONE",
+      "useScope": "PERSONNEL"
+    }
+  },
+  "elapsed_ms": 48
+}

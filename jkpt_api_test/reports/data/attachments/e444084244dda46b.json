@@ -1,0 +1,12 @@
+{
+  "case_name": "字段模板-删除-负向-非法id",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/field-templates/00000000-0000-0000-0000-000000000000",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

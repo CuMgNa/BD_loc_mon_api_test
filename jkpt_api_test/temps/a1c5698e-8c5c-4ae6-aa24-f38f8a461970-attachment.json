@@ -1,0 +1,14 @@
+{
+  "case_name": "字段模板-编辑-负向-名称为空",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/field-templates/6a0d33b0099c5e0bec2c149f",
+  "params": {
+    "name": ""
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "case_name": "批量导入设备-负向-未上传文件",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/terminals/batch/import",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}
