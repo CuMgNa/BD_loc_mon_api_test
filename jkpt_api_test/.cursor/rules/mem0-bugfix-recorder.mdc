@@ -1,0 +1,68 @@
+---
+description: 自动把"失败分析+修复方案"沉淀为标准化 mem0 记忆（jkpt_api_test 项目）
+alwaysApply: false
+globs: ["**/*"]
+---
+
+# Skill: mem0 Bugfix Recorder
+
+> 共享模板见 `mem0-bugfix-schema.md`。mem0 为官方云端 MCP，工具名 `add_memory` / `search_memories` / `update_memory`。
+
+## 何时触发
+- 我（Agent）刚完成一次「报错 → 根因 → 修复」闭环
+- 或用户说："记一下 / 复盘 / 写进 mem0 / sync memory"
+
+## 何时不触发
+- 仅是代码风格建议、重构讨论、无明确报错
+- 修复未经任何验证 → 仍可写，但 metadata.verified = false
+
+## 执行步骤（严格按序）
+
+1. 抽取下列 JSON（见 schema 第 3 节），字段缺失填 "unknown" 或向用户追问：
+   ```json
+   { "scene":"", "trigger":"", "root_cause":"", "debug_path":"",
+     "fix_primary":"", "fix_alt":"", "verify":"", "anti_pattern":"",
+     "metadata": { "type":"bugfix", "category":"", "project":"jkpt_api_test",
+                   "module":"", "stack":["python","pytest","requests","yaml"],
+                   "error_signature":"", "severity":"", "tags":[],
+                   "source":"cursor-agent", "verified":true } }
+   ```
+
+2. 去重检索，调用官方 `search_memories`：
+   ```json
+   {
+     "query": "<error_signature> <module>",
+     "filters": { "AND": [ {"user_id": "tongmeina"} ] },
+     "top_k": 5,
+     "source": "cursor-agent"
+   }
+   ```
+   > 重要：`filters` 只接受官方允许键（`user_id`/`agent_id`/`run_id`/`app_id`/`categories`/`keywords`/`metadata`/`created_at` 等）。
+   > **不能**直接写 `{"type":"bugfix"}` / `{"project":...}` / `{"module":...}`，否则报 `Unknown filter key`。
+   > 自定义字段需放在 `metadata` 键下（如 `{"metadata": {"project": "jkpt_api_test"}}`），或按本步骤先只用 `user_id` 过滤、再在返回结果的 `metadata` 上人工比对。
+
+3. 路由（保守策略，不强依赖 score）：
+   - 返回结果的 `metadata.error_signature` 与本次相同，且能取到 `id` → `update_memory(memory_id=id, text=..., source="cursor-agent")`
+   - 否则 → `add_memory(text, user_id="tongmeina", metadata={...}, source="cursor-agent")`
+
+4. 按 7 段式渲染正文（每段一句一行）：
+   ```
+   [场景] ...
+   [触发条件] ...
+   [根因] ...
+   [排查路径] ...
+   [修复方案] 推荐：...；次选：...
+   [验证方式] ...
+   [反模式] ...
+   ```
+
+5. 写入 mem0；user_id 用当前 Cursor 用户标识（默认 `tongmeina`）。
+
+6. 回执：一行确认 `✅ 已记忆 [error_signature] · id=... · add|update`
+
+## 硬约束
+- 禁止编造根因；不确定写 "疑似:..." 并 verified:false
+- 错误码、接口路径、异常类名、pytest 节点名原文保留
+- 单条正文 ≤ 400 字；超长则拆主记忆 + 子记忆，metadata.parent_id 串联
+- 不写时间、人名、聊天上下文等易变信息
+- 工具名必须用 `search_memories`（非 `search_memory`），参数用 `top_k`（非 `limit`）

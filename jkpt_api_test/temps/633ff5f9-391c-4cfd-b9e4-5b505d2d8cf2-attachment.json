@@ -1,0 +1,396 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Fri, 22 May 2026 01:53:03 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "total": 34,
+      "totalPage": 1,
+      "items": [
+        {
+          "id": "6a0fb6ff1970c12ec38e10b9",
+          "sn": "202605224775034",
+          "addr": "202605224775034",
+          "name": "星地通",
+          "remark": "星地通",
+          "terminalType": "XDT",
+          "useScope": "CAR",
+          "timeStr": "2026-05-22 09:53:03",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6ff1970c12ec38e10b4",
+          "sn": "202605224775033",
+          "addr": "202605224775033",
+          "name": "对讲机",
+          "remark": "对讲机",
+          "terminalType": "INTERPHONE",
+          "useScope": "PERSONNEL",
+          "timeStr": "2026-05-22 09:53:03",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6ff1970c12ec38e10af",
+          "sn": "202605224775032",
+          "addr": "202605224775032",
+          "name": "宽带自组网基站",
+          "remark": "宽带自组网基站",
+          "terminalType": "BROADBAND_AD_HOC_BASE_STATION",
+          "useScope": "GB",
+          "timeStr": "2026-05-22 09:53:03",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e10a9",
+          "sn": "202605224775031",
+          "addr": "202605224775031",
+          "name": "窄带语音自组网基站",
+          "remark": "窄带语音自组网基站",
+          "terminalType": "NARROWBAND_VOICE_AD_HOC_BASE_STATION",
+          "useScope": "SIP",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e10a4",
+          "sn": "202605224775030",
+          "addr": "202605224775030",
+          "name": "DMR语音网关",
+          "remark": "DMR语音网关",
+          "terminalType": "DMR_VOICE_GATEWAY",
+          "useScope": "MOTORBIKE",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e109f",
+          "sn": "202605224775029",
+          "addr": "202605224775029",
+          "name": "模拟语音网关",
+          "remark": "模拟语音网关",
+          "terminalType": "SIMULATED_VOICE_GATEWAY",
+          "useScope": "TRAIN",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e109a",
+          "sn": "202605224775028",
+          "addr": "202605224775028",
+          "name": "PDT语音网关",
+          "remark": "PDT语音网关",
+          "terminalType": "PDT_VOICE_GATEWAY",
+          "useScope": "AIRCRAFT",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e1095",
+          "sn": "202605224775027",
+          "addr": "202605224775027",
+          "name": "APP设备",
+          "remark": "APP设备",
+          "terminalType": "APP",
+          "useScope": "HELICOPTER",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e1090",
+          "sn": "202605224775026",
+          "addr": "202605224775026",
+          "name": "SIP设备",
+          "remark": "SIP设备",
+          "terminalType": "SIP",
+          "useScope": "STEAMER",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e108b",
+          "sn": "202605224775025",
+          "addr": "202605224775025",
+          "name": "国标设备",
+          "remark": "国标设备",
+          "terminalType": "GB",
+          "useScope": "ANIMAL",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e1086",
+          "sn": "202605224775024",
+          "addr": "202605224775024",
+          "name": "天通救援棒",
+          "remark": "天通救援棒",
+          "terminalType": "TT_RESCUE_STICK",
+          "useScope": "TRUCKS",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e1081",
+          "sn": "202605224775023",
+          "addr": "202605224775023",
+          "name": "铱星车载",
+          "remark": "铱星车载",
+          "terminalType": "YX",
+          "useScope": "CAR",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fe1970c12ec38e107c",
+          "sn": "202605224775022",
+          "addr": "202605224775022",
+          "name": "LoRa通信终端",
+          "remark": "LoRa通信终端",
+          "terminalType": "PL02",
+          "useScope": "PERSONNEL",
+          "timeStr": "2026-05-22 09:53:02",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e1075",
+          "sn": "202605224775021",
+          "addr": "202605224775021",
+          "name": "RTK定位终端",
+          "remark": "RTK定位终端",
+          "terminalType": "RTK",
+          "useScope": "GB",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e1070",
+          "sn": "202605224775020",
+          "addr": "202605224775020",
+          "name": "北斗太阳能报位终端",
+          "remark": "北斗太阳能报位终端",
+          "terminalType": "PD15",
+          "useScope": "SIP",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e106b",
+          "sn": "202605224775019",
+          "addr": "202605224775019",
+          "name": "LoRa示位标",
+          "remark": "LoRa示位标",
+          "terminalType": "PL01",
+          "useScope": "MOTORBIKE",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e1066",
+          "sn": "202605224775018",
+          "addr": "202605224775018",
+          "name": "808定位终端",
+          "remark": "808定位终端",
+          "terminalType": "T808",
+          "useScope": "TRAIN",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e1061",
+          "sn": "202605224775017",
+          "addr": "202605224775017",
+          "name": "北斗盒子二代",
+          "remark": "北斗盒子二代",
+          "terminalType": "PD03",
+          "useScope": "AIRCRAFT",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e105b",
+          "sn": "202605224775016",
+          "addr": "202605224775016",
+          "name": "北斗车载终端",
+          "remark": "北斗车载终端",
+          "terminalType": "PD05",
+          "useScope": "HELICOPTER",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e1056",
+          "sn": "202605224775015",
+          "addr": "202605224775015",
+          "name": "北斗盒子三代",
+          "remark": "北斗盒子三代",
+          "terminalType": "PD11",
+          "useScope": "STEAMER",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e1051",
+          "sn": "202605224775014",
+          "addr": "202605224775014",
+          "name": "北斗盒子四代",
+          "remark": "北斗盒子四代",
+          "terminalType": "PD13",
+          "useScope": "ANIMAL",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fc1970c12ec38e104c",
+          "sn": "202605224775013",
+          "addr": "202605224775013",
+          "name": "北二手持机",
+          "remark": "北二手持机",
+          "terminalType": "PD14",
+          "useScope": "TRUCKS",
+          "timeStr": "2026-05-22 09:53:00",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1047",
+          "sn": "202605224775012",
+          "addr": "202605224775012",
+          "name": "4G太阳能报位设备",
+          "remark": "4G太阳能报位设备",
+          "terminalType": "PN06",
+          "useScope": "CAR",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1042",
+          "sn": "202605224775011",
+          "addr": "202605224775011",
+          "name": "吉利星座哨兵",
+          "remark": "吉利星座哨兵",
+          "terminalType": "JILI_IMG_TRAN",
+          "useScope": "PERSONNEL",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e103c",
+          "sn": "202605224775010",
+          "addr": "202605224775010",
+          "name": "风云哨兵",
+          "remark": "风云哨兵",
+          "terminalType": "FY_IMG_TRAN",
+          "useScope": "GB",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1037",
+          "sn": "202605224775009",
+          "addr": "202605224775009",
+          "name": "天通哨兵",
+          "remark": "天通哨兵",
+          "terminalType": "TT_IMG_TRAN",
+          "useScope": "SIP",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1032",
+          "sn": "202605224775008",
+          "addr": "202605224775008",
+          "name": "北斗哨兵",
+          "remark": "北斗哨兵",
+          "terminalType": "BD_IMG_TRAN",
+          "useScope": "MOTORBIKE",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e102d",
+          "sn": "202605224775007",
+          "addr": "202605224775007",
+          "name": "天通终端",
+          "remark": "天通终端",
+          "terminalType": "TIAN_TONG",
+          "useScope": "TRAIN",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1028",
+          "sn": "202605224775006",
+          "addr": "202605224775006",
+          "name": "NTN设备",
+          "remark": "NTN设备",
+          "terminalType": "NTN",
+          "useScope": "AIRCRAFT",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1023",
+          "sn": "202605224775005",
+          "addr": "202605224775005",
+          "name": "北斗设备",
+          "remark": "北斗设备",
+          "terminalType": "OTHER",
+          "useScope": "HELICOPTER",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e101e",
+          "sn": "202605224775004",
+          "addr": "202605224775004",
+          "name": "北三盒子",
+          "remark": "北三盒子",
+          "terminalType": "PD18",
+          "useScope": "STEAMER",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1019",
+          "sn": "202605224775003",
+          "addr": "202605224775003",
+          "name": "北三手持机",
+          "remark": "北三手持机",
+          "terminalType": "PD20",
+          "useScope": "ANIMAL",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fb1970c12ec38e1014",
+          "sn": "202605224775002",
+          "addr": "202605224775002",
+          "name": "北三车载",
+          "remark": "北三车载",
+          "terminalType": "PD22",
+          "useScope": "TRUCKS",
+          "timeStr": "2026-05-22 09:52:59",
+          "updatedTimeStr": null
+        },
+        {
+          "id": "6a0fb6fa1970c12ec38e100f",
+          "sn": "202605224775001",
+          "addr": "202605224775001",
+          "name": "4G太阳能报位设备(二代)",
+          "remark": "4G太阳能报位设备(二代)",
+          "terminalType": "PN07",
+          "useScope": "CAR",
+          "timeStr": "2026-05-22 09:52:58",
+          "updatedTimeStr": null
+        }
+      ]
+    }
+  },
+  "elapsed_ms": 106
+}

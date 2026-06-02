@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202605224775013",
+    "sn": "202605224775013",
+    "name": "北二手持机",
+    "remark": "北二手持机",
+    "terminalType": "PD14",
+    "useScope": "TRUCKS"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

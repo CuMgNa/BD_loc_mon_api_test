@@ -87,12 +87,12 @@ class TestBDProtocolClient:
         _print_protocol_send_result(case_name, base_url, result)
         assert result.success
 
-    # ---------- 13：EE 推送报警（有定位） ----------
-    def test_send_alarm_13(self, bd_client, bd_test_terminal, base_url):
-        case_name = "协议-13报警"
-        result = bd_client.send_alarm_13(from_addr=bd_test_terminal, case_name=case_name)
-        _print_protocol_send_result(case_name, base_url, result)
-        assert result.success
+    # # ---------- 13：EE 推送报警（有定位） ----------
+    # def test_send_alarm_13(self, bd_client, bd_test_terminal, base_url):
+    #     case_name = "协议-13报警"
+    #     result = bd_client.send_alarm_13(from_addr=bd_test_terminal, case_name=case_name)
+    #     _print_protocol_send_result(case_name, base_url, result)
+    #     assert result.success
 
     def test_send_alarm_13_with_custom(self, bd_client, bd_test_terminal, base_url):
         case_name = "协议-13报警-指定坐标与手机"

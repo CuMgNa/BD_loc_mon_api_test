@@ -1,0 +1,9 @@
+{
+  "case_name": "获取验证码",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/captcha?captchaId=177941477460529153",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": null
+}

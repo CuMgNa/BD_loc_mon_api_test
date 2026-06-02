@@ -1,0 +1,64 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Fri, 22 May 2026 01:53:00 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "addr": "202605224775013",
+      "remark": "北二手持机",
+      "scope": "TRUCKS",
+      "type": "PD14",
+      "follow": false,
+      "lastCommTime": 0,
+      "status": "NOT",
+      "listeningStatus": null,
+      "trackColor": "#141323",
+      "trackSize": 5,
+      "belongTo": 2,
+      "belongToDesc": "我的",
+      "followByShareNum": null,
+      "showAoWeiBtn": true,
+      "stopPort": false,
+      "password": "",
+      "gatewayParam": {
+        "radioRcvChn": 0.0,
+        "radioSndChn": 0.0,
+        "radioPower": 0,
+        "colorCodeId": 1,
+        "rxCss": "",
+        "txCss": "",
+        "width": 0,
+        "gid": 0
+      },
+      "onlineFlag": "UNKNOWN",
+      "ipAddress": null,
+      "groupCallNumber": null,
+      "parentAddr": "",
+      "dialSwitch": false,
+      "silenceSwitch": false,
+      "silenceThreshold": 0,
+      "webAccount": null,
+      "loc": null,
+      "infos": [],
+      "fields": [
+        {
+          "name": "自定义字段1",
+          "value": "自定义值1"
+        },
+        {
+          "name": "自定义字段2",
+          "value": "自定义值2"
+        }
+      ]
+    }
+  },
+  "elapsed_ms": 55
+}

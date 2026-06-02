@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202605224775024",
+    "sn": "202605224775024",
+    "name": "天通救援棒",
+    "remark": "天通救援棒",
+    "terminalType": "TT_RESCUE_STICK",
+    "useScope": "TRUCKS"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

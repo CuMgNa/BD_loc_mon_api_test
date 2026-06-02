@@ -1,0 +1,66 @@
+---
+description: 新报错出现时先检索 mem0，命中则复用经验，否则再自主排查（jkpt_api_test 项目）
+alwaysApply: false
+globs: ["**/*"]
+---
+
+# Skill: mem0 Bugfix Recall
+
+> 共享模板见 `mem0-bugfix-schema.md`。mem0 为官方云端 MCP，工具名 `search_memories`。
+
+## 何时触发
+- 用户粘贴报错堆栈 / pytest 失败日志 / 异常接口返回（4xx/5xx）
+- 用户问「为什么 X 报错 / X 跑不起来 / X 用例失败」
+- Agent 即将给出排查建议前（调试场景）
+
+## 何时不触发
+- 纯功能开发、需求讨论、无报错语境
+- 用户明确说「不要查 mem0 / 直接帮我写」
+- 本轮已 recall 过且无新报错
+
+## 执行步骤（严格按序）
+
+1. 提取检索特征：
+   - `error_signature` 候选：异常类 / 错误码 / 接口路径 / pytest 断言关键字
+   - `module` 候选：从文件路径、用例名、用户描述推断（conftest / protocol_codec / terminal_controller / batch_terminal / bd_protocol / export_assert ...）
+   - 关键词：堆栈顶部方法、日志高频词
+
+2. 检索 mem0（分两轮，官方 `search_memories`）：
+   a) 精确：
+   ```json
+   {
+     "query": "<error_signature> <module>",
+     "filters": { "AND": [ {"user_id": "tongmeina"} ] },
+     "top_k": 5,
+     "source": "cursor-agent"
+   }
+   ```
+   > 重要：`filters` 只接受官方允许键（`user_id`/`agent_id`/`run_id`/`app_id`/`categories`/`keywords`/`metadata`/`created_at` 等）。
+   > **不能**直接写 `{"type":...}` / `{"project":...}` / `{"module":...}`，否则报 `Unknown filter key`。
+   > 项目/模块过滤改为：在返回结果的 `metadata`（`project`/`module`/`type`）上人工比对，或放在 `{"metadata": {...}}` 键下。
+   b) 若 a 命中不足 3 条 → 语义：`search_memories(query=用户原始报错描述, top_k=5)`
+
+3. 命中（结果包含相同接口路径/异常类/错误关键词/模块上下文）时，先输出命中摘要：
+   ```
+   🧠 mem0 命中 N 条历史经验：
+   [i] <error_signature> · severity · verified
+       根因摘要：...
+       推荐修复：...
+       memory_id：...
+   → 优先按 [最相关] 核对当前问题，不适用再展开新排查。
+   ```
+
+4. 未命中时输出：
+   ```
+   🧠 mem0 未命中，开始自主排查。
+   （结束后由 Recorder 技能沉淀新经验）
+   ```
+
+5. 场景一致性校验：项目/模块/技术栈/版本若与命中记忆不一致，必须在回答中标注差异并谨慎复用。
+
+## 硬约束
+- 复用 ≠ 盲信：命中后必须做一致性校验
+- 不得跳过 recall 步骤直接给排查建议（除非用户明确拒绝）
+- 命中但 verified:false 的记忆，标注「未经验证」再使用
+- 检索失败（mem0 不可达）应明确告知用户而非静默跳过
+- 工具名必须用 `search_memories`（非 `search_memory`），参数用 `top_k`（非 `limit`）

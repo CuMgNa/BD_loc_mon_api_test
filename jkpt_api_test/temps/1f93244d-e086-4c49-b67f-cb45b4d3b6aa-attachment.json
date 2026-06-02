@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202605224775006",
+    "sn": "202605224775006",
+    "name": "NTN设备",
+    "remark": "NTN设备",
+    "terminalType": "NTN",
+    "useScope": "AIRCRAFT"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

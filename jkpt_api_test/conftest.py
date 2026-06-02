@@ -422,128 +422,128 @@ def clear_data_per_session():
     sep(" 🏁 测试结束 ")
 
 
-# ==================== 设备和分组清理 ====================
-def get_terminals_by_group(base_url, auth_headers, group_id):
-    """获取指定分组下的所有设备地址列表"""
-    url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
-    params = {"page": 1, "pageSize": 1000}
+# # ==================== 设备和分组清理 ====================
+# def get_terminals_by_group(base_url, auth_headers, group_id):
+#     """获取指定分组下的所有设备地址列表"""
+#     url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
+#     params = {"page": 1, "pageSize": 1000}
 
-    resp = http.send_request(
-        method="get",
-        url=url,
-        params=params,
-        headers=auth_headers,
-        case_name=f"获取分组 {group_id} 下的设备",
-        log_level="none"
-    )
+#     resp = http.send_request(
+#         method="get",
+#         url=url,
+#         params=params,
+#         headers=auth_headers,
+#         case_name=f"获取分组 {group_id} 下的设备",
+#         log_level="none"
+#     )
 
-    json_data = resp.json()
-    code = _jsonpath_parse(json_data, "$.code")[0]
+#     json_data = resp.json()
+#     code = _jsonpath_parse(json_data, "$.code")[0]
 
-    if code == 0:
-        terminals = _jsonpath_parse(json_data, "$.data.items[*].addr")
-        return terminals if terminals else []
+#     if code == 0:
+#         terminals = _jsonpath_parse(json_data, "$.data.items[*].addr")
+#         return terminals if terminals else []
 
-    key(f"获取分组 {group_id} 设备失败", "将返回空列表")
-    return []
-
-
-def cleanup_terminals_batch(base_url, auth_headers, group_id, addrs):
-    """批量删除指定分组下的设备"""
-    if not addrs:
-        key(f"分组 {group_id}", "无设备需要删除")
-        return 0, 0
-
-    url = f"{base_url}/api/monitor/terminals/batch"
-    data = {"addrs": ",".join(addrs)}
-
-    resp = http.send_request(
-        method="delete",
-        url=url,
-        json=data,
-        headers=auth_headers,
-        case_name=f"批量删除分组 {group_id} 下的设备",
-        log_level="none"
-    )
-
-    json_data = resp.json()
-    code = _jsonpath_parse(json_data, "$.code")[0]
-
-    if code == 0:
-        key(f"✅ 分组 {group_id} 设备删除", f"成功删除 {len(addrs)} 个设备")
-        return len(addrs), 0
-
-    msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
-    key(f"❌ 分组 {group_id} 设备删除失败", f"code={code}, msg={msg}")
-    return 0, len(addrs)
+#     key(f"获取分组 {group_id} 设备失败", "将返回空列表")
+#     return []
 
 
-def delete_groups_in_order(base_url, auth_headers, group_ids):
-    """按顺序删除分组：三级 → 二级 → 一级"""
-    groups_url = f"{base_url}/api/monitor/groups"
-    success_count = 0
-    fail_count = 0
+# def cleanup_terminals_batch(base_url, auth_headers, group_id, addrs):
+#     """批量删除指定分组下的设备"""
+#     if not addrs:
+#         key(f"分组 {group_id}", "无设备需要删除")
+#         return 0, 0
 
-    for level in ["three_id", "two_id", "one_id"]:
-        group_id = group_ids.get(level)
-        if group_id is None:
-            continue
+#     url = f"{base_url}/api/monitor/terminals/batch"
+#     data = {"addrs": ",".join(addrs)}
 
-        delete_url = f"{groups_url}/{group_id}"
-        resp = http.send_request(
-            method="delete",
-            url=delete_url,
-            headers=auth_headers,
-            case_name=f"删除{level}分组 {group_id}",
-            log_level="none"
-        )
+#     resp = http.send_request(
+#         method="delete",
+#         url=url,
+#         json=data,
+#         headers=auth_headers,
+#         case_name=f"批量删除分组 {group_id} 下的设备",
+#         log_level="none"
+#     )
 
-        json_data = resp.json()
-        code = _jsonpath_parse(json_data, "$.code")[0]
-        if code == 0:
-            success_count += 1
-            key(f"✅ 删除{level}分组 {group_id}", "成功")
-        else:
-            fail_count += 1
-            msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
-            key(f"❌ 删除{level}分组 {group_id} 失败", f"code={code}, msg={msg}")
+#     json_data = resp.json()
+#     code = _jsonpath_parse(json_data, "$.code")[0]
 
-    return success_count, fail_count
+#     if code == 0:
+#         key(f"✅ 分组 {group_id} 设备删除", f"成功删除 {len(addrs)} 个设备")
+#         return len(addrs), 0
+
+#     msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+#     key(f"❌ 分组 {group_id} 设备删除失败", f"code={code}, msg={msg}")
+#     return 0, len(addrs)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def cleanup_test_data(base_url, auth_headers, group_fixture, pytestconfig):
-    """在 session 结束时自动清理测试数据和分组"""
-    yield
+# def delete_groups_in_order(base_url, auth_headers, group_ids):
+#     """按顺序删除分组：三级 → 二级 → 一级"""
+#     groups_url = f"{base_url}/api/monitor/groups"
+#     success_count = 0
+#     fail_count = 0
 
-    if not ENABLE_AUTO_CLEANUP:
-        sep(" ⚠️  自动清理已禁用 (ENABLE_AUTO_CLEANUP=false)")
-        return
+#     for level in ["three_id", "two_id", "one_id"]:
+#         group_id = group_ids.get(level)
+#         if group_id is None:
+#             continue
 
-    sep(" 🧹 开始清理测试数据 ")
-    group_dict = pytestconfig.stash.get("test_group_ids", group_fixture)
+#         delete_url = f"{groups_url}/{group_id}"
+#         resp = http.send_request(
+#             method="delete",
+#             url=delete_url,
+#             headers=auth_headers,
+#             case_name=f"删除{level}分组 {group_id}",
+#             log_level="none"
+#         )
 
-    sep(" 步骤1: 删除设备 ")
-    total_deleted_terminals = 0
-    total_failed_terminals = 0
+#         json_data = resp.json()
+#         code = _jsonpath_parse(json_data, "$.code")[0]
+#         if code == 0:
+#             success_count += 1
+#             key(f"✅ 删除{level}分组 {group_id}", "成功")
+#         else:
+#             fail_count += 1
+#             msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
+#             key(f"❌ 删除{level}分组 {group_id} 失败", f"code={code}, msg={msg}")
 
-    for level in ["three_id", "two_id", "one_id"]:
-        group_id = group_dict.get(level)
-        if not group_id:
-            continue
-        addrs = get_terminals_by_group(base_url, auth_headers, group_id)
-        if addrs:
-            deleted, failed = cleanup_terminals_batch(base_url, auth_headers, group_id, addrs)
-            total_deleted_terminals += deleted
-            total_failed_terminals += failed
+#     return success_count, fail_count
 
-    key("设备删除统计", f"成功: {total_deleted_terminals}, 失败: {total_failed_terminals}")
 
-    sep(" 步骤2: 删除分组 ")
-    group_success, group_fail = delete_groups_in_order(base_url, auth_headers, group_dict)
-    key("分组删除统计", f"成功: {group_success}, 失败: {group_fail}")
+# @pytest.fixture(scope="session", autouse=True)
+# def cleanup_test_data(base_url, auth_headers, group_fixture, pytestconfig):
+#     """在 session 结束时自动清理测试数据和分组"""
+#     yield
 
-    sep(" 🎉 清理完成 ")
+#     if not ENABLE_AUTO_CLEANUP:
+#         sep(" ⚠️  自动清理已禁用 (ENABLE_AUTO_CLEANUP=false)")
+#         return
+
+#     sep(" 🧹 开始清理测试数据 ")
+#     group_dict = pytestconfig.stash.get("test_group_ids", group_fixture)
+
+#     sep(" 步骤1: 删除设备 ")
+#     total_deleted_terminals = 0
+#     total_failed_terminals = 0
+
+#     for level in ["three_id", "two_id", "one_id"]:
+#         group_id = group_dict.get(level)
+#         if not group_id:
+#             continue
+#         addrs = get_terminals_by_group(base_url, auth_headers, group_id)
+#         if addrs:
+#             deleted, failed = cleanup_terminals_batch(base_url, auth_headers, group_id, addrs)
+#             total_deleted_terminals += deleted
+#             total_failed_terminals += failed
+
+#     key("设备删除统计", f"成功: {total_deleted_terminals}, 失败: {total_failed_terminals}")
+
+#     sep(" 步骤2: 删除分组 ")
+#     group_success, group_fail = delete_groups_in_order(base_url, auth_headers, group_dict)
+#     key("分组删除统计", f"成功: {group_success}, 失败: {group_fail}")
+
+#     sep(" 🎉 清理完成 ")
 
 
 # ==================== glht 管理员系统清理（独立运转） ====================

@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202605224775030",
+    "sn": "202605224775030",
+    "name": "DMR语音网关",
+    "remark": "DMR语音网关",
+    "terminalType": "DMR_VOICE_GATEWAY",
+    "useScope": "MOTORBIKE"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

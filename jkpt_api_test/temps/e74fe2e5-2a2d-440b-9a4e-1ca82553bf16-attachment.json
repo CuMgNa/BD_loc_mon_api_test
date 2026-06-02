@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202605224775029",
+    "sn": "202605224775029",
+    "name": "模拟语音网关",
+    "remark": "模拟语音网关",
+    "terminalType": "SIMULATED_VOICE_GATEWAY",
+    "useScope": "TRAIN"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}
