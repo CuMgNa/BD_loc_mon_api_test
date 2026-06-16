@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202606163941018",
+    "sn": "202606163941018",
+    "name": "北斗车载终端",
+    "remark": "北斗车载终端",
+    "terminalType": "PD05",
+    "useScope": "TRAIN"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

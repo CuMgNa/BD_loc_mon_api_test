@@ -9,7 +9,7 @@ from common.requests_util import BaseRequest
 from common.yaml_util import read_yaml, write_yaml
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
-from common.export_assert_util import assert_xlsx_export_structure
+from common.export_assert_util import assert_export_response
 
 _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
@@ -314,42 +314,11 @@ class TestBatchTerminalController:
         )
 
     def _assert_export_response(self, case, res, addr_list=None):
-        """导出接口：正文以 UTF-8 JSON 对象/数组起头时断言业务 code/msg，否则断言 HTTP + 二进制正文。
-
-        分支只看 body 前缀，不因 Content-Type: application/json 就走 JSON（网关/网关错标时仍可下载文件）。"""
-        exp = case["expected"]
-        raw = res.content or b""
-        trimmed = raw.lstrip()
-        looks_like_json = trimmed[:1] in (b"{", b"[")
-        if looks_like_json:
-            self._assert_and_report(case, res)
-            return
-
-        expected_http = exp.get("http_status")
-        if expected_http is None:
-            expected_http = exp.get("code")
-        assert expected_http is not None, (
-            f"[{case['name']}] 二进制响应需在 expected 中配置 http_status（或兼容字段 code）"
+        """导出接口统一走公共断言，不再只看 HTTP 200。"""
+        assert_export_response(
+            case_name=case["name"],
+            response=res,
+            expected=case["expected"],
+            require_binary=bool(case.get("binary_response")),
+            addr_count=len(addr_list) if addr_list else None,
         )
-
-        sep(" 断言结果(二进制导出) ")
-        key("预期 HTTP 状态码", expected_http)
-        key("实际 HTTP 状态码", res.status_code)
-        key("Content-Type", res.headers.get("Content-Type"))
-        key("Content-Disposition", res.headers.get("Content-Disposition"))
-        body = raw
-        key("响应体字节数", len(body))
-
-        assert res.status_code == expected_http, (
-            f"[{case['name']}] HTTP 状态码不匹配: 预期={expected_http}, 实际={res.status_code}"
-        )
-        assert len(body) > 0, f"[{case['name']}] 导出正文为空"
-
-        if case.get("binary_response") and exp.get("headers"):
-            assert_xlsx_export_structure(
-                case_name=case["name"],
-                content=body,
-                expected=exp,
-                addr_count=len(addr_list) if addr_list else None,
-                content_disposition=res.headers.get("Content-Disposition"),
-            )

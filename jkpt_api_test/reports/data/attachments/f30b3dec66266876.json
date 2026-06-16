@@ -1,0 +1,15 @@
+{
+  "case_name": "添加分组-三级分组-负向-名称为空",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups",
+  "params": {
+    "groupName": "",
+    "parentId": "6a311e3c2a6f3164497d8a2d"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

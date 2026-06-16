@@ -1,0 +1,32 @@
+{
+  "case_name": "协议-A6神经语音",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/datas/bd",
+  "params": null,
+  "json": {
+    "commInfos": [
+      {
+        "commTime": "",
+        "content": "A60454CF920FD5B384C75F68BCEC8A4A46E6D2D3534F3D194A6BCC31C7FCC59F3DF5649B461ABD615B4B2DADB6E86A7FFEF927B07FF687279E78E6D218810456462794509AA1E700E544A402855453AD6677BDA8A0C29F3137B4C1C96060D3ECA0ACF852E45660A0124F463D35D96253F9DC92116BCEED534E39861A3A0BD586EA21DAA251454841078951AD5293BE305399CCC0DC82EA36DBA0FA67CC4D9613DE73CF6D5B69A5613456696DD34CC15E0645D03767626F52BD4A934D0663A82030C2382DB8F418EA4B93451461A38D36DA68A38D7FD2538E2F10BDFA2A",
+        "fromAddr": "20260430200104",
+        "time": "2026-06-16 17:56:37",
+        "toAddr": "110110110"
+      }
+    ],
+    "receipts": [
+      {
+        "fromAddr": "string",
+        "msg": "string",
+        "msgId": "string",
+        "sendTime": "string",
+        "status": 0,
+        "toAddr": "string"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

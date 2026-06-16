@@ -1,0 +1,32 @@
+{
+  "case_name": "协议-14报平安",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/datas/bd",
+  "params": null,
+  "json": {
+    "commInfos": [
+      {
+        "commTime": "",
+        "content": "1400000315CDB0DE06C358E701618C6F0034CED2D2D1C6BDB0B2B5BDB4EFA3ACC7EBB7C5D0C4A3A1",
+        "fromAddr": "20260430200104",
+        "time": "2026-06-16 17:56:40",
+        "toAddr": "110110110"
+      }
+    ],
+    "receipts": [
+      {
+        "fromAddr": "string",
+        "msg": "string",
+        "msgId": "string",
+        "sendTime": "string",
+        "status": 0,
+        "toAddr": "string"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

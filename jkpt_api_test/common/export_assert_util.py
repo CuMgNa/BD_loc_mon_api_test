@@ -243,3 +243,97 @@ def assert_xlsx_export_structure(
         key(f"{addr_column} 非空行数", len(snapshot.addr_column_values))
 
     return snapshot
+
+
+def assert_export_response(
+    *,
+    case_name: str,
+    response: Any,
+    expected: dict,
+    require_binary: bool = False,
+    addr_count: int | None = None,
+) -> None:
+    """统一导出响应断言：
+    - body 前缀像 JSON -> 断言业务 code/msg（若 require_binary=True 则直接失败）
+    - 否则按二进制文件断言 HTTP/正文/xlsx 结构
+    """
+    raw = response.content or b""
+    trimmed = raw.lstrip()
+    looks_like_json = trimmed[:1] in (b"{", b"[")
+    content_type = response.headers.get("Content-Type")
+    content_disposition = response.headers.get("Content-Disposition")
+
+    expected_http = expected.get("http_status")
+    if expected_http is None:
+        expected_http = expected.get("code")
+
+    if looks_like_json:
+        if expected_http is not None:
+            assert response.status_code == expected_http, (
+                f"[{case_name}] HTTP 状态码不匹配: 预期={expected_http}, 实际={response.status_code}"
+            )
+        try:
+            payload = response.json()
+        except Exception as exc:
+            raise AssertionError(
+                f"[{case_name}] 响应体看似 JSON，但解析失败: HTTP={response.status_code}, "
+                f"Content-Type={content_type}, 前缀={trimmed[:120]!r}"
+            ) from exc
+
+        actual_code = payload.get("code")
+        actual_msg = payload.get("msg", "")
+        if require_binary:
+            raise AssertionError(
+                f"[{case_name}] 预期二进制导出文件，实际返回 JSON: "
+                f"HTTP={response.status_code}, code={actual_code}, msg={actual_msg}, "
+                f"Content-Type={content_type}"
+            )
+
+        expected_code = expected.get("code")
+        if expected_code is not None:
+            assert actual_code == expected_code, (
+                f"[{case_name}] 业务码不匹配: 预期={expected_code}, 实际={actual_code}"
+            )
+        expected_msg = expected.get("error_msg")
+        if expected_msg is not None:
+            assert actual_msg == expected_msg, (
+                f"[{case_name}] 业务消息不匹配: 预期={expected_msg}, 实际={actual_msg}"
+            )
+        return
+
+    # 二进制分支
+    assert expected_http is not None, (
+        f"[{case_name}] 二进制响应需在 expected 中配置 http_status（或兼容字段 code）"
+    )
+
+    sep(" 断言结果(二进制导出) ")
+    key("预期 HTTP 状态码", expected_http)
+    key("实际 HTTP 状态码", response.status_code)
+    key("Content-Type", content_type)
+    key("Content-Disposition", content_disposition)
+    key("响应体字节数", len(raw))
+
+    assert response.status_code == expected_http, (
+        f"[{case_name}] HTTP 状态码不匹配: 预期={expected_http}, 实际={response.status_code}"
+    )
+    assert len(raw) > 0, f"[{case_name}] 导出正文为空"
+
+    if require_binary:
+        # 防止“HTTP=200 但并未返回文件”
+        assert raw[:2] == b"PK", (
+            f"[{case_name}] 预期 xlsx 文件，实际非 zip/xlsx 魔数: 前缀={raw[:4]!r}"
+        )
+        if content_disposition:
+            assert "attachment" in content_disposition.lower(), (
+                f"[{case_name}] 预期文件下载头 attachment，实际={content_disposition}"
+            )
+
+    # 若配置了结构化预期，做 xlsx 深度断言
+    if expected.get("headers") or expected.get("filename") or expected.get("addr_column"):
+        assert_xlsx_export_structure(
+            case_name=case_name,
+            content=raw,
+            expected=expected,
+            addr_count=addr_count,
+            content_disposition=content_disposition,
+        )

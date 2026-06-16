@@ -11,6 +11,7 @@ from common.requests_util import BaseRequest
 from common.yaml_util import read_yaml
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
+from common.export_assert_util import assert_export_response
 
 _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
@@ -78,6 +79,7 @@ class TestLocationController:
         headers = {
             **auth_headers,
             "Time-Zone": "Asia/Shanghai",
+            "time-zone-utc": "+08:00"
         }
 
         addr = self._resolve_bd_addr(case.get("addr"), bd_test_terminal)
@@ -158,29 +160,10 @@ class TestLocationController:
         )
 
     def _assert_export_response(self, case, res):
-        """导出：正文以 UTF-8 JSON 起头则断言业务 code/msg，否则断言 HTTP + 非空正文。"""
-        exp = case["expected"]
-        raw = res.content or b""
-        trimmed = raw.lstrip()
-        looks_like_json = trimmed[:1] in (b"{", b"[")
-        if looks_like_json:
-            self._assert_and_report(case, res)
-            return
-
-        expected_http = exp.get("http_status")
-        if expected_http is None:
-            expected_http = exp.get("code")
-        assert expected_http is not None, (
-            f"[{case['name']}] 二进制响应需在 expected 中配置 http_status（或兼容字段 code）"
+        """导出接口统一走公共断言，不再只看 HTTP 200。"""
+        assert_export_response(
+            case_name=case["name"],
+            response=res,
+            expected=case["expected"],
+            require_binary=bool(case.get("binary_response")),
         )
-
-        sep(" 断言结果(二进制导出) ")
-        key("预期 HTTP 状态码", expected_http)
-        key("实际 HTTP 状态码", res.status_code)
-        key("Content-Type", res.headers.get("Content-Type"))
-        key("响应体字节数", len(raw))
-
-        assert res.status_code == expected_http, (
-            f"[{case['name']}] HTTP 状态码不匹配: 预期={expected_http}, 实际={res.status_code}"
-        )
-        assert len(raw) > 0, f"[{case['name']}] 导出正文为空"

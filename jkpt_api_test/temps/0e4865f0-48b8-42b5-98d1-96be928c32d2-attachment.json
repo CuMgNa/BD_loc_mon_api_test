@@ -1,0 +1,21 @@
+{
+  "case_name": "字段模板-保存字段-正向",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/field-templates/6a311e312a6f3164497d8660/fields",
+  "params": [
+    [
+      "fields",
+      "fieldA"
+    ],
+    [
+      "fields",
+      "fieldB"
+    ]
+  ],
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}
