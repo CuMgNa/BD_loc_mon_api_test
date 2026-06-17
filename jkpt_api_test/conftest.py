@@ -348,23 +348,20 @@ def terminal_type_enum_cases(terminal_types, terminal_use_scopes):
     return cases
 
 
-# ==================== BD协议测试设备 Fixture ====================
-BD_TEST_ADDR = "20260430200104"
+# ==================== 测试设备 Fixture ====================
+TEST_TERMINALS = [
+    {"sn": "20260430200104", "remark": "bd协议测试", "icon": "🛰️", "name": "BD协议测试设备"},
+    {"sn": "20260430200105", "remark": "消息测试",    "icon": "📬", "name": "消息测试设备"},
+]
 
 
-@pytest.fixture(scope="session")
-def bd_test_terminal(base_url, auth_headers, group_fixture):
-    """在 group_fixture['one_id'] 下创建 BD 协议测试专用设备，返回 addr（即 fromAddr）
-
-    设备 SN 固定为 BD_TEST_ADDR；session 结束时由 cleanup_test_data 自动清理 one_id 下的所有设备。
-    若设备已存在（重复 session 或部分清理失败），create 接口失败也直接返回该 addr 复用。
-    """
-    sep(" 🛰️ 创建BD协议测试设备 ")
-    group_id = group_fixture["one_id"]
+def _create_terminal(base_url, auth_headers, group_id, addr, remark, icon, name):
+    """在指定分组下创建设备，若已存在则复用。"""
+    sep(f" {icon} 创建{name} ")
     url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
     body = {
-        "addr": BD_TEST_ADDR,
-        "remark": "bd协议测试",
+        "sn": addr,
+        "remark": remark,
         "groupId": group_id,
         "terminalType": "PD18",
         "useScope": "STEAMER",
@@ -385,24 +382,32 @@ def bd_test_terminal(base_url, auth_headers, group_fixture):
         },
         "fieldJson": "",
     }
-
     resp = http.send_request(
-        method="post",
-        url=url,
-        json=body,
-        headers=auth_headers,
-        case_name="创建BD协议测试设备",
-        log_level="none",
+        method="post", url=url, json=body, headers=auth_headers,
+        case_name=f"创建{name}", log_level="none",
     )
     json_data = resp.json()
     code = _jsonpath_parse(json_data, "$.code")[0]
     if code == 0:
-        key("BD协议测试设备", f"创建成功 addr={BD_TEST_ADDR}")
+        key(name, f"创建成功 addr={addr}")
     else:
         msg = _jsonpath_parse(json_data, "$.msg")[0] if _jsonpath_parse(json_data, "$.msg") else "未知错误"
-        # 设备已存在等情况不阻塞测试，仅日志提示
-        key("⚠️ BD协议测试设备创建失败(将复用)", f"code={code}, msg={msg}")
-    return BD_TEST_ADDR
+        key(f"⚠️ {name}创建失败(将复用)", f"code={code}, msg={msg}")
+    return addr
+
+
+@pytest.fixture(scope="session")
+def bd_test_terminal(base_url, auth_headers, group_fixture):
+    group_id = group_fixture["one_id"]
+    t = TEST_TERMINALS[0]
+    return _create_terminal(base_url, auth_headers, group_id, t["sn"], t["remark"], t["icon"], t["name"])
+
+
+@pytest.fixture(scope="session")
+def msg_test_terminal(base_url, auth_headers, group_fixture):
+    group_id = group_fixture["one_id"]
+    t = TEST_TERMINALS[1]
+    return _create_terminal(base_url, auth_headers, group_id, t["sn"], t["remark"], t["icon"], t["name"])
 
 
 @pytest.fixture(scope="session")

@@ -1,0 +1,14 @@
+{
+  "case_name": "批量删除分组 6a31fdf049b113309e33dc2f 下的设备",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/terminals/batch",
+  "params": null,
+  "json": {
+    "addrs": "20260430200103"
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

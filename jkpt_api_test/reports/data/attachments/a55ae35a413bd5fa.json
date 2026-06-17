@@ -1,0 +1,15 @@
+{
+  "case_name": "添加分组-三级分组-正向",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups",
+  "params": {
+    "groupName": "AUTO_GROUP_L33",
+    "parentId": "6a31fe6e49b113309e33ed27"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

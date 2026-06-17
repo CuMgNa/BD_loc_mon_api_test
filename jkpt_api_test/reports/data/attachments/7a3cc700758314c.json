@@ -1,0 +1,55 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 01:56:37 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "addr": "202606171370013",
+      "remark": "风云哨兵",
+      "scope": "TRUCKS",
+      "type": "FY_IMG_TRAN",
+      "follow": false,
+      "lastCommTime": 0,
+      "status": "NOT",
+      "listeningStatus": null,
+      "trackColor": "#141323",
+      "trackSize": 5,
+      "belongTo": 2,
+      "belongToDesc": "我的",
+      "followByShareNum": null,
+      "showAoWeiBtn": false,
+      "stopPort": false,
+      "password": null,
+      "gatewayParam": null,
+      "onlineFlag": "UNKNOWN",
+      "ipAddress": null,
+      "groupCallNumber": null,
+      "parentAddr": null,
+      "dialSwitch": false,
+      "silenceSwitch": null,
+      "silenceThreshold": null,
+      "webAccount": null,
+      "loc": null,
+      "infos": [],
+      "fields": [
+        {
+          "name": "自定义字段1",
+          "value": "自定义值1"
+        },
+        {
+          "name": "自定义字段2",
+          "value": "自定义值2"
+        }
+      ]
+    }
+  },
+  "elapsed_ms": 869
+}

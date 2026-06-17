@@ -1,0 +1,128 @@
+# yaml/test_alarm_controller.yaml
+# 报警接口 (Alarm Controller) — 7 个接口
+
+alarm_list_cases:
+  - name: "分页查询报警列表-正向"
+    scenario: "positive"
+    addr: "{{msg_test_terminal}}"
+    page: 1
+    page_size: 10
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "分页查询报警列表-负向-addr为空"
+    scenario: "empty_addr"
+    addr: ""
+    expected:
+      code: 999
+      error_msg: "失败"
+
+  - name: "分页查询报警列表-负向-缺token"
+    scenario: "no_auth"
+    addr: "{{msg_test_terminal}}"
+    no_auth: true
+    expected:
+      code: 401
+      error_msg: "Unauthorized"
+
+
+alarm_history_cases:
+  - name: "查询设备历史报警-正向"
+    scenario: "positive"
+    addr: "{{msg_test_terminal}}"
+    page: 1
+    page_size: 10
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "查询设备历史报警-负向-addr为空"
+    scenario: "empty_addr"
+    addr: ""
+    expected:
+      code: 999
+      error_msg: "失败"
+
+
+alarm_latest_cases:
+  - name: "获取最新报警-正向"
+    scenario: "positive"
+    addr: "{{msg_test_terminal}}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "获取最新报警-负向-addr不存在"
+    scenario: "invalid_addr"
+    addr: "99999999999"
+    expected:
+      code: 999
+      error_msg: "无此设备数据信息"
+
+
+alarm_handle_cases:
+  - name: "处理报警-正向"
+    scenario: "positive"
+    id: "{{alarm_single_id}}"
+    handle_result: "已处理"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "处理报警-负向-ID不存在"
+    scenario: "invalid_id"
+    id: 999999
+    handle_result: "测试"
+    expected:
+      code: 1001
+      error_msg: "报警ID列表不能为空"
+
+
+alarm_batch_handle_cases:
+  - name: "按类型批量处理-正向"
+    scenario: "positive"
+    alarm_type: "SOS"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "按类型批量处理-负向-type为空"
+    scenario: "empty_type"
+    alarm_type: ""
+    expected:
+      code: 999
+      error_msg: "失败"
+
+
+alarm_batch_handle_ids_cases:
+  - name: "按ID批量处理-正向"
+    scenario: "positive"
+    handle_result: "批量已处理"
+    ids: "{{alarm_batch_ids}}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "按ID批量处理-负向-空列表"
+    scenario: "empty_ids"
+    handle_result: "批量已处理"
+    ids: []
+    expected:
+      code: 1001
+      error_msg: "报警ID列表不能为空"
+
+
+alarm_batch_info_cases:
+  - name: "获取报警类型统计-正向"
+    scenario: "positive"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "获取报警类型统计-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 401
+      error_msg: "Unauthorized"

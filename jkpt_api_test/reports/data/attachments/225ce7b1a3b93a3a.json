@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 01:52:51 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "account": "admin",
+      "token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJTeXN0ZW1BZG1pbiIsImV4cCI6MTc4ODg2MTE3MSwiaWF0IjoxNzgxNjYxMTcxfQ.j1j0cOMgos9IPDpfjRqTOqWCGSxza0DNwJepz-uFGuMHLT2apeqPQNuqlxn08G0WT2S5lhjpOSvsO_eA2YEyiA",
+      "role": {
+        "name": "SystemAdmin",
+        "value": "系统管理员"
+      }
+    }
+  },
+  "elapsed_ms": 1391
+}

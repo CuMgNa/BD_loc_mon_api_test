@@ -1,0 +1,19 @@
+{
+  "case_name": "分页查询位置列表-负向-addr为空",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/locations",
+  "params": {
+    "Authorization": "******",
+    "addr": "",
+    "startTimeStr": "2026-06-17 00:00:00",
+    "endTimeStr": "2026-06-17 23:59:59",
+    "page": 1,
+    "pageSize": 10
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

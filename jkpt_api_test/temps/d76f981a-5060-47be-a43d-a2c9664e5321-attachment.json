@@ -1,0 +1,14 @@
+{
+  "case_name": "用户登录",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/web-user/login",
+  "params": {
+    "account": "tmn",
+    "password": "******",
+    "captcha": "kuwrq",
+    "captchaId": "178169220141212219"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

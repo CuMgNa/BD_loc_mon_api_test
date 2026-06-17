@@ -1,0 +1,12 @@
+{
+  "case_name": "获取最新报警-负向-addr不存在",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarms/latest/99999999999",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

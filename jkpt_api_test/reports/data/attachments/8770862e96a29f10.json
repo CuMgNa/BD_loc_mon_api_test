@@ -1,0 +1,26 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 01:55:05 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "id": "6a31fe6a49b113309e33ed22",
+      "parentId": "0",
+      "name": "Updated_1781661304",
+      "selected": false,
+      "expanded": false,
+      "level": null,
+      "terminals": [],
+      "children": []
+    }
+  },
+  "elapsed_ms": 872
+}

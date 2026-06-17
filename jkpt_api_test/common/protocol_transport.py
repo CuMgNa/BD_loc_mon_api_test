@@ -42,24 +42,45 @@ class BDProtocolTransport:
         case_name: str = "",
         to_addr: Optional[str] = None,
     ) -> ProtocolSendResult:
-        """发送 bd 协议数据
+        """发送 bd 协议数据（单地址）"""
+        return self.send_bd_content_batch(
+            content_hexes=[content_hex] if isinstance(content_hex, str) else content_hex,
+            from_addrs=[from_addr],
+            case_name=case_name,
+            to_addr=to_addr,
+        )
+
+    def send_bd_content_batch(
+        self,
+        content_hexes: list,
+        from_addrs: list,
+        case_name: str = "",
+        to_addr: Optional[str] = None,
+    ) -> ProtocolSendResult:
+        """批量发送 bd 协议数据（多地址 / 多内容）
 
         Body 结构与 JMX 完全一致：
         {
             "commInfos": [{"commTime": "", "content": "...", "fromAddr": "...",
-                           "time": "yyyy-MM-dd HH:mm:ss", "toAddr": "110110110"}],
+                           "time": "yyyy-MM-dd HH:mm:ss", "toAddr": "110110110"}, ...],
             "receipts": [{...}]
         }
         """
+        n = len(content_hexes)
+        if n != len(from_addrs):
+            raise ValueError(f"content_hexes({n}) 与 from_addrs({len(from_addrs)}) 长度必须一致")
+
+        now_str = _now_cst_str()
         body: Dict[str, Any] = {
             "commInfos": [
                 {
                     "commTime": "",
-                    "content": content_hex,
-                    "fromAddr": from_addr,
-                    "time": _now_cst_str(),
+                    "content": content_hexes[i],
+                    "fromAddr": from_addrs[i],
+                    "time": now_str,
                     "toAddr": to_addr or self.to_addr,
                 }
+                for i in range(n)
             ],
             "receipts": [
                 {

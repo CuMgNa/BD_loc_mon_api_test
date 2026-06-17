@@ -1,0 +1,14 @@
+{
+  "case_name": "查询设备历史报警-负向-addr为空",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarms/",
+  "params": {
+    "Authorization": "******"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

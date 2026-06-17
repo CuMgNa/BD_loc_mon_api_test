@@ -167,6 +167,28 @@ class BDProtocolClient:
             content_hex=content, from_addr=from_addr, case_name=case_name
         )
 
+    def send_alarm_13_batch(
+        self,
+        from_addrs: List[str],
+        lon: Optional[float] = None,
+        lat: Optional[float] = None,
+        phone: Optional[str] = None,
+        case_name: str = "协议-13报警-批量",
+    ) -> ProtocolSendResult:
+        """一次 HTTP 请求，向多个不同卡号发送 13 报警"""
+        lon_v, lat_v = _ensure_lonlat(lon, lat)
+        phone_hex = resolve_phone_hex(phone, default_phone=self.default_phone)
+        content = self.build_alarm_13_content(
+            phone_hex=phone_hex,
+            lon_hex=ProtocolCodec.lon_int_hex(lon_v),
+            lat_hex=ProtocolCodec.lat_int_hex(lat_v),
+        )
+        return self.transport.send_bd_content_batch(
+            content_hexes=[content] * len(from_addrs),
+            from_addrs=from_addrs,
+            case_name=case_name,
+        )
+
     # ============================================================
     # 0x14 - 报平安（有定位，INT 坐标 + phone）
     # ============================================================

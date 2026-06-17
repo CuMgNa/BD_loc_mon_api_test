@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 01:56:47 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "sn": "202606171370018",
+      "addr": "202606171370018",
+      "name": "北斗车载终端",
+      "remark": "北斗车载终端",
+      "terminalType": "PD05",
+      "useScope": "TRAIN"
+    }
+  },
+  "elapsed_ms": 2808
+}

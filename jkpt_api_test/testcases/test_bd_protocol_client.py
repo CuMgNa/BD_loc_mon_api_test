@@ -104,6 +104,19 @@ class TestBDProtocolClient:
         _print_protocol_send_result(case_name, base_url, result)
         assert result.success
 
+    def test_send_alarm_13_batch_two_terminals(
+        self, bd_client, bd_test_terminal, msg_test_terminal, base_url
+    ):
+        """一次 HTTP 请求，向两个不同卡号发送 13 报警"""
+        case_name = "协议-13报警-批量两终端"
+        result = bd_client.send_alarm_13_batch(
+            from_addrs=[bd_test_terminal, msg_test_terminal],
+            phone="13250703582",
+            case_name=case_name,
+        )
+        _print_protocol_send_result(case_name, base_url, result)
+        assert result.success
+
     # ---------- 14：报平安（有定位） ----------
     def test_send_safe_14(self, bd_client, bd_test_terminal, base_url):
         case_name = "协议-14报平安"

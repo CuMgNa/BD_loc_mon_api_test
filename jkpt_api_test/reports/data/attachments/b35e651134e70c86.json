@@ -1,0 +1,43 @@
+{
+  "case_name": "枚举添加-RTK",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a31fdf249b113309e33dc31/terminals",
+  "params": null,
+  "json": {
+    "addr": "",
+    "remark": "RTK定位终端",
+    "useScope": "CAR",
+    "sn": "202606171370023",
+    "password": "******",
+    "terminalType": "RTK",
+    "trackColor": "#141323",
+    "trackSize": 5,
+    "gatewayParam": {
+      "colorCodeId": 1,
+      "gid": 0,
+      "radioRcvChn": "",
+      "radioSndChn": "",
+      "radioPower": 0,
+      "rxCss": "",
+      "txCss": "",
+      "width": 0
+    },
+    "fieldJson": "",
+    "fields": [
+      {
+        "name": "自定义字段1",
+        "value": "自定义值1"
+      },
+      {
+        "name": "自定义字段2",
+        "value": "自定义值2"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

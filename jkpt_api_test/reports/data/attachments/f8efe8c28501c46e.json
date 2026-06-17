@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 01:56:40 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "sn": "202606171370015",
+      "addr": "202606171370015",
+      "name": "北二手持机",
+      "remark": "北二手持机",
+      "terminalType": "PD14",
+      "useScope": "STEAMER"
+    }
+  },
+  "elapsed_ms": 988
+}

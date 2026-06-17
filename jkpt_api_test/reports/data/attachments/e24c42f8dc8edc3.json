@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202606171370009",
+    "sn": "202606171370009",
+    "name": "天通哨兵",
+    "remark": "天通哨兵",
+    "terminalType": "TT_IMG_TRAN",
+    "useScope": "SIP"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

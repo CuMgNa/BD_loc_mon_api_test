@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 01:56:27 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "sn": "202606171370008",
+      "addr": "202606171370008",
+      "name": "北斗哨兵",
+      "remark": "北斗哨兵",
+      "terminalType": "BD_IMG_TRAN",
+      "useScope": "MOTORBIKE"
+    }
+  },
+  "elapsed_ms": 1875
+}

@@ -1,0 +1,14 @@
+{
+  "case_name": "处理报警-正向",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarms/6a32773c67479c507ddef6d9",
+  "params": {
+    "handleResult": "已处理"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

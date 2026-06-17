@@ -1,0 +1,12 @@
+{
+  "case_name": "查询最新报警-20260430200105",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarms/latest/20260430200105",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}
