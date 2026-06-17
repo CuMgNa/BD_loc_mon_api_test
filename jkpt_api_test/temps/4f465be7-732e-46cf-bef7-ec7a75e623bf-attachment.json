@@ -1,0 +1,12 @@
+{
+  "case_name": "glht管理员登录",
+  "method": "POST",
+  "url": "http://back.tdwt.admin.pg8.ink/api/admin/login",
+  "params": null,
+  "json": {
+    "account": "admin",
+    "password": "******"
+  },
+  "data": null,
+  "headers": null
+}

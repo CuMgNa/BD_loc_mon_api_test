@@ -160,7 +160,7 @@ class TestAlarmController:
         """按类型批量处理报警"""
         url = f"{base_url}/api/monitor/alarms/batch-handle"
         headers = {**auth_headers}
-        alarm_type = case.get("alarm_type", case.get("alarmType", ""))
+        alarm_type = case.get("alarmTypes", "")
         handle_result = case.get("handle_result", case.get("handleResult", "批量已处理"))
 
         if case.get("scenario") == "positive":
@@ -170,7 +170,7 @@ class TestAlarmController:
                 case_name=f"{case['name']}-seed",
             )
 
-        body = {"alarmType": alarm_type, "handleResult": handle_result}
+        body = {"alarmTypes": alarm_type, "handleResult": handle_result}
 
         sep(f" 测试用例: {case['name']}")
         print_request("PUT", url, json=body, headers=headers)

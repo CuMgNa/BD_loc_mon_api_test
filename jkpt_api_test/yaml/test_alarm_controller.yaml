@@ -75,7 +75,7 @@ alarm_handle_cases:
 alarm_batch_handle_cases:
   - name: "按类型批量处理-正向"
     scenario: "positive"
-    alarm_type: "SOS"
+    alarmTypes: "SOS"
     handle_result: "批量已处理"
     expected:
       code: 0
@@ -83,7 +83,7 @@ alarm_batch_handle_cases:
 
   - name: "按类型批量处理-负向-报警类型为空"
     scenario: "invalid_type"
-    alarm_type: ""
+    alarmTypes: ""
     handle_result: "批量已处理"
     expected:
       code: 1001
@@ -91,7 +91,7 @@ alarm_batch_handle_cases:
 
   - name: "按类型批量处理-负向-处理结果为空"
     scenario: "empty_type"
-    alarm_type: "SOS"
+    alarmTypes: "SOS"
     handle_result: ""
     expected:
       code: 1001

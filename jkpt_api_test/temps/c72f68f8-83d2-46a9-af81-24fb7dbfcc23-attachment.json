@@ -1,0 +1,59 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Wed, 17 Jun 2026 16:23:10 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "addr": "20260430200105",
+      "remark": "消息测试",
+      "scope": "STEAMER",
+      "type": "OTHER",
+      "follow": false,
+      "lastCommTime": 1781712499024,
+      "status": "SOS",
+      "listeningStatus": null,
+      "trackColor": "#141323",
+      "trackSize": 5,
+      "belongTo": 2,
+      "belongToDesc": "我的",
+      "followByShareNum": null,
+      "showAoWeiBtn": true,
+      "stopPort": false,
+      "password": null,
+      "gatewayParam": null,
+      "onlineFlag": "ON",
+      "ipAddress": null,
+      "groupCallNumber": null,
+      "parentAddr": null,
+      "dialSwitch": false,
+      "silenceSwitch": null,
+      "silenceThreshold": null,
+      "webAccount": null,
+      "loc": {
+        "locType": "BD",
+        "locStatus": "SOS",
+        "lng": 113.470938,
+        "lat": 23.167511,
+        "alt": 36.0,
+        "speed": 0.0,
+        "dir": -1,
+        "time": "2026-06-18 00:08:19",
+        "remark": null,
+        "wgs84Lng": 113.465513,
+        "wgs84Lat": 23.170075,
+        "reportType": null
+      },
+      "infos": [],
+      "fields": []
+    }
+  },
+  "elapsed_ms": 137
+}

@@ -1,0 +1,12 @@
+{
+  "case_name": "获取报警类型统计-正向",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarms/batch-info",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

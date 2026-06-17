@@ -1,0 +1,47 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Wed, 17 Jun 2026 16:23:13 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "id": "6a32c9f177639103020b67b6",
+      "addr": "20260430200104",
+      "remark": "bd协议测试",
+      "alarmType": {
+        "name": "SOS",
+        "value": "SOS报警"
+      },
+      "alarmTimeStr": "2026-06-18 00:23:13",
+      "loc": {
+        "locType": "BD",
+        "locStatus": "SOS",
+        "lng": 113.472081,
+        "lat": 23.167788,
+        "alt": 36.0,
+        "speed": 0.0,
+        "dir": -1,
+        "time": "2026-06-18 00:23:13",
+        "remark": null,
+        "wgs84Lng": 113.466659,
+        "wgs84Lat": 23.170355,
+        "reportType": 0
+      },
+      "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+      "handleTimeStr": null,
+      "handleResult": null,
+      "handleStatus": {
+        "name": "UNTREATED",
+        "value": "未处理"
+      }
+    }
+  },
+  "elapsed_ms": 67
+}

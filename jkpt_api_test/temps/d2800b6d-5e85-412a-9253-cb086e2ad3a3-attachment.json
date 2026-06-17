@@ -1,0 +1,15 @@
+{
+  "case_name": "批量解绑设备-负向-addrs为空",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/terminals/batch",
+  "params": null,
+  "json": {
+    "addrs": ""
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

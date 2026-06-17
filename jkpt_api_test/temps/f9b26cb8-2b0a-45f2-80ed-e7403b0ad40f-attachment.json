@@ -1,0 +1,30 @@
+{
+  "case_name": "经纬度批量查询详情-正向",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/terminals/batch/lnglat-details",
+  "params": null,
+  "json": {
+    "points": [
+      {
+        "lat": 22.543096,
+        "lng": 114.057868
+      },
+      {
+        "lat": 32.129163,
+        "lng": 123.264435
+      },
+      {
+        "lat": 24.543096,
+        "lng": 116.057868
+      }
+    ],
+    "page": 1,
+    "pageSize": 100
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}
