@@ -1,0 +1,17 @@
+{
+  "case_name": "",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/mock-in-storage",
+  "params": {
+    "Authorization": "******",
+    "addr": "202606182567029",
+    "sn": "202606182567029",
+    "name": "APP设备",
+    "remark": "APP设备",
+    "terminalType": "APP",
+    "useScope": "TRAIN"
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

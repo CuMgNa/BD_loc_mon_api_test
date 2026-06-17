@@ -62,4 +62,4 @@ location_export_cases:
     addr: ""
     expected:
       code: 999
-      error_msg: "失败"
+      error_msg: "无此设备数据信息"

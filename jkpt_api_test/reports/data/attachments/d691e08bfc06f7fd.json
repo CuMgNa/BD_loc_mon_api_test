@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Wed, 17 Jun 2026 16:09:30 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "sn": "202606182567012",
+      "addr": "202606182567012",
+      "name": "Ku哨兵",
+      "remark": "Ku哨兵",
+      "terminalType": "KU_TRAN",
+      "useScope": "CAR"
+    }
+  },
+  "elapsed_ms": 100
+}

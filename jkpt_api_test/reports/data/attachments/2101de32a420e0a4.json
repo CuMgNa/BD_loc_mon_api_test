@@ -1,0 +1,34 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Wed, 17 Jun 2026 16:08:12 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "account": "tmn",
+      "token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0bW4iLCJyb2xlIjoiV2ViQWRtaW4iLCJleHAiOjE3ODg5MTI0OTIsImlhdCI6MTc4MTcxMjQ5Mn0.OgfLUq-lyxGDqNHDJ93Uz4wUL60wGsVaKJqzyBJxwUImHr2xaek3kDC4YKM-Uw1Yq5SYl5eWAACJ2knq13khfw",
+      "name": "一级企业账号",
+      "phone": "13250703582",
+      "email": "3360699298@qq.com",
+      "avatar": "oss323032362f362f31362f3661333130313932326136663331363434393739383537642e706e67",
+      "platformLogo": "oss323032362f362f31362f3661333130313936326136663331363434393739383539302e706e67",
+      "platformName": "一级账号13128251672",
+      "role": {
+        "name": "WebAdmin",
+        "value": "Web管理员"
+      },
+      "mapLayer": {
+        "name": "STANDARD",
+        "value": "标准地图"
+      }
+    }
+  },
+  "elapsed_ms": 90
+}

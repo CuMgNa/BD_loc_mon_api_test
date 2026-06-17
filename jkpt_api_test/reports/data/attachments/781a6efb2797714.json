@@ -1,0 +1,34 @@
+{
+  "case_name": "创建消息测试设备",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a32c66c77639103020afa12/terminals",
+  "params": null,
+  "json": {
+    "sn": "20260430200105",
+    "remark": "消息测试",
+    "groupId": "6a32c66c77639103020afa12",
+    "terminalType": "PD18",
+    "useScope": "STEAMER",
+    "fromAddr": "",
+    "trackColor": "#141323",
+    "trackSize": 5,
+    "groupCallNumber": "",
+    "ipAddress": "",
+    "gatewayParam": {
+      "colorCodeId": 1,
+      "gid": 0,
+      "radioRcvChn": "",
+      "radioSndChn": "",
+      "radioPower": 0,
+      "rxCss": "",
+      "txCss": "",
+      "width": 0
+    },
+    "fieldJson": ""
+  },
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

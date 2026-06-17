@@ -1,0 +1,14 @@
+{
+  "case_name": "字段模板-编辑-正向",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/field-templates/6a32c6b077639103020b0286",
+  "params": {
+    "name": "AUTO_FT_UPD_1781712561"
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

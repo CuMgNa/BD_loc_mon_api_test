@@ -154,12 +154,23 @@ class TestAlarmController:
 
     # ---------- e. 按类型批量处理 ----------
     @pytest.mark.parametrize("case", test_data["alarm_batch_handle_cases"])
-    def test_alarm_e_batch_handle(self, base_url, auth_headers, case):
+    def test_alarm_e_batch_handle(
+        self, base_url, auth_headers, bd_client, msg_test_terminal, case
+    ):
         """按类型批量处理报警"""
         url = f"{base_url}/api/monitor/alarms/batch-handle"
         headers = {**auth_headers}
         alarm_type = case.get("alarm_type", case.get("alarmType", ""))
-        body = {"alarmType": alarm_type}
+        handle_result = case.get("handle_result", case.get("handleResult", "批量已处理"))
+
+        if case.get("scenario") == "positive":
+            self._seed_alarm_for_addr(
+                bd_client=bd_client,
+                from_addr=msg_test_terminal,
+                case_name=f"{case['name']}-seed",
+            )
+
+        body = {"alarmType": alarm_type, "handleResult": handle_result}
 
         sep(f" 测试用例: {case['name']}")
         print_request("PUT", url, json=body, headers=headers)

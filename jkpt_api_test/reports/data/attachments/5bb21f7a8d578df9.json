@@ -1,0 +1,26 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Wed, 17 Jun 2026 16:09:22 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "id": "6a32c6b277639103020b028a",
+      "parentId": "6a32c6b177639103020b0289",
+      "name": "AUTO_GROUP_L22",
+      "selected": false,
+      "expanded": false,
+      "level": null,
+      "terminals": [],
+      "children": []
+    }
+  },
+  "elapsed_ms": 75
+}

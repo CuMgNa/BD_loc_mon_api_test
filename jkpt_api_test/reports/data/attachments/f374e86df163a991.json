@@ -1,0 +1,162 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Server": "nginx/1.21.5",
+    "Date": "Wed, 17 Jun 2026 16:09:24 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "total": 17,
+      "totalPage": 2,
+      "items": [
+        {
+          "locType": "RN",
+          "locStatus": "NORMAL",
+          "lng": 113.471529,
+          "lat": 23.167518,
+          "alt": 0.0,
+          "speed": 10.08,
+          "dir": 110,
+          "time": "2026-06-18 00:08:14",
+          "remark": null,
+          "wgs84Lng": 113.4661055556,
+          "wgs84Lat": 23.1700833333,
+          "reportType": 0
+        },
+        {
+          "locType": "RN",
+          "locStatus": "NORMAL",
+          "lng": 113.495345,
+          "lat": 23.197379,
+          "alt": 0.0,
+          "speed": 10.08,
+          "dir": 345,
+          "time": "2026-06-18 00:08:14",
+          "remark": null,
+          "wgs84Lng": 113.4899972222,
+          "wgs84Lat": 23.2,
+          "reportType": 0
+        },
+        {
+          "locType": "BD",
+          "locStatus": "SOS",
+          "lng": 113.471431,
+          "lat": 23.167713,
+          "alt": 36.0,
+          "speed": 0.0,
+          "dir": -1,
+          "time": "2026-06-18 00:08:15",
+          "remark": null,
+          "wgs84Lng": 113.466007,
+          "wgs84Lat": 23.170278,
+          "reportType": 0
+        },
+        {
+          "locType": "BD",
+          "locStatus": "NORMAL",
+          "lng": 113.47127,
+          "lat": 23.167899,
+          "alt": 23.0,
+          "speed": 0.0,
+          "dir": -1,
+          "time": "2026-06-18 00:08:18",
+          "remark": null,
+          "wgs84Lng": 113.465846,
+          "wgs84Lat": 23.170463,
+          "reportType": 0
+        },
+        {
+          "locType": "BD",
+          "locStatus": "NORMAL",
+          "lng": 113.505313,
+          "lat": 23.197349,
+          "alt": 23.0,
+          "speed": 0.0,
+          "dir": -1,
+          "time": "2026-06-18 00:08:18",
+          "remark": null,
+          "wgs84Lng": 113.5,
+          "wgs84Lat": 23.2,
+          "reportType": 0
+        },
+        {
+          "locType": "BD",
+          "locStatus": "SOS",
+          "lng": 113.471292,
+          "lat": 23.168293,
+          "alt": 36.0,
+          "speed": 0.0,
+          "dir": -1,
+          "time": "2026-06-18 00:08:19",
+          "remark": null,
+          "wgs84Lng": 113.465868,
+          "wgs84Lat": 23.170857,
+          "reportType": 0
+        },
+        {
+          "locType": "BD",
+          "locStatus": "SOS",
+          "lng": 113.470938,
+          "lat": 23.167511,
+          "alt": 36.0,
+          "speed": 0.0,
+          "dir": -1,
+          "time": "2026-06-18 00:08:19",
+          "remark": null,
+          "wgs84Lng": 113.465513,
+          "wgs84Lat": 23.170075,
+          "reportType": 0
+        },
+        {
+          "locType": "APP",
+          "locStatus": "NORMAL",
+          "lng": 113.472004,
+          "lat": 23.167744,
+          "alt": 52.0,
+          "speed": 0.0,
+          "dir": -1,
+          "time": "2026-06-18 00:08:19",
+          "remark": null,
+          "wgs84Lng": 113.466582,
+          "wgs84Lat": 23.17031,
+          "reportType": 0
+        },
+        {
+          "locType": "RN",
+          "locStatus": "NORMAL",
+          "lng": 113.471557,
+          "lat": 23.167604,
+          "alt": 0.0,
+          "speed": 20.88,
+          "dir": 326,
+          "time": "2026-06-18 00:08:19",
+          "remark": null,
+          "wgs84Lng": 113.4661333333,
+          "wgs84Lat": 23.1701694444,
+          "reportType": 0
+        },
+        {
+          "locType": "RN",
+          "locStatus": "NORMAL",
+          "lng": 113.505313,
+          "lat": 23.207352,
+          "alt": 0.0,
+          "speed": 20.88,
+          "dir": 147,
+          "time": "2026-06-18 00:08:19",
+          "remark": null,
+          "wgs84Lng": 113.5,
+          "wgs84Lat": 23.21,
+          "reportType": 0
+        }
+      ]
+    }
+  },
+  "elapsed_ms": 108
+}

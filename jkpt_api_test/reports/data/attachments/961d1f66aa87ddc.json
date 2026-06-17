@@ -1,0 +1,32 @@
+{
+  "case_name": "协议-A4定位轨迹",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/datas/bd",
+  "params": null,
+  "json": {
+    "commInfos": [
+      {
+        "commTime": "",
+        "content": "00A41A061200081300050545711B39414E170A0B25000501120145711B394C4E170A0B44002C01530145711B39574E170A0B63001C008C0145711B39624E170A0C1E001C006E0145711B3A084E170A0C3D003A014601F4",
+        "fromAddr": "20260430200104",
+        "time": "2026-06-18 00:08:19",
+        "toAddr": "110110110"
+      }
+    ],
+    "receipts": [
+      {
+        "fromAddr": "string",
+        "msg": "string",
+        "msgId": "string",
+        "sendTime": "string",
+        "status": 0,
+        "toAddr": "string"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

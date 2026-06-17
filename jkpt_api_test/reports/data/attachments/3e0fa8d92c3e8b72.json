@@ -1,0 +1,39 @@
+{
+  "case_name": "协议-13报警-批量两终端",
+  "method": "POST",
+  "url": "http://back.tdwtv2.pg8.ink/api/datas/bd",
+  "params": null,
+  "json": {
+    "commInfos": [
+      {
+        "commTime": "",
+        "content": "13000315CDB0DE06C358A901618C1B0024000001CED2C3D4C2B7C1CBA3ACC7EBC7F3B0EFD6FAA1A3",
+        "fromAddr": "20260430200104",
+        "time": "2026-06-18 00:08:19",
+        "toAddr": "110110110"
+      },
+      {
+        "commTime": "",
+        "content": "13000315CDB0DE06C358A901618C1B0024000001CED2C3D4C2B7C1CBA3ACC7EBC7F3B0EFD6FAA1A3",
+        "fromAddr": "20260430200105",
+        "time": "2026-06-18 00:08:19",
+        "toAddr": "110110110"
+      }
+    ],
+    "receipts": [
+      {
+        "fromAddr": "string",
+        "msg": "string",
+        "msgId": "string",
+        "sendTime": "string",
+        "status": 0,
+        "toAddr": "string"
+      }
+    ]
+  },
+  "data": null,
+  "headers": {
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json"
+  }
+}

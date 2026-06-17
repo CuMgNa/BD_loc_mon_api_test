@@ -1,1 +1,0 @@
-AssertionError: [按类型批量处理-负向-type为空] code不匹配: 预期=999, 实际=1001, msg=处理结果不能为空
