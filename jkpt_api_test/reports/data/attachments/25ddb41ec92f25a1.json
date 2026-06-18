@@ -1,0 +1,12 @@
+{
+  "case_name": "删除three_id分组 6a32772f67479c507ddef654",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a32772f67479c507ddef654",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

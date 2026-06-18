@@ -62,14 +62,30 @@ alarm_handle_cases:
     expected:
       code: 0
       error_msg: "成功"
+  
+  - name: "处理报警-负向-报警记录重复处理"
+    scenario: "duplicate_handle"
+    id: "{{alarm_single_id}}"
+    handle_result: "已处理"
+    expected:
+      code: 1001
+      error_msg: "报警记录已处理"
+
+  - name: "处理报警-负向-处理结果为空"
+    scenario: "empty_result"
+    id: "{{alarm_single_id}}"
+    handle_result: ""
+    expected:
+      code: 1001
+      error_msg: "处理结果不能为空"
 
   - name: "处理报警-负向-ID不存在"
     scenario: "invalid_id"
     id: 999999
     handle_result: "测试"
     expected:
-      code: 1001
-      error_msg: "报警ID列表不能为空"
+      code: 999
+      error_msg: "失败"
 
 
 alarm_batch_handle_cases:

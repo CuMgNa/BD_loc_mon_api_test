@@ -1,0 +1,195 @@
+# testcases/test_alarm_settings_controller.py
+# 报警通知设置管理接口测试
+# test_as_a_list 提取 id + 四开关原值写入 extract.yaml
+# test_as_b_edit 快照 + 取反 + 断言 + 还原
+import jsonpath
+import pytest
+import re
+from common.requests_util import BaseRequest
+from common.yaml_util import read_yaml, write_yaml
+from common.logger_util import sep, key, print_request, print_response
+from common.allure_assert_util import assert_api_result
+
+_jsonpath_parse = jsonpath.jsonpath
+http = BaseRequest()
+
+# 四开关字段名（与 AlarmSettingRespDto 对齐）
+_SWITCH_FIELDS = ["alarmVoice", "emailNoti", "popupWindow", "smsNoti"]
+
+
+class TestAlarmSettingsController:
+    """报警通知设置管理接口测试"""
+
+    test_data = read_yaml("./yaml/test_alarm_settings_controller.yaml")
+
+    # ---------- a. 获取报警通知设置列表（GET /api/monitor/alarm-settings） ----------
+    @pytest.mark.parametrize("case", test_data["list_alarm_settings_cases"])
+    def test_as_a_list_alarm_settings(self, base_url, auth_headers, case):
+        """获取列表；正向提取 id + 四开关原值写入 extract.yaml"""
+        url = f"{base_url}/api/monitor/alarm-settings"
+        if case.get("no_auth"):
+            headers = {}
+        else:
+            headers = {**auth_headers}
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, headers=headers)
+        res = http.send_request(
+            "get",
+            url,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+
+        # 正向：提取 id + 四开关快照写入 extract.yaml
+        if code == 0 and case.get("name") == "报警通知设置-列表-正向":
+            items = _jsonpath_parse(json_data, "$.data[*]")
+            if not items:
+                pytest.fail("报警通知设置列表为空，无法继续编辑链路")
+            first = items[0]
+            sid = first.get("id")
+            if sid:
+                snapshot = {f: first.get(f) for f in _SWITCH_FIELDS}
+                write_yaml(
+                    "./extract.yaml",
+                    {"alarm_setting_id": sid, "alarm_setting_original": snapshot},
+                    mode="append",
+                )
+                key("alarm_setting_id", sid)
+                key("四开关快照", snapshot)
+
+        self._assert_and_report(case, res)
+
+    # ---------- b. 编辑报警通知设置（PUT /api/monitor/alarm-settings/{id}） ----------
+    @pytest.mark.parametrize("case", test_data["edit_alarm_settings_cases"])
+    def test_as_b_edit_alarm_settings(self, base_url, auth_headers, case):
+        """编辑报警通知设置；正向：快照→取反→断言→还原"""
+        raw_id = case.get("setting_id")
+        tid = self._resolve_value(raw_id, required=self._is_extract_placeholder(raw_id))
+
+        if case.get("no_auth"):
+            headers = {}
+        else:
+            headers = {**auth_headers}
+
+        # ---------- 取原始快照 ----------
+        orig_snapshot = None
+        if not case.get("no_auth") and not case.get("setting_id", "").startswith("0000"):
+            try:
+                extract_data = read_yaml("./extract.yaml")
+                orig_snapshot = extract_data.get("alarm_setting_original")
+            except Exception:
+                orig_snapshot = None
+
+        # ---------- 构造 params ----------
+        omit_alarm_voice = case.get("omit_alarm_voice", False)
+        omit_email_noti = case.get("omit_email_noti", False)
+
+        params = {}
+        for f in _SWITCH_FIELDS:
+            if f == "alarmVoice" and omit_alarm_voice:
+                continue
+            if f == "emailNoti" and omit_email_noti:
+                continue
+            # 若有快照则取反，否则默认 true
+            if orig_snapshot is not None:
+                params[f] = not orig_snapshot.get(f)
+            else:
+                params[f] = True
+
+        url = f"{base_url}/api/monitor/alarm-settings/{tid}"
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("PUT", url, params=params, headers=headers)
+        res = http.send_request(
+            "put",
+            url,
+            params=params,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+
+        # ---------- 正向：还原 ----------
+        if (
+            code == 0
+            and case.get("name") == "报警通知设置-编辑-正向"
+            and orig_snapshot is not None
+        ):
+            restore_params = {f: orig_snapshot.get(f) for f in _SWITCH_FIELDS}
+            sep(" 还原四开关 ")
+            print_request("PUT", url, params=restore_params, headers=headers)
+            restore_res = http.send_request(
+                "put",
+                url,
+                params=restore_params,
+                headers=headers,
+                case_name="报警通知设置-编辑-正向-还原",
+                log_level="none",
+            )
+            restore_json = restore_res.json()
+            restore_code = _jsonpath_parse(restore_json, "$.code")[0]
+            if restore_code != 0:
+                restore_msg = _jsonpath_parse(restore_json, "$.msg")
+                pytest.fail(
+                    f"还原失败，请立即检查 alarm_setting_id={tid} 的四开关状态！"
+                    f"restore_code={restore_code}, restore_msg={restore_msg[0] if restore_msg else '未知'}"
+                )
+            key("还原结果", "成功")
+
+        self._assert_and_report(case, res)
+
+    @staticmethod
+    def _is_extract_placeholder(yaml_value):
+        if yaml_value is None or not isinstance(yaml_value, str):
+            return False
+        return bool(re.match(r"^\{\{\w+\}\}$", yaml_value))
+
+    def _resolve_value(self, yaml_value, required=False):
+        if yaml_value is None:
+            return None
+        if isinstance(yaml_value, str):
+            match = re.match(r"^\{\{(\w+)\}\}$", yaml_value)
+            if match:
+                var_name = match.group(1)
+                value = self._get_variable(var_name)
+                if value is None and required:
+                    pytest.skip(f"依赖的变量 {var_name} 不存在，请先执行相关正向用例")
+                return value
+        return yaml_value
+
+    def _get_variable(self, key_name):
+        try:
+            data = read_yaml("./extract.yaml")
+            return data.get(key_name)
+        except Exception:
+            return None
+
+    def _assert_and_report(self, case, res):
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        raw_msg = _jsonpath_parse(json_data, "$.msg")
+        msg = raw_msg[0] if raw_msg else "未知错误"
+
+        sep(" 断言结果 ")
+        key("预期 code", case["expected"]["code"])
+        key("实际 code", code)
+        key("预期 msg", case["expected"].get("error_msg", ""))
+        key("实际 msg", msg)
+
+        assert_api_result(
+            case_name=case["name"],
+            expected_code=case["expected"]["code"],
+            expected_msg=case["expected"].get("error_msg", ""),
+            actual_code=code,
+            actual_msg=msg,
+        )

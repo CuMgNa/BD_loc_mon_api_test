@@ -1,0 +1,15 @@
+{
+  "case_name": "获取分组 6a32772d67479c507ddef64d 下的设备",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a32772d67479c507ddef64d/terminals",
+  "params": {
+    "page": 1,
+    "pageSize": 1000
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

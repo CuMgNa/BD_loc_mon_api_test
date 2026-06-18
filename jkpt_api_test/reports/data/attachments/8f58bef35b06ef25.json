@@ -1,0 +1,332 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 10:30:16 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "total": 10,
+      "totalPage": 1,
+      "items": [
+        {
+          "id": "6a32773367479c507ddef677",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:30:10",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.471892,
+            "lat": 23.167666,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:30:10",
+            "remark": null,
+            "wgs84Lng": 113.46647,
+            "wgs84Lat": 23.170232,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": null,
+          "handleResult": null,
+          "handleStatus": {
+            "name": "UNTREATED",
+            "value": "未处理"
+          }
+        },
+        {
+          "id": "6a3274f567479c507dde9fd9",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:20:35",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.472367,
+            "lat": 23.167442,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:20:35",
+            "remark": null,
+            "wgs84Lng": 113.466946,
+            "wgs84Lat": 23.170009,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": "2026-06-17 18:20:39",
+          "handleResult": "批量已处理",
+          "handleStatus": {
+            "name": "PROCESSED",
+            "value": "已处理"
+          }
+        },
+        {
+          "id": "6a3274ef67479c507dde9fa0",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:20:28",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.470971,
+            "lat": 23.168123,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:20:28",
+            "remark": null,
+            "wgs84Lng": 113.465546,
+            "wgs84Lat": 23.170687,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": "2026-06-17 18:20:33",
+          "handleResult": "已处理",
+          "handleStatus": {
+            "name": "PROCESSED",
+            "value": "已处理"
+          }
+        },
+        {
+          "id": "6a3274ce67479c507dde9ebf",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:19:56",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.471514,
+            "lat": 23.168113,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:19:56",
+            "remark": null,
+            "wgs84Lng": 113.466091,
+            "wgs84Lat": 23.170678,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": "2026-06-17 18:20:01",
+          "handleResult": "批量已处理",
+          "handleStatus": {
+            "name": "PROCESSED",
+            "value": "已处理"
+          }
+        },
+        {
+          "id": "6a3273d567479c507dde77ca",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:15:47",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.47126,
+            "lat": 23.168691,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:15:47",
+            "remark": null,
+            "wgs84Lng": 113.465836,
+            "wgs84Lat": 23.171255,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": null,
+          "handleResult": null,
+          "handleStatus": {
+            "name": "UNTREATED",
+            "value": "未处理"
+          }
+        },
+        {
+          "id": "6a3273c867479c507dde766d",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:15:34",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.47178,
+            "lat": 23.168458,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:15:34",
+            "remark": null,
+            "wgs84Lng": 113.466357,
+            "wgs84Lat": 23.171024,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": "2026-06-17 18:15:46",
+          "handleResult": "已处理",
+          "handleStatus": {
+            "name": "PROCESSED",
+            "value": "已处理"
+          }
+        },
+        {
+          "id": "6a32738367479c507dde6968",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:14:25",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.471153,
+            "lat": 23.168525,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:14:25",
+            "remark": null,
+            "wgs84Lng": 113.465728,
+            "wgs84Lat": 23.171089,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": null,
+          "handleResult": null,
+          "handleStatus": {
+            "name": "UNTREATED",
+            "value": "未处理"
+          }
+        },
+        {
+          "id": "6a32734567479c507dde64b8",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:13:23",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.470685,
+            "lat": 23.167935,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:13:23",
+            "remark": null,
+            "wgs84Lng": 113.465259,
+            "wgs84Lat": 23.170498,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": null,
+          "handleResult": null,
+          "handleStatus": {
+            "name": "UNTREATED",
+            "value": "未处理"
+          }
+        },
+        {
+          "id": "6a32730c67479c507dde5bb1",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:12:27",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.471627,
+            "lat": 23.167168,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:12:27",
+            "remark": null,
+            "wgs84Lng": 113.466204,
+            "wgs84Lat": 23.169734,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": null,
+          "handleResult": null,
+          "handleStatus": {
+            "name": "UNTREATED",
+            "value": "未处理"
+          }
+        },
+        {
+          "id": "6a32730767479c507dde5a14",
+          "addr": "20260430200105",
+          "remark": "消息测试",
+          "alarmType": {
+            "name": "SOS",
+            "value": "SOS报警"
+          },
+          "alarmTimeStr": "2026-06-17 18:12:22",
+          "loc": {
+            "locType": "BD",
+            "locStatus": "SOS",
+            "lng": 113.470915,
+            "lat": 23.168007,
+            "alt": 36.0,
+            "speed": 0.0,
+            "dir": -1,
+            "time": "2026-06-17 18:12:22",
+            "remark": null,
+            "wgs84Lng": 113.46549,
+            "wgs84Lat": 23.17057,
+            "reportType": 0
+          },
+          "content": "紧急情况: 其他, 身体情况: 良好, 人数: 1人",
+          "handleTimeStr": "2026-06-17 18:12:25",
+          "handleResult": "已处理",
+          "handleStatus": {
+            "name": "PROCESSED",
+            "value": "已处理"
+          }
+        }
+      ]
+    }
+  },
+  "elapsed_ms": 1077
+}

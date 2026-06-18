@@ -1,0 +1,48 @@
+# yaml/test_alarm_settings_controller.yaml
+# 报警通知设置管理 — test_as_a_list 提取 id + 四开关原值写入 extract.yaml；test_as_b_edit 快照 + 取反 + 还原
+
+list_alarm_settings_cases:
+  - name: "报警通知设置-列表-正向"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "报警通知设置-列表-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+edit_alarm_settings_cases:
+  - name: "报警通知设置-编辑-正向"
+    setting_id: "{{alarm_setting_id}}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "报警通知设置-编辑-负向-非法id"
+    setting_id: "000000000000000000000000"
+    expected:
+      code: 1001
+      error_msg: "报警通知设置不存在"
+
+  - name: "报警通知设置-编辑-负向-缺alarmVoice"
+    setting_id: "{{alarm_setting_id}}"
+    omit_alarm_voice: true
+    expected:
+      code: 1001
+      error_msg: "是否有报警声音参数不能为空"
+
+  - name: "报警通知设置-编辑-负向-缺emailNoti"
+    setting_id: "{{alarm_setting_id}}"
+    omit_email_noti: true
+    expected:
+      code: 1001
+      error_msg: "是否邮箱通知参数不能为空"
+
+  - name: "报警通知设置-编辑-负向-无Token"
+    setting_id: "{{alarm_setting_id}}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"

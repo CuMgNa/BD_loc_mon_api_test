@@ -1,0 +1,18 @@
+{
+  "case_name": "glht查询入库记录 20260617",
+  "method": "GET",
+  "url": "http://back.tdwt.admin.pg8.ink/api/admin/inventory",
+  "params": {
+    "Authorization": "******",
+    "content": "20260617",
+    "index": 0,
+    "specifyTime": "false",
+    "startTimeStr": "",
+    "endTimeStr": "",
+    "page": 1,
+    "pageSize": 100
+  },
+  "json": null,
+  "data": null,
+  "headers": null
+}

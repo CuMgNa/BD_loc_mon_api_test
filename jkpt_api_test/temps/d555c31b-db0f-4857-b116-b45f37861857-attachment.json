@@ -1,0 +1,9 @@
+{
+  "case_name": "报警通知设置-列表-负向-无Token",
+  "method": "GET",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarm-settings",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {}
+}

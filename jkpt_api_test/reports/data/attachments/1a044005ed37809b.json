@@ -1,0 +1,12 @@
+{
+  "case_name": "删除one_id分组 6a32772d67479c507ddef64d",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a32772d67479c507ddef64d",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

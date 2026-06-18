@@ -1,0 +1,12 @@
+{
+  "case_name": "删除三级分组-正向",
+  "method": "DELETE",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/groups/6a3277ca67479c507ddf09a7",
+  "params": null,
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "case_name": "报警通知设置-编辑-负向-非法id",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarm-settings/000000000000000000000000",
+  "params": {
+    "alarmVoice": true,
+    "emailNoti": true,
+    "popupWindow": true,
+    "smsNoti": true
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

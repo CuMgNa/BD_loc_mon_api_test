@@ -1,0 +1,64 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 10:34:25 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "addr": "202606172396034",
+      "remark": "宽带自组网基站",
+      "scope": "CAR",
+      "type": "BROADBAND_AD_HOC_BASE_STATION",
+      "follow": false,
+      "lastCommTime": 0,
+      "status": "NOT",
+      "listeningStatus": null,
+      "trackColor": "#141323",
+      "trackSize": 5,
+      "belongTo": 2,
+      "belongToDesc": "我的",
+      "followByShareNum": null,
+      "showAoWeiBtn": false,
+      "stopPort": false,
+      "password": null,
+      "gatewayParam": {
+        "radioRcvChn": 436.025,
+        "radioSndChn": 436.025,
+        "radioPower": 1,
+        "colorCodeId": 1,
+        "rxCss": "",
+        "txCss": "",
+        "width": 0,
+        "gid": 106001
+      },
+      "onlineFlag": "UNKNOWN",
+      "ipAddress": null,
+      "groupCallNumber": null,
+      "parentAddr": "",
+      "dialSwitch": false,
+      "silenceSwitch": false,
+      "silenceThreshold": 0,
+      "webAccount": null,
+      "loc": null,
+      "infos": [],
+      "fields": [
+        {
+          "name": "自定义字段1",
+          "value": "自定义值1"
+        },
+        {
+          "name": "自定义字段2",
+          "value": "自定义值2"
+        }
+      ]
+    }
+  },
+  "elapsed_ms": 932
+}

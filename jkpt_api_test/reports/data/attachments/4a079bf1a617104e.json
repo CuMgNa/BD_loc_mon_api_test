@@ -1,0 +1,24 @@
+{
+  "status_code": 200,
+  "headers": {
+    "Connection": "close",
+    "Transfer-Encoding": "chunked",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 17 Jun 2026 10:34:02 GMT",
+    "Server": "nginx/1.21.5",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "body": {
+    "code": 0,
+    "msg": "成功",
+    "data": {
+      "sn": "202606172396023",
+      "addr": "202606172396023",
+      "name": "RTK定位终端",
+      "remark": "RTK定位终端",
+      "terminalType": "RTK",
+      "useScope": "CAR"
+    }
+  },
+  "elapsed_ms": 724
+}

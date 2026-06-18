@@ -1,0 +1,16 @@
+{
+  "case_name": "报警通知设置-编辑-负向-缺emailNoti",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarm-settings/6862057d6bc9d6391e615f03",
+  "params": {
+    "alarmVoice": false,
+    "popupWindow": false,
+    "smsNoti": true
+  },
+  "json": null,
+  "data": null,
+  "headers": {
+    "Authorization": "******",
+    "Accept-Language": "zh-CN"
+  }
+}

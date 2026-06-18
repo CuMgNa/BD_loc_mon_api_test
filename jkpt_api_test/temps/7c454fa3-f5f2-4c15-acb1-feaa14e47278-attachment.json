@@ -1,0 +1,14 @@
+{
+  "case_name": "报警通知设置-编辑-负向-无Token",
+  "method": "PUT",
+  "url": "http://back.tdwtv2.pg8.ink/api/monitor/alarm-settings/6862057d6bc9d6391e615f03",
+  "params": {
+    "alarmVoice": true,
+    "emailNoti": true,
+    "popupWindow": true,
+    "smsNoti": true
+  },
+  "json": null,
+  "data": null,
+  "headers": {}
+}
