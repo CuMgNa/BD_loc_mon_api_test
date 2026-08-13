@@ -2,7 +2,7 @@
 
 ## 目标
 
-以 **jkpt_api_test 真实运行栈**（`common/` + `conftest.py` + 模式 A/B 用例）为唯一真相源，持续沉淀到 [api-test-framework/api-test-framework/](../api-test-framework/api-test-framework/)，使 AI 生成用例时 **import 固定、模板可复制、无虚构 API**。
+以 **jkpt_api_test 真实运行栈**（`common/` + `conftest.py` + 模式 A/B 用例）为唯一真相源，持续沉淀到 [skills/api-test-framework/](../../skills/api-test-framework/)，使 AI 生成用例时 **import 固定、模板可复制、无虚构 API**。
 
 **不在本计划范围**：补齐 `api_test_framework/run_case`、`pytest_plugin`、`OpenAPI 生成器（除非单独立项）。
 

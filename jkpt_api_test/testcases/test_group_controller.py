@@ -2,9 +2,8 @@
 import jsonpath
 import pytest
 import time
-import re
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml, write_yaml
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
 
@@ -24,7 +23,7 @@ class TestGroupController:
         url = f"{base_url}/api/monitor/groups"
         headers = {**auth_headers}
 
-        parent_id = self._resolve_value(case.get("parentId"))
+        parent_id = resolve_extract_value(case.get("parentId"))
 
         group_name = case.get("groupName", "")
     
@@ -60,7 +59,7 @@ class TestGroupController:
         url = f"{base_url}/api/monitor/groups"
         headers = {**auth_headers}
 
-        parent_id = self._resolve_value(case.get("parentId"), required=True)
+        parent_id = resolve_extract_value(case.get("parentId"), required=True)
 
         group_name = case.get("groupName", "")
 
@@ -96,7 +95,7 @@ class TestGroupController:
         url = f"{base_url}/api/monitor/groups"
         headers = {**auth_headers}
 
-        parent_id = self._resolve_value(case.get("parentId"), required=True)
+        parent_id = resolve_extract_value(case.get("parentId"), required=True)
 
         group_name = case.get("groupName", "")
 
@@ -172,7 +171,7 @@ class TestGroupController:
     @pytest.mark.parametrize("case", test_data["update_group_cases"])
     def test_update_group(self, base_url, auth_headers, case):
         """编辑分组名称"""
-        group_id = self._resolve_value(case.get("groupId"), required=True)
+        group_id = resolve_extract_value(case.get("groupId"), required=True)
         url = f"{base_url}/api/monitor/groups/{group_id}"
         headers = {**auth_headers}
         group_name = case.get("groupName", "")
@@ -204,7 +203,7 @@ class TestGroupController:
         url = f"{base_url}/api/monitor/groups"
         headers = {**auth_headers}
 
-        group_ids = self._resolve_value(case.get("groupIds"), required=True)
+        group_ids = resolve_extract_value(case.get("groupIds"), required=True)
 
         if group_ids:
             json_data = {"groupIds": group_ids}
@@ -229,7 +228,7 @@ class TestGroupController:
     @pytest.mark.parametrize("case", test_data["delete_group_cases"])
     def test_delete_group(self, base_url, auth_headers, case):
         """删除分组"""
-        group_id = self._resolve_value(case.get("groupId"), required=True)
+        group_id = resolve_extract_value(case.get("groupId"), required=True)
         url = f"{base_url}/api/monitor/groups/{group_id}"
         headers = {**auth_headers}
 
@@ -246,28 +245,6 @@ class TestGroupController:
         self._assert_and_report(case, res)
 
     # ==================== 辅助方法 ====================
-    def _resolve_value(self, yaml_value, required=False):
-        """
-        解析YAML中的变量占位符
-        占位符格式: {{variable_name}}
-        - 如果值是占位符，从extract.yaml读取对应变量
-        - 如果值不是占位符，直接返回原值
-        - required=True时，如果变量不存在则跳过用例
-        """
-        if yaml_value is None:
-            return None
-
-        if isinstance(yaml_value, str):
-            match = re.match(r"^\{\{(\w+)\}\}$", yaml_value)
-            if match:
-                var_name = match.group(1)
-                value = self._get_group(var_name)
-                if value is None and required:
-                    pytest.skip(f"依赖的变量 {var_name} 不存在，请先执行相关正向用例")
-                return value
-
-        return yaml_value
-
     def _assert_and_report(self, case, res):
         """统一断言并输出报告"""
         json_data = res.json()
@@ -287,11 +264,3 @@ class TestGroupController:
             actual_code=code,
             actual_msg=msg
         )
-
-    def _get_group(self, key_name):
-        """从extract.yaml获取变量，不存在则返回None"""
-        try:
-            data = read_yaml("./extract.yaml")
-            return data.get(key_name)
-        except:
-            return None

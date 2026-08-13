@@ -1,4 +1,3 @@
-import re
 import time
 
 import jsonpath
@@ -7,7 +6,7 @@ import pytest
 from common.allure_assert_util import assert_api_result
 from common.logger_util import key, print_request, print_response, sep
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml, write_yaml
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value
 
 _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
@@ -132,7 +131,7 @@ class TestAlarmController:
                 retry_seed_addr=msg_test_terminal,
             )
             write_yaml("./extract.yaml", {"alarm_single_id": alarm_id}, mode="append")
-            alarm_id = self._resolve_value("{{alarm_single_id}}", required=True)
+            alarm_id = resolve_extract_value("{{alarm_single_id}}", required=True)
         else:
             alarm_id = case.get("id")
 
@@ -223,7 +222,7 @@ class TestAlarmController:
                     bd_addr=bd_test_terminal,
                 )
             write_yaml("./extract.yaml", {"alarm_batch_ids": ids}, mode="append")
-            ids = self._resolve_value("{{alarm_batch_ids}}", required=True)
+            ids = resolve_extract_value("{{alarm_batch_ids}}", required=True)
             if not isinstance(ids, list):
                 pytest.fail(f"alarm_batch_ids 解析结果不是列表: {ids}")
             # Apifox 契约：字段必须是 idStr（逗号拼接），不是 ids
@@ -278,21 +277,6 @@ class TestAlarmController:
         if isinstance(yaml_value, str) and yaml_value.strip() == "{{msg_test_terminal}}":
             return msg_test_terminal
         return yaml_value if yaml_value is not None else ""
-
-    @staticmethod
-    def _resolve_value(yaml_value, required=False):
-        if yaml_value is None:
-            return None
-        if isinstance(yaml_value, str):
-            match = re.match(r"^\{\{(\w+)\}\}$", yaml_value.strip())
-            if match:
-                var_name = match.group(1)
-                data = read_yaml("./extract.yaml") or {}
-                value = data.get(var_name)
-                if value is None and required:
-                    pytest.fail(f"依赖变量 {var_name} 不存在，无法继续")
-                return value
-        return yaml_value
 
     def _build_query_params(self, headers, addr, case):
         auth = headers.get("Authorization") or ""

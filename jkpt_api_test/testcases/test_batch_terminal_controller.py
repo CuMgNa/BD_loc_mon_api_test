@@ -3,10 +3,9 @@
 import io
 import jsonpath
 import os
-import re
 import pytest
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml, write_yaml
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
 from common.export_assert_util import assert_export_response
@@ -15,7 +14,7 @@ _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
 
 _FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
-_TEMPLATE_XLSX = r"C:\Users\33606\Desktop\jkpt_api_test\jkpt_api_test\yaml\import-device-template2026_5_1.xlsx"
+_TEMPLATE_XLSX = r"C:\Users\33606\Desktop\BD_loc_mon_api_test\jkpt_api_test\yaml\import-device-template2026_5_1.xlsx"
 
 
 class TestBatchTerminalController:
@@ -99,7 +98,7 @@ class TestBatchTerminalController:
         url = f"{base_url}/api/monitor/terminals/batch/details"
         headers = {**auth_headers, "Content-Type": "application/json"}
         addrs_raw = case.get("addrs")
-        addrs = self._resolve_batch_addrs(addrs_raw)
+        addrs = resolve_extract_value(addrs_raw, required=True)
         body = {"addrs": addrs}
 
         sep(f" 测试用例: {case['name']}")
@@ -122,7 +121,7 @@ class TestBatchTerminalController:
         url = f"{base_url}/api/monitor/terminals/batch/remark"
         headers = {**auth_headers, "Content-Type": "application/json"}
         addrs_raw = case.get("addrs")
-        addrs = self._resolve_batch_addrs(addrs_raw)
+        addrs = resolve_extract_value(addrs_raw, required=True)
         body = {"addrs": addrs}
 
         sep(f" 测试用例: {case['name']}")
@@ -145,7 +144,7 @@ class TestBatchTerminalController:
         url = f"{base_url}/api/monitor/terminals/batch/aggr-point-details"
         headers = {**auth_headers, "Content-Type": "application/json"}
         addrs_raw = case.get("addrs")
-        addrs = self._resolve_batch_addrs(addrs_raw)
+        addrs = resolve_extract_value(addrs_raw, required=True)
         body = {
             "addrs": addrs,
             "page": case.get("page", 1),
@@ -200,7 +199,7 @@ class TestBatchTerminalController:
         url = f"{base_url}/api/monitor/terminals/batch/move-group"
         headers = {**auth_headers, "Content-Type": "application/json"}
         addrs_raw = case.get("addrs")
-        addrs = self._resolve_batch_addrs(addrs_raw)
+        addrs = resolve_extract_value(addrs_raw, required=True)
 
         ng_raw = case.get("newGroupId")
         if "{{one_id}}" in str(ng_raw):
@@ -230,7 +229,7 @@ class TestBatchTerminalController:
         url = f"{base_url}/api/monitor/terminals/batch/export"
         headers = {**auth_headers, "Content-Type": "application/json", "Time-Zone": "Asia/Shanghai","time-zone-utc": "+08:00"}
         addrs_raw = case.get("addrs")
-        addrs = self._resolve_batch_addrs(addrs_raw)
+        addrs = resolve_extract_value(addrs_raw, required=True)
         addr_list = [a.strip() for a in str(addrs).split(",") if a.strip()] if addrs else []
 
         sep(f" 测试用例: {case['name']}")
@@ -256,7 +255,7 @@ class TestBatchTerminalController:
         url = f"{base_url}/api/monitor/terminals/batch"
         headers = {**auth_headers, "Content-Type": "application/json"}
         addrs_raw = case.get("addrs")
-        addrs = self._resolve_batch_addrs(addrs_raw)
+        addrs = resolve_extract_value(addrs_raw, required=True)
         body = {"addrs": addrs}
 
         sep(f" 测试用例: {case['name']}")
@@ -273,26 +272,6 @@ class TestBatchTerminalController:
         self._assert_and_report(case, res)
 
     # ---------- 辅助方法 ----------
-    def _resolve_batch_addrs(self, yaml_value):
-        """解析 {{batch_addrs}}；正向依赖导入接口，缺失则跳过。"""
-        if yaml_value is None:
-            return None
-        if isinstance(yaml_value, str):
-            m = re.match(r"^\{\{(\w+)\}\}$", yaml_value.strip())
-            if m and m.group(1) == "batch_addrs":
-                val = self._get_variable("batch_addrs")
-                if val is None:
-                    pytest.skip("依赖 batch_addrs：请先跑通「批量导入设备-正向」")
-                return val
-        return yaml_value
-
-    def _get_variable(self, key_name):
-        try:
-            data = read_yaml("./extract.yaml")
-            return data.get(key_name)
-        except Exception:
-            return None
-
     def _assert_and_report(self, case, res):
         json_data = res.json()
         code = _jsonpath_parse(json_data, "$.code")[0]

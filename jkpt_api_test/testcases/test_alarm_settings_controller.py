@@ -4,9 +4,8 @@
 # test_as_b_edit 快照 + 取反 + 断言 + 还原
 import jsonpath
 import pytest
-import re
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml, write_yaml
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value, is_extract_placeholder
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
 
@@ -70,7 +69,7 @@ class TestAlarmSettingsController:
     def test_as_b_edit_alarm_settings(self, base_url, auth_headers, case):
         """编辑报警通知设置；正向：快照→取反→断言→还原"""
         raw_id = case.get("setting_id")
-        tid = self._resolve_value(raw_id, required=self._is_extract_placeholder(raw_id))
+        tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
 
         if case.get("no_auth"):
             headers = {}
@@ -147,32 +146,6 @@ class TestAlarmSettingsController:
             key("还原结果", "成功")
 
         self._assert_and_report(case, res)
-
-    @staticmethod
-    def _is_extract_placeholder(yaml_value):
-        if yaml_value is None or not isinstance(yaml_value, str):
-            return False
-        return bool(re.match(r"^\{\{\w+\}\}$", yaml_value))
-
-    def _resolve_value(self, yaml_value, required=False):
-        if yaml_value is None:
-            return None
-        if isinstance(yaml_value, str):
-            match = re.match(r"^\{\{(\w+)\}\}$", yaml_value)
-            if match:
-                var_name = match.group(1)
-                value = self._get_variable(var_name)
-                if value is None and required:
-                    pytest.skip(f"依赖的变量 {var_name} 不存在，请先执行相关正向用例")
-                return value
-        return yaml_value
-
-    def _get_variable(self, key_name):
-        try:
-            data = read_yaml("./extract.yaml")
-            return data.get(key_name)
-        except Exception:
-            return None
 
     def _assert_and_report(self, case, res):
         json_data = res.json()

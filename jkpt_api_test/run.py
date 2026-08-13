@@ -8,7 +8,14 @@
     无法加载 reports/data 下的 json，页面会一直 Loading）
 """
 import os
+import subprocess
+import sys
 import time
+
+_VENV_PY = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv", "Scripts", "python.exe")
+if os.path.isfile(_VENV_PY) and os.path.normcase(os.path.abspath(sys.executable)) != os.path.normcase(os.path.abspath(_VENV_PY)):
+    raise SystemExit(subprocess.call([_VENV_PY, *sys.argv], cwd=os.path.dirname(os.path.abspath(__file__))))
+
 import pytest
 
 if __name__ == '__main__':

@@ -1,17 +1,17 @@
 ---
 description: jkpt API 自动化测试用例生成约束（强制以仓库技能为唯一真相源）
-globs: testcases/**, yaml/**, common/**, conftest.py, api-test-framework/**
+globs: testcases/**, yaml/**, common/**, conftest.py, skills/api-test-framework/**, jkpt_api_test/testcases/**, jkpt_api_test/yaml/**, jkpt_api_test/common/**, jkpt_api_test/conftest.py
 ---
 
 # jkpt 接口测试生成规则
 
-本仓库的接口自动化生成 **必须** 遵循以下约束。技能来源 = 仓库内：
+本仓库的接口自动化生成 **必须** 遵循以下约束。技能来源 = 仓库根目录：
 
-- 主文档：[api-test-framework/api-test-framework/SKILL.md](mdc:api-test-framework/api-test-framework/SKILL.md)
-- 方法字典：[api-test-framework/api-test-framework/references/methods-reference.md](mdc:api-test-framework/api-test-framework/references/methods-reference.md)
-- 适配层 Fixture：[api-test-framework/api-test-framework/references/conftest-jkpt.md](mdc:api-test-framework/api-test-framework/references/conftest-jkpt.md)
-- 适配层 YAML：[api-test-framework/api-test-framework/references/yaml-conventions.md](mdc:api-test-framework/api-test-framework/references/yaml-conventions.md)
-- 变更跟踪：[api-test-framework/api-test-framework/CHANGELOG.md](mdc:api-test-framework/api-test-framework/CHANGELOG.md)
+- 主文档：[skills/api-test-framework/SKILL.md](mdc:skills/api-test-framework/SKILL.md)
+- 方法字典：[skills/api-test-framework/references/methods-reference.md](mdc:skills/api-test-framework/references/methods-reference.md)
+- 适配层 Fixture：[skills/api-test-framework/references/conftest-jkpt.md](mdc:skills/api-test-framework/references/conftest-jkpt.md)
+- 适配层 YAML：[skills/api-test-framework/references/yaml-conventions.md](mdc:skills/api-test-framework/references/yaml-conventions.md)
+- 变更跟踪：[skills/api-test-framework/CHANGELOG.md](mdc:skills/api-test-framework/CHANGELOG.md)
 
 > 同时存在的 Cursor 全局 `~/.cursor/skills/api-test-framework/` 与本仓库**不一致**，**禁止**作为生成依据。
 
@@ -29,9 +29,9 @@ globs: testcases/**, yaml/**, common/**, conftest.py, api-test-framework/**
 
 ## 禁止
 
-- `from api_test_framework.runner import run_case`（jkpt 未使用）
+- `from api_test_framework.runner import run_case`（该包已删除）
 - `from api_test_framework.<anything> import ...`（仅 common/ 进入用例层）
-- `pytest_plugins = ["api_test_framework.pytest_plugin"]`（文件不存在）
+- `pytest_plugins = ["api_test_framework.pytest_plugin"]`
 - 模式 C（纯 YAML + `run_case`）
 - 全局技能的 YAML 结构：`version: "1.0"`、`assertions: [{type: ..., expected: ...}]`、`api-test-generate` CLI
 - YAML 中写可执行表达式（`!python`、`eval` 等）
@@ -64,5 +64,5 @@ globs: testcases/**, yaml/**, common/**, conftest.py, api-test-framework/**
 ## 公共能力提取规则
 
 - ≥2 个 testcase 重复 ≥5 行同样逻辑 → 抽到 `common/<topic>_util.py`
-- 同步更新 [methods-reference.md](mdc:api-test-framework/api-test-framework/references/methods-reference.md) + [CHANGELOG.md](mdc:api-test-framework/api-test-framework/CHANGELOG.md)
-- 详细流程：[api-test-framework/api-test-framework/CONTRIBUTING.md](mdc:api-test-framework/api-test-framework/CONTRIBUTING.md)
+- 同步更新 [methods-reference.md](mdc:skills/api-test-framework/references/methods-reference.md) + [CHANGELOG.md](mdc:skills/api-test-framework/CHANGELOG.md)
+- 详细流程：[CONTRIBUTING.md](mdc:skills/api-test-framework/CONTRIBUTING.md)

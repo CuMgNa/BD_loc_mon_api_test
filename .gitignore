@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+jkpt_api_test/reports/
+jkpt_api_test/temps/
+jkpt_api_test/extract.yaml

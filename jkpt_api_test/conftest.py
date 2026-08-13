@@ -2,14 +2,13 @@
 import pytest
 import time
 import datetime
-import random
+import hashlib
 import logging
 import json
-import traceback
 import os
 from common.requests_util import BaseRequest, get_last_http_context, NonJsonResponseError, parse_response_json
 from common.yaml_util import clear_yaml
-from common.captcha_util import CaptchaRecognizer
+from common.captcha_util import CaptchaRecognizer, generate_captcha_id
 from common.logger_util import sep, key, print_request, print_response
 from common.bd_protocol_client import BDProtocolClient
 from common.protocol_transport import BDProtocolTransport
@@ -40,10 +39,16 @@ ocr = CaptchaRecognizer()
 
 # ==================== 配置清理行为 ====================
 ENABLE_AUTO_CLEANUP = os.getenv("ENABLE_AUTO_CLEANUP", "true").lower() == "true"
+ENABLE_GLHT_CLEANUP = os.getenv("ENABLE_GLHT_CLEANUP", "false").lower() == "true"
+
+JKPT_ACCOUNT = os.getenv("JKPT_ACCOUNT", "tmn")
+JKPT_PASSWORD = os.getenv("JKPT_PASSWORD", "4f9cb165cd6249312e5804fcf9416c5e")
+GLHT_ACCOUNT = os.getenv("GLHT_ACCOUNT", "admin")
+GLHT_PASSWORD = os.getenv("GLHT_PASSWORD", "123abc!!")
 
 # ==================== 配置 ====================
 def pytest_configure(config):
-    config.base_url = "http://back.tdwtv2.pg8.ink"
+    config.base_url = os.getenv("JKPT_BASE_URL", "http://back.tdwtv2.pg8.ink")
     config.accept_language = "zh-CN"
     sep(" 配置信息 ")
     key("🌐 base_url", config.base_url)
@@ -58,12 +63,6 @@ def accept_language(pytestconfig):
     return pytestconfig.accept_language
 
 # ==================== 认证核心：auth_token fixture ====================
-def generate_captcha_id():
-    """生成18位无0开头的captchaId"""
-    timestamp = str(int(time.time() * 1000))
-    random_5 = str(random.randint(10000, 99999))
-    return timestamp + random_5
-
 @pytest.fixture(scope="session")
 def auth_token(base_url):
     """通过验证码识别获取token，带循环重试机制"""
@@ -95,8 +94,8 @@ def auth_token(base_url):
         # 步骤3：执行登录
         login_url = f"{base_url}/api/monitor/web-user/login"
         login_data = {
-            "account": "tmn",
-            "password": "4f9cb165cd6249312e5804fcf9416c5e",
+            "account": JKPT_ACCOUNT,
+            "password": JKPT_PASSWORD,
             "captcha": captcha_text,
             "captchaId": captcha_id
         }
@@ -620,20 +619,18 @@ def _glht_cleanup_inventory(glht_token: str, glht_base_url: str, date_str: str) 
 @pytest.fixture(scope="session")
 def glht_base_url():
     """glht 管理员系统 base URL"""
-    import os
     return os.environ.get("GLHT_BASE_URL", GLHT_BASE_URL_DEFAULT)
 
 
 @pytest.fixture(scope="session")
 def glht_token(glht_base_url):
     """glht 管理员系统登录，获取 glht token"""
-    import hashlib
     sep(" 🔐 glht 管理员登录 ")
-    password_md5 = hashlib.md5("123abc!!".encode()).hexdigest()
+    password_md5 = hashlib.md5(GLHT_PASSWORD.encode()).hexdigest()
     resp = http.send_request(
         method="post",
         url=f"{glht_base_url}/api/admin/login",
-        json={"account": "admin", "password": password_md5},
+        json={"account": GLHT_ACCOUNT, "password": password_md5},
         case_name="glht管理员登录",
         log_level="none",
     )
@@ -646,15 +643,17 @@ def glht_token(glht_base_url):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def glht_cleanup_test_data(glht_token, glht_base_url):
-    """glht 入库记录清理（session 结束时自动执行，独立于 jkpt cleanup_test_data）"""
+def glht_cleanup_test_data(request):
+    """glht 入库记录清理。默认关闭；ENABLE_GLHT_CLEANUP=true 时才登录并清理。"""
     from datetime import datetime, timezone, timedelta
 
-    yield
-
-    if not ENABLE_AUTO_CLEANUP:
-        sep(" ⚠️  glht 自动清理已禁用 (ENABLE_AUTO_CLEANUP=false)")
+    if not ENABLE_GLHT_CLEANUP:
+        yield
         return
+
+    glht_token = request.getfixturevalue("glht_token")
+    glht_base_url = request.getfixturevalue("glht_base_url")
+    yield
 
     sep(" 🧹 glht 入库记录清理 ")
     today = datetime.now(timezone(timedelta(hours=8))).strftime("%Y%m%d")

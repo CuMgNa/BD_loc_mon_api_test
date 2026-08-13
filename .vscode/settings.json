@@ -1,0 +1,3 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/jkpt_api_test/.venv/Scripts/python.exe"
+}

@@ -1,0 +1,89 @@
+# test_xxx.yaml — CRUD测试数据模板（适配模式B′）
+# 从 api-test-framework Skill 生成
+#
+# 对应模板: assets/templates/test_case_crud.tpl.py
+# 关键约定:
+#   1) 顶层 key 必须是 cases（CRUD模板里固定读取 ["cases"]）
+#   2) 动态依赖值用 {{var_name}} 占位，通过 resolve_extract_value() 从 extract.yaml 读取
+#   3) 不在 YAML 内写运行时生成值（如时间戳），由 Python 方法体内组装
+#   4) 正向在前、负向在后，便于按切片分配到 create/update/delete
+#   5) 多顶层 *_cases 写法见下方注释块（与 SKILL 第5节一致）
+
+cases:
+  # ==================== CREATE（前3条）====================
+  - name: "创建成功"
+    name_field: "资源_{int(time.time())}"
+    field2: "固定值"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "创建失败-名称为空"
+    name_field: ""
+    field2: "固定值"
+    expected:
+      code: 1001
+      error_msg: "名称不能为空"
+
+  - name: "创建失败-名称超长"
+    name_field: "这是一个非常非常非常长的名称超出限制长度了..."
+    field2: "固定值"
+    expected:
+      code: 1002
+      error_msg: "名称长度不能超过50个字符"
+
+  # ==================== UPDATE（第4-5条）====================
+  - name: "编辑成功"
+    id: "{{created_id}}"            # 来自 CREATE 成功后写入 extract.yaml
+    name_field: "编辑_{int(time.time())}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "编辑失败-资源不存在"
+    id: "NONEXIST_RESOURCE_ID"
+    name_field: "编辑_非法目标"
+    expected:
+      code: 1005
+      error_msg: "资源不存在"
+
+  # ==================== DELETE（第6条起）====================
+  - name: "删除成功-资源为空"
+    id: "{{created_id}}"            # 由模板按名称优先读取 created_id
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "删除失败-资源非空"
+    id: "{{one_id}}"                # 由 fixture 提供（如 conftest 的 group_fixture），非 extract
+    expected:
+      code: 1004
+      error_msg: "该资源下存在关联数据，无法删除"
+
+  - name: "删除失败-资源不存在"
+    id: "NONEXIST_RESOURCE_ID"
+    expected:
+      code: 1005
+      error_msg: "资源不存在"
+
+# ==================== 可选：查询场景示例（多顶层 *_cases）====================
+# 若采用多顶层 key 写法（按场景拆分），Python 中多个 parametrize 分别取值：
+#   test_data_create = read_yaml("./yaml/test_xxx.yaml")["add_xxx_cases"]
+#   test_data_get    = read_yaml("./yaml/test_xxx.yaml")["get_xxx_cases"]
+#   test_data_delete = read_yaml("./yaml/test_xxx.yaml")["delete_xxx_cases"]
+# 示例片段：
+#
+# add_xxx_cases:
+#   - name: "某模块-一级-正向"
+#     groupName: "AUTO_GROUP_L1"
+#     parentId: 0
+#     expected:
+#       code: 0
+#       error_msg: "成功"
+#
+# get_xxx_cases:
+#   - name: "某模块-查询-正向"
+#     no_auth: true               # 用例级开关：test_xxx.py 中根据 case.get("no_auth") 决定是否传 auth_headers
+#     expected:
+#       code: 3001
+#       error_msg: "没有访问权限"

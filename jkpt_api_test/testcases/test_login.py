@@ -1,11 +1,9 @@
 # testcases/test_login.py
 import jsonpath  # pyright: ignore[reportMissingImports]
 import pytest  # pyright: ignore[reportMissingImports]
-import time
-import random
 from common.requests_util import BaseRequest
 from common.yaml_util import read_yaml
-from common.captcha_util import CaptchaRecognizer
+from common.captcha_util import CaptchaRecognizer, generate_captcha_id
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
 
@@ -17,19 +15,12 @@ http = BaseRequest()
 ocr = CaptchaRecognizer()
 
 
-def generate_captcha_id():
-    """生成18位无0开头的captchaId"""
-    timestamp = str(int(time.time() * 1000))
-    random_5 = str(random.randint(10000, 99999))
-    return timestamp + random_5
-
-
 class TestLoginAPI:
     """
     登录接口测试（负向场景）
     """
 
-    test_data = read_yaml("./yaml/login.yaml")["login_cases"]
+    test_data = read_yaml("./yaml/test_login.yaml")["login_cases"]
 
     @pytest.mark.parametrize("case", test_data)
     def test_login_negative(self, base_url, auth_headers, case):

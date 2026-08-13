@@ -2,9 +2,8 @@
 import jsonpath
 import pytest
 import time
-import re
 from common.requests_util import BaseRequest, NonJsonResponseError, parse_response_json
-from common.yaml_util import read_yaml, write_yaml
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
 from common.common_data import get_current_datetime
@@ -70,7 +69,7 @@ class TestTerminalController:
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals"
         headers = {**auth_headers, "Content-Type": "application/json"}
 
-        devices_addr = self._resolve_value("{{devices_addr}}", required=True)
+        devices_addr = resolve_extract_value("{{devices_addr}}", required=True)
 
         terminal_data = {
             "addr": devices_addr,
@@ -149,7 +148,7 @@ class TestTerminalController:
     def test_follow_terminal(self, base_url, auth_headers, group_fixture, case):
         """关注/收藏设备"""
         group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
-        devices_addr = self._resolve_value("{{devices_addr}}", required=True)
+        devices_addr = resolve_extract_value("{{devices_addr}}", required=True)
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals/{devices_addr}/follow"
         headers = {**auth_headers}
 
@@ -171,7 +170,7 @@ class TestTerminalController:
         """移动设备分组"""
         group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
         new_group_id = group_fixture.get("one_id") if "{{one_id}}" in str(case.get("newGroupId")) else case.get("newGroupId")
-        devices_addr = self._resolve_value("{{devices_addr}}", required=True)
+        devices_addr = resolve_extract_value("{{devices_addr}}", required=True)
         url = f"{base_url}/api/monitor/groups/{group_id}/terminals/{devices_addr}/move"
         headers = {**auth_headers}
 
@@ -295,25 +294,6 @@ class TestTerminalController:
             self._assert_and_report_res(r_add, f"枚举添加-{case['terminalType']}")
 
     # ==================== 辅助方法 ====================
-    def _resolve_value(self, yaml_value, required=False):
-        """
-        解析YAML中的变量占位符
-        占位符格式: {{variable_name}}
-        """
-        if yaml_value is None:
-            return None
-
-        if isinstance(yaml_value, str):
-            match = re.match(r"^\{\{(\w+)\}\}$", yaml_value)
-            if match:
-                var_name = match.group(1)
-                value = self._get_variable(var_name)
-                if value is None and required:
-                    pytest.skip(f"依赖的变量 {var_name} 不存在，请先执行相关正向用例")
-                return value
-
-        return yaml_value
-
     def _assert_and_report_res(self, res, case_name):
         """接受 Response 对象的断言（枚举用例无 YAML expected）"""
         try:
@@ -352,11 +332,3 @@ class TestTerminalController:
             actual_code=code,
             actual_msg=msg
         )
-
-    def _get_variable(self, key_name):
-        """从extract.yaml获取变量，不存在则返回None"""
-        try:
-            data = read_yaml("./extract.yaml")
-            return data.get(key_name)
-        except:
-            return None
