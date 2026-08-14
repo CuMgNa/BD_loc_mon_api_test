@@ -1,3 +1,15 @@
+## [Unreleased] — 2026-08-14 正向 expected.msg / 负向 expected.error_msg
+
+### Added
+- `common.yaml_util.read_expected_msg`：正向读 `msg`，负向读 `error_msg`
+
+### Changed
+- 全部 jkpt YAML 正向用例由 `error_msg: "成功"` 改为 `msg: "成功"`；负向仍用 `error_msg`
+- testcase / `export_assert_util` / 模板改为 `read_expected_msg(case["expected"])`
+- `yaml-conventions.md`：正向禁止写 `error_msg: "成功"`
+
+---
+
 ## [Unreleased] — 2026-08-13 技能追上代码与运行时对齐
 
 ### Added

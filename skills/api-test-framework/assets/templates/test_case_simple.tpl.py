@@ -7,7 +7,7 @@ test_xxx.py — 简单无状态接口模板（模式A）
 import jsonpath
 import pytest
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml
+from common.yaml_util import read_yaml, read_expected_msg
 from common.allure_assert_util import assert_api_result
 
 _jsonpath_parse = jsonpath.jsonpath   # ← 项目统一别名，使用函数式API
@@ -61,7 +61,7 @@ class Test_xxxAPI:
         assert_api_result(
             case_name=case["name"],
             expected_code=case["expected"]["code"],
-            expected_msg=case["expected"]["error_msg"],
+            expected_msg=read_expected_msg(case["expected"]),
             actual_code=code,
             actual_msg=msg,
             biz_context={"请求参数": payload}

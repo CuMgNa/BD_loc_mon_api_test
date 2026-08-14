@@ -29,7 +29,7 @@ add_terminal_cases:
         value: "自定义值2"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "添加单个设备-负向-SN为空"
     groupId: "{{three_id}}"
@@ -77,7 +77,7 @@ update_terminal_cases:
     fields: []
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
 batch_add_terminals_cases:
   - name: "手动输入SN码批量添加-正向"
@@ -101,14 +101,14 @@ batch_add_terminals_cases:
         password: ""
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
 follow_terminal_cases:
   - name: "关注/收藏设备-正向"
     groupId: "{{three_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
     
   - name: "关注/收藏设备-负向-分组或设备不存在"
     groupId: "12345"
@@ -122,7 +122,7 @@ move_terminal_cases:
     newGroupId: "{{one_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "移动设备分组-负向-目标分组不存在"
     groupId: "{{three_id}}"
@@ -140,7 +140,7 @@ list_terminals_cases:
     terminalType: ""
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "分页获取分组下设备列表-负向-缺少Token"
     groupId: "{{two_id}}"

@@ -61,7 +61,7 @@ class TestXxxProtocol:
     #     protocol: "13"
     #     expected:
     #       code: 0
-    #       error_msg: "成功"
+    #       msg: "成功"
     #
     #   - name: "13报警-负向-坐标越界"
     #     protocol: "13"
@@ -87,7 +87,7 @@ class TestXxxProtocol:
     #     assert_api_result(
     #         case_name=case["name"],
     #         expected_code=case["expected"]["code"],
-    #         expected_msg=case["expected"]["error_msg"],
+    #         expected_msg=read_expected_msg(case["expected"]),
     #         actual_code=result.code,
     #         actual_msg=result.msg,
     #         biz_context={"protocol": case.get("protocol"), "from_addr": bd_test_terminal},

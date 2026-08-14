@@ -8,7 +8,7 @@ import jsonpath
 import pytest
 import time
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml, write_yaml, resolve_extract_value
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value, read_expected_msg
 from common.allure_assert_util import assert_api_result
 
 # 可选：生成唯一测试名（与 time.time() 二选一）
@@ -77,7 +77,7 @@ class Test_xxxAPI:
         assert_api_result(
             case_name=case["name"],
             expected_code=case["expected"]["code"],
-            expected_msg=case["expected"]["error_msg"],
+            expected_msg=read_expected_msg(case["expected"]),
             actual_code=code,
             actual_msg=msg,
             biz_context={"请求参数": payload}
@@ -120,7 +120,7 @@ class Test_xxxAPI:
         assert_api_result(
             case_name=case["name"],
             expected_code=case["expected"]["code"],
-            expected_msg=case["expected"]["error_msg"],
+            expected_msg=read_expected_msg(case["expected"]),
             actual_code=code,
             actual_msg=msg,
             biz_context={"请求参数": payload}
@@ -158,7 +158,7 @@ class Test_xxxAPI:
         assert_api_result(
             case_name=case["name"],
             expected_code=case["expected"]["code"],
-            expected_msg=case["expected"]["error_msg"],
+            expected_msg=read_expected_msg(case["expected"]),
             actual_code=code,
             actual_msg=msg,
             biz_context={"请求参数": payload}

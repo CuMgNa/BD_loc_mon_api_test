@@ -14,7 +14,7 @@ xxx_cases:
     field2: "correct_password"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   # ==================== 负向用例 ====================
   - name: "登录失败-密码错误"

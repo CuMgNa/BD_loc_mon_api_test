@@ -141,7 +141,7 @@ flowchart TD
 **内容**（基于现有 yaml）：
 
 - 顶层 key 命名：`{module}_{action}_cases`（例：`location_list_cases`）
-- 字段：`name`、`scenario`、`expected.code`、`expected.error_msg`、`no_auth`
+- 字段：`name`、`scenario`、`expected.code`、正向 `expected.msg` / 负向 `expected.error_msg`、`no_auth`
 - 占位符：`{{bd_test_terminal}}` → 由 testcase 或 conftest 解析
 - 时区：Asia/Shanghai 当天窗口（参考 location 用例注释）
 - **不采用** 全局 Cursor 技能的 `version: "1.0"` + `assertions[]` 格式

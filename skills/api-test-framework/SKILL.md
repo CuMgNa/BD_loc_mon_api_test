@@ -19,7 +19,7 @@ description: >
 - HTTP 客户端：`from common.requests_util import BaseRequest`
 - 断言：`from common.allure_assert_util import assert_api_result`
 - 日志：`from common.logger_util import sep, key, print_request, print_response`
-- 数据：`from common.yaml_util import read_yaml, write_yaml, clear_yaml, resolve_extract_value`
+- 数据：`from common.yaml_util import read_yaml, write_yaml, clear_yaml, resolve_extract_value, read_expected_msg`
 - 用例模式：模式 A（无状态）/ 模式 B（CRUD/有状态）
 - 协议层（如项目使用）：`bd_client` + `bd_test_terminal`（详见 [conftest-jkpt.md](references/conftest-jkpt.md)）
 
@@ -142,7 +142,7 @@ res = BaseRequest().send_request(
 ### 2.2 YAML工具
 
 **文件**: `common/yaml_util.py`
-**导入**: `from common.yaml_util import read_yaml, write_yaml, clear_yaml, resolve_extract_value`
+**导入**: `from common.yaml_util import read_yaml, write_yaml, clear_yaml, resolve_extract_value, read_expected_msg`
 
 ```python
 # 读取YAML → 返回dict/list
@@ -154,6 +154,9 @@ write_yaml("./extract.yaml", {"user_id": 123}, mode="append")
 
 # 下游解析 YAML 中的 {{user_id}}
 user_id = resolve_extract_value("{{user_id}}", required=True)
+
+# 正向 expected.msg / 负向 expected.error_msg
+exp_msg = read_expected_msg(case["expected"])
 
 # 清空extract.yaml（每轮测试前调用）
 clear_yaml()
@@ -192,7 +195,7 @@ ts = get_current_datetime()
 assert_api_result(
     case_name=case["name"],
     expected_code=case["expected"]["code"],
-    expected_msg=case["expected"]["error_msg"],
+    expected_msg=read_expected_msg(case["expected"]),
     actual_code=code,
     actual_msg=msg,
     biz_context={"请求参数": payload}
@@ -359,7 +362,7 @@ class Test_xxxAPI:
             # 成功时的额外断言...
         else:
             assert code == case["expected"]["code"]
-            assert case["expected"]["error_msg"] == res.json()["msg"]
+            assert read_expected_msg(case["expected"]) == res.json()["msg"]
 ```
 
 ### 模式B：有状态CRUD接口（增删改查有关联）
@@ -399,7 +402,7 @@ class Test_crudAPI:
             assert code == case["expected"]["code"]
         else:
             assert code == case["expected"]["code"]
-            assert case["expected"]["error_msg"] == res.json()["msg"]
+            assert read_expected_msg(case["expected"]) == res.json()["msg"]
 
     # UPDATE (依赖CREATE的结果)
     @pytest.mark.parametrize("case", test_data[N:M])
@@ -511,7 +514,7 @@ msg = _jsonpath_parse(json_data, "$.msg")[0]
 assert_api_result(
     case_name=case["name"],
     expected_code=case["expected"]["code"],
-    expected_msg=case["expected"]["error_msg"],
+    expected_msg=read_expected_msg(case["expected"]),
     actual_code=code,
     actual_msg=msg,
     biz_context={"请求参数": payload}
@@ -562,7 +565,7 @@ add_xxx_l1_cases:
     parentId: 0
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "某模块-一级-负向-名称为空"
     groupName: ""
@@ -577,7 +580,7 @@ add_xxx_l2_cases:
     parentId: "{{one_id}}"     # 与 extract.yaml 中写入的键名一致
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
 update_xxx_cases:
   - name: "某模块-编辑-正向"
@@ -585,13 +588,13 @@ update_xxx_cases:
     groupName: "Updated_{int(time.time())}"   # 由 Python 方法体内 replace，不在 YAML 执行代码
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
 get_xxx_cases:
   - name: "某模块-查询-正向"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "某模块-查询-负向-缺少Token"
     no_auth: true               # 用例级开关：测试中分支处理 headers
@@ -605,7 +608,7 @@ delete_xxx_cases:
     groupId: "{{three_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 ```
 
 说明：`delete_xxx_cases:` 后空一行再写列表项的写法合法，与现有分组 YAML 一致。
@@ -618,7 +621,7 @@ delete_xxx_cases:
 | 多顶层 `*_cases` | 按场景分块；Python 中 `read_yaml("./yaml/...yaml")["某key"]` 与各 `@pytest.mark.parametrize` 一一对应；**不必**强行合并为单一 `xxx_cases` |
 | `name` | 语义化，建议含模块、行为、正向/负向；需要时供 Python 关键字分支 |
 | 业务字段 | 与真实接口参数名一致（如 `groupName`、`parentId`、`groupId`、`groupIds`） |
-| `expected` | 与当前断言工具、现有 YAML 保持一致；至少包含 `code`，其余字段按项目惯例编写 |
+| `expected` | 正向用 `code` + `msg`；负向用 `code` + `error_msg`。断言走 `read_expected_msg(case["expected"])`，禁止正向写 `error_msg: "成功"` |
 | `{{变量名}}` | 与 `extract.yaml` 写入键一致；须为整段占位（如 `{{one_id}}`），由 `resolve_extract_value` 解析 |
 | 运行时占位串 | 如 `Updated_{int(time.time())}`，在测试代码里 `replace` 替换，**不要**在 YAML 中写可执行表达式 |
 | 开关字段 | 如 `no_auth: true`，用于分支构造请求头或鉴权 |
@@ -657,7 +660,7 @@ delete_xxx_cases:
 - [ ] 有动态数据的场景是否用了 `get_current_datetime()`
 - [ ] `case_name` 和 `log_level` 参数是否传入 `send_request`
 - [ ] **协议用例**：注入 `bd_client` + `bd_test_terminal`，**不**注入 `auth_headers`；断言 `result.success`
-- [ ] **YAML 约定**：顶层 key 以 `_cases` 结尾；占位符 `{{xxx}}` 与解析路径一一对应（见 [yaml-conventions.md](references/yaml-conventions.md)）
+- [ ] **YAML 约定**：顶层 key 以 `_cases` 结尾；正向 `expected.msg`、负向 `expected.error_msg`；占位符 `{{xxx}}` 与解析路径一一对应（见 [yaml-conventions.md](references/yaml-conventions.md)）
 - [ ] **禁止**：未生成 `run_case` / `pytest_plugin` / `assertions[]` 数组
 - [ ] 没有硬编码生产 URL、明文密码、真实手机号 / 身份证
 

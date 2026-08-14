@@ -106,15 +106,19 @@ def is_extract_placeholder(yaml_value) -> bool:
 def resolve_extract_value(yaml_value, required: bool = False, extract_path: str = "./extract.yaml"):
     """解析 YAML 中整段 `{{var}}`，从 extract.yaml 取值。
     required=True 且变量不存在时 pytest.skip。非占位符原样返回。"""
+
+def read_expected_msg(expected) -> str:
+    """正向读 expected.msg，负向读 expected.error_msg；两者都有时优先 msg。"""
 ```
 
 典型调用：
 
 ```python
-from common.yaml_util import read_yaml, write_yaml, resolve_extract_value
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value, read_expected_msg
 
 write_yaml("./extract.yaml", {"devices_addr": addr}, mode="append")
 addr = resolve_extract_value("{{devices_addr}}", required=True)
+exp_msg = read_expected_msg(case["expected"])  # 正向 msg，负向 error_msg
 ```
 
 ---

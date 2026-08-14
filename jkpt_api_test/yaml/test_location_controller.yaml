@@ -11,7 +11,7 @@ location_list_cases:
     pageSize: 10
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "分页查询位置列表-负向-addr为空"
     scenario: "empty_addr"
@@ -38,7 +38,7 @@ location_track_cases:
     addr: "{{bd_test_terminal}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "获取轨迹信息-负向-addr为空"
     scenario: "empty_addr"

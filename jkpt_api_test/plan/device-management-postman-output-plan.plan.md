@@ -99,7 +99,7 @@ group_cases:
     groupName: "AUTO_GROUP_L1"
     expected:
       code: 0
-      error_msg: "success"
+      msg: "success"
 
   - name: "添加分组-一级分组-负向-名称为空"
     parentId: 0
@@ -117,7 +117,7 @@ terminal_cases:
   - name: "设备类型查看-正向"
     expected:
       code: 0
-      error_msg: "success"
+      msg: "success"
 
   - name: "设备类型查看-负向-缺少Token"
     no_auth: true
@@ -128,7 +128,7 @@ terminal_cases:
 
 字段约定（按 README 风格落地）：
 - 顶层 key 使用 `group_cases` / `terminal_cases` / `terminal_batch_cases` / `field_template_cases`
-- 每条用例必须包含：`name`、`expected.code`、`expected.error_msg`
+- 每条用例必须包含：`name`、`expected.code`；正向再加 `expected.msg`，负向再加 `expected.error_msg`
 - **method 和 path 不写在 YAML 中**，而在 Python 测试代码里写死（保持"薄 YAML + 厚 Python"原则）
 - 业务参数平铺在用例节点中（例如 `groupId`、`terminalId`、`groupName`）
 - 仅在确有需要时增加控制字段（例如 `no_auth`、`need_extract`）

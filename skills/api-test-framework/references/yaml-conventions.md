@@ -74,7 +74,8 @@ delete_xxx_cases:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `expected.error_msg` | str | 预期错误信息（与 `assert_api_result` 的 `expected_msg` 对齐） |
+| `expected.msg` | str | **正向**预期业务文案（如 `"成功"`） |
+| `expected.error_msg` | str | **负向**预期错误文案；testcase 用 `read_expected_msg(case["expected"])` 读取 |
 | `scenario` | str | 场景标签：`positive` / `empty_xxx` / `no_auth` / `invalid_xxx` 等，便于 testcase 分支与统计 |
 | `no_auth` | bool | 用例级鉴权开关；testcase 内 strip `Authorization` |
 | `expected.http_status` | int | 仅非 JSON 响应（如导出二进制）才用 |
@@ -144,12 +145,18 @@ YAML 字面量串如 `"Updated_{int(time.time())}"`，**testcase 内 `case["x"].
 ### 5.1 标准（JSON 响应）
 
 ```yaml
+# 正向
 expected:
   code: 0
-  error_msg: "成功"
+  msg: "成功"
+
+# 负向
+expected:
+  code: 1001
+  error_msg: "围栏名称不能为空"
 ```
 
-`assert_api_result` 直接读 `case["expected"]["code"]` 与 `case["expected"]["error_msg"]`。
+`assert_api_result` 的 `expected_msg` 通过 `read_expected_msg(case["expected"])` 读取：优先 `msg`，否则 `error_msg`。正向禁止写 `error_msg: "成功"`。
 
 ### 5.2 二进制响应
 
@@ -187,7 +194,7 @@ testcase 内分支处理 `.json()` vs `.content`。
 | `{{bd_test_terminal}}` | conftest `bd_test_terminal` fixture |
 | `{{one_id}}` 等分组占位 | conftest `group_fixture` 或 `extract.yaml` |
 | `no_auth: true` | testcase 内 strip Authorization 头 |
-| `expected.error_msg` | `assert_api_result(expected_msg=...)` |
+| `expected.msg` / `expected.error_msg` | `read_expected_msg(case["expected"])` → `assert_api_result(expected_msg=...)` |
 
 完整 fixture 文档见 [conftest-jkpt.md](conftest-jkpt.md)。
 
@@ -198,7 +205,7 @@ testcase 内分支处理 `.json()` vs `.content`。
 写完 YAML 对照：
 
 - [ ] 顶层 key 以 `_cases` 结尾且与 testcase `parametrize` 一致
-- [ ] 每个 case 至少有 `name` + `expected.code`
+- [ ] 正向 `expected.msg`，负向 `expected.error_msg`；禁止正向写 `error_msg: "成功"`
 - [ ] 占位符 `{{xxx}}` 在 testcase 中有明确解析路径（fixture 或 `resolve_extract_value`）
 - [ ] 没有可执行表达式（如 `!python` / `eval`）
 - [ ] 没有硬编码生产 URL / 真实密码 / 真实手机号

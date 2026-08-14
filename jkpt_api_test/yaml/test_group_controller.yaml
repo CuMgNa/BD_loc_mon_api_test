@@ -8,7 +8,7 @@ add_group_l1_cases:
     parentId: 0
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "添加分组-一级分组-负向-名称为空"
     groupName: ""
@@ -30,7 +30,7 @@ add_group_l2_cases:
     parentId: "{{one_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "添加分组-二级分组-负向-名称为空"
     groupName: ""
@@ -53,7 +53,7 @@ add_group_l3_cases:
     parentId: "{{two_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "添加分组-三级分组-负向-名称为空"
     groupName: ""
@@ -66,7 +66,7 @@ get_groups_cases:
   - name: "获取设备分组信息-正向"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "获取设备分组信息-负向-缺少Token"
     no_auth: true
@@ -80,7 +80,7 @@ update_group_cases:
     groupName: "Updated_{int(time.time())}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "编辑分组名称-负向-分组名称为空"
     groupId: "{{one_id}}"
@@ -94,7 +94,7 @@ sort_groups_cases:
     groupIds: "{{parent_group_ids}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   
   - name: "分组排序-负向-分组ID为空"
     groupIds: ""
@@ -108,19 +108,19 @@ delete_group_cases:
     groupId: "{{three_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "删除二级分组-正向"
     groupId: "{{two_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   
   - name: "删除一级分组-正向"
     groupId: "{{one_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "删除分组-负向-分组不存在"
     groupId: "TEST_NONEXIST_ID"

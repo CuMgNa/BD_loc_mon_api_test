@@ -8,7 +8,7 @@ batch_import_cases:
     file_key: "template"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "批量导入设备-负向-未上传文件"
     scenario: "no_file"
@@ -27,7 +27,7 @@ batch_details_cases:
     addrs: "{{batch_addrs}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "批量查询详情-负向-addrs为空"
     addrs: ""
@@ -41,7 +41,7 @@ batch_remark_cases:
     addrs: "{{batch_addrs}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "批量查询备注-负向-addrs为空"
     addrs: ""
@@ -57,7 +57,7 @@ batch_aggr_point_cases:
     pageSize: 100
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "聚合点批量查询详情-负向-addrs为空"
     addrs: ""
@@ -82,7 +82,7 @@ batch_lnglat_cases:
     pageSize: 100
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "经纬度批量查询详情-负向-points为空"
     addr: ""
@@ -99,7 +99,7 @@ batch_move_group_cases:
     newGroupId: "{{one_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "批量移动分组-负向-目标分组不存在"
     addrs: "{{batch_addrs}}"
@@ -145,7 +145,7 @@ batch_delete_cases:
     addrs: "{{batch_addrs}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "批量解绑设备-负向-addrs为空"
     addrs: ""

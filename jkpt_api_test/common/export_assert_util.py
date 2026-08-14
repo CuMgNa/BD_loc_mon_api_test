@@ -11,6 +11,7 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from common.logger_util import key, sep
+from common.yaml_util import read_expected_msg
 
 
 @dataclass
@@ -294,8 +295,8 @@ def assert_export_response(
             assert actual_code == expected_code, (
                 f"[{case_name}] 业务码不匹配: 预期={expected_code}, 实际={actual_code}"
             )
-        expected_msg = expected.get("error_msg")
-        if expected_msg is not None:
+        if "msg" in expected or "error_msg" in expected:
+            expected_msg = read_expected_msg(expected)
             assert actual_msg == expected_msg, (
                 f"[{case_name}] 业务消息不匹配: 预期={expected_msg}, 实际={actual_msg}"
             )

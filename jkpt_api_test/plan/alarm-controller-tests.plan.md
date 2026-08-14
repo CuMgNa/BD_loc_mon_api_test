@@ -174,7 +174,7 @@ alarm_list_cases:
     page_size: 10
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
 alarm_batch_handle_ids_cases:
   - name: "按ID批量处理-正向"
@@ -182,7 +182,7 @@ alarm_batch_handle_ids_cases:
     ids: []
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   - name: "按ID批量处理-负向-空列表"
     scenario: "empty_ids"
     ids: []

@@ -16,7 +16,7 @@ cases:
     field2: "固定值"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "创建失败-名称为空"
     name_field: ""
@@ -38,7 +38,7 @@ cases:
     name_field: "编辑_{int(time.time())}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "编辑失败-资源不存在"
     id: "NONEXIST_RESOURCE_ID"
@@ -52,7 +52,7 @@ cases:
     id: "{{created_id}}"            # 由模板按名称优先读取 created_id
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "删除失败-资源非空"
     id: "{{one_id}}"                # 由 fixture 提供（如 conftest 的 group_fixture），非 extract
@@ -79,7 +79,7 @@ cases:
 #     parentId: 0
 #     expected:
 #       code: 0
-#       error_msg: "成功"
+#       msg: "成功"
 #
 # get_xxx_cases:
 #   - name: "某模块-查询-正向"

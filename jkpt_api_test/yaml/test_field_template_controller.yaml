@@ -5,7 +5,7 @@ list_field_templates_cases:
   - name: "字段模板-列表-正向"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "字段模板-列表-负向-无Token"
     no_auth: true
@@ -18,7 +18,7 @@ add_field_template_cases:
     templateName: "AUTO_FT_{int(time.time())}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "字段模板-创建-负向-名称为空"
     templateName: ""
@@ -32,7 +32,7 @@ update_field_template_cases:
     templateName: "AUTO_FT_UPD_{int(time.time())}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "字段模板-编辑-负向-名称为空"
     templateId: "{{field_template_id}}"
@@ -49,7 +49,7 @@ save_fields_cases:
       - "fieldB"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "字段模板-保存字段-负向-fields为空"
     templateId: "{{field_template_id}}"
@@ -63,7 +63,7 @@ delete_field_template_cases:
     templateId: "{{field_template_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "字段模板-删除-负向-非法id"
     templateId: "00000000-0000-0000-0000-000000000000"

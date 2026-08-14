@@ -5,7 +5,7 @@ list_alarm_settings_cases:
   - name: "报警通知设置-列表-正向"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "报警通知设置-列表-负向-无Token"
     no_auth: true
@@ -18,7 +18,7 @@ edit_alarm_settings_cases:
     setting_id: "{{alarm_setting_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "报警通知设置-编辑-负向-非法id"
     setting_id: "000000000000000000000000"

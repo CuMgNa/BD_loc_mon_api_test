@@ -125,7 +125,7 @@ flowchart TB
 
 ### 6.1 结构示例（节选示意，占位与 expected 对齐项目惯例）
 
-说明：以下为**结构与字段名**示例；`expected.code` / `error_msg` 中与业务相关的数值**必须以联环境返回为准回填**。
+说明：以下为**结构与字段名**示例；`expected.code` / 正向 `msg` / 负向 `error_msg` 中与业务相关的数值**必须以联环境返回为准回填**。
 
 ```yaml
 # yaml/test_field_template_controller.yaml
@@ -135,7 +135,7 @@ list_field_templates_cases:
   - name: "字段模板-列表-正向"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   - name: "字段模板-列表-负向-无Token"
     no_auth: true
     expected:
@@ -147,7 +147,7 @@ add_field_template_cases:
     templateName: "AUTO_FT_{int(time.time())}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   - name: "字段模板-创建-负向-名称为空"
     templateName: ""
     expected:
@@ -160,7 +160,7 @@ update_field_template_cases:
     templateName: "AUTO_FT_UPD_{int(time.time())}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   - name: "字段模板-编辑-负向-名称为空"
     templateId: "{{field_template_id}}"
     templateName: ""
@@ -176,7 +176,7 @@ save_fields_cases:
       - "fieldB"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   - name: "字段模板-保存字段-负向-fields为空"
     templateId: "{{field_template_id}}"
     omit_fields_query: true
@@ -189,7 +189,7 @@ delete_field_template_cases:
     templateId: "{{field_template_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   - name: "字段模板-删除-负向-非法id"
     templateId: "00000000-0000-0000-0000-000000000000"
     expected:

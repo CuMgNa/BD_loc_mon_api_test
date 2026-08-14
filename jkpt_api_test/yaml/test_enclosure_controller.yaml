@@ -1,0 +1,140 @@
+# yaml/test_enclosure_controller.yaml
+# 围栏管理：enclosure_id / enclosure_share_code 由创建正向写入 extract
+# {{msg_test_terminal}} 由 testcase 注入 fixture，不走 extract
+# {{enclosure_id}} 整段占位才 resolve_extract_value
+# 名称现网：不能为空，最长30个字（文案如此）；正向用 E{timestamp}（11 位）
+# 产品口述 2-12 未在接口生效，1 位/13 位现网可成功，故负向改为 31 位
+
+add_enclosure_cases:
+  - name: "围栏-创建-正向"
+    enclosureName: "E{int(time.time())}"
+    pointJson: '{"points":[{"lng":113.466203,"lat":23.170439},{"lng":113.467203,"lat":23.170439},{"lng":113.466703,"lat":23.171139},{"lng":113.466203,"lat":23.170439}]}'
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "围栏-创建-负向-名称为空"
+    enclosureName: ""
+    pointJson: '{"points":[{"lng":113.466203,"lat":23.170439},{"lng":113.467203,"lat":23.170439},{"lng":113.466703,"lat":23.171139},{"lng":113.466203,"lat":23.170439}]}'
+    expected:
+      code: 1001
+      error_msg: "围栏名称不能为空,最长30个字"
+
+  - name: "围栏-创建-负向-名称31位"
+    enclosureName: "1234567890123456789012345678901"
+    pointJson: '{"points":[{"lng":113.466203,"lat":23.170439},{"lng":113.467203,"lat":23.170439},{"lng":113.466703,"lat":23.171139},{"lng":113.466203,"lat":23.170439}]}'
+    expected:
+      code: 1001
+      error_msg: "围栏名称最长30个字符"
+
+list_enclosure_cases:
+  - name: "围栏-列表-正向"
+    enclosureId: "{{enclosure_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "围栏-列表-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+update_enclosure_cases:
+  - name: "围栏-编辑-正向"
+    enclosureId: "{{enclosure_id}}"
+    enclosureName: "U{int(time.time())}"
+    pointJson: '{"points":[{"lng":113.466203,"lat":23.170439},{"lng":113.467203,"lat":23.170439},{"lng":113.466703,"lat":23.171139},{"lng":113.466203,"lat":23.170439}]}'
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "围栏-编辑-负向-名称为空"
+    enclosureId: "{{enclosure_id}}"
+    enclosureName: ""
+    pointJson: '{"points":[{"lng":113.466203,"lat":23.170439},{"lng":113.467203,"lat":23.170439},{"lng":113.466703,"lat":23.171139},{"lng":113.466203,"lat":23.170439}]}'
+    expected:
+      code: 1001
+      error_msg: "围栏名称不能为空,最长30个字"
+
+  - name: "围栏-编辑-负向-名称31位"
+    enclosureId: "{{enclosure_id}}"
+    enclosureName: "1234567890123456789012345678901"
+    pointJson: '{"points":[{"lng":113.466203,"lat":23.170439},{"lng":113.467203,"lat":23.170439},{"lng":113.466703,"lat":23.171139},{"lng":113.466203,"lat":23.170439}]}'
+    expected:
+      code: 1001
+      error_msg: "围栏名称最长30个字符"
+
+  - name: "围栏-编辑-负向-非法id"
+    enclosureId: "ffffffffffffffffffffffff"
+    enclosureName: "BadEncName12"
+    expected:
+      code: 1001
+      error_msg: "电子围栏不存在"
+
+add_enclosure_terminals_cases:
+  - name: "围栏-添加设备-正向"
+    enclosureId: "{{enclosure_id}}"
+    addrs: "{{msg_test_terminal}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "围栏-清空设备-正向"
+    enclosureId: "{{enclosure_id}}"
+    addrs: ""
+    expected:
+      code: 0
+      msg: "成功"
+
+export_enclosure_cases:
+  - name: "围栏-导出KML-正向"
+    enclosureId: "{{enclosure_id}}"
+    binary_response: true
+    expected:
+      http_status: 200
+
+  - name: "围栏-导出KML-负向-无Token"
+    enclosureId: "{{enclosure_id}}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+  - name: "围栏-导出KML-负向-非法id"
+    enclosureId: "ffffffffffffffffffffffff"
+    expected:
+      code: 1001
+      error_msg: "电子围栏不存在"
+
+add_enclosure_by_code_cases:
+  - name: "围栏-分享码添加-正向"
+    shareCode: "28feceb1b1"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "围栏-分享码添加-反向-自己的码"
+    shareCode: "{{enclosure_share_code}}"
+    expected:
+      code: 0
+      error_msg: "成功"
+
+  - name: "围栏-分享码添加-负向-非法码"
+    shareCode: "INVALID_SHARE_XXXX"
+    expected:
+      code: 1001
+      error_msg: "围栏不存在"
+
+delete_enclosure_cases:
+  - name: "围栏-删除-正向"
+    enclosureId: "{{enclosure_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "围栏-删除-负向-非法id"
+    enclosureId: "ffffffffffffffffffffffff"
+    expected:
+      code: 1001
+      error_msg: "电子围栏不存在"

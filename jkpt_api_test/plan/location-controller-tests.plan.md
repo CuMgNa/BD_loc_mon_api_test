@@ -88,7 +88,7 @@ location_list_cases:
     addr: "{{bd_test_terminal}}"
     page: 1
     pageSize: 10
-    expected: { code: 0, error_msg: "成功" }
+    expected: { code: 0, msg: "成功" }
   - name: "分页查询位置列表-负向-addr为空"
     scenario: "empty_addr"
     addr: ""
@@ -98,7 +98,7 @@ location_track_cases:
   - name: "获取轨迹信息-正向"
     scenario: "positive"
     addr: "{{bd_test_terminal}}"
-    expected: { code: 0, error_msg: "成功" }
+    expected: { code: 0, msg: "成功" }
   - name: "获取轨迹信息-负向-addr为空"
     scenario: "empty_addr"
     addr: ""
@@ -109,7 +109,7 @@ location_export_cases:
     scenario: "positive"
     addr: "{{bd_test_terminal}}"
     binary_response: true
-    expected: { http_status: 200, code: 0, error_msg: "成功" }
+    expected: { http_status: 200, code: 0, msg: "成功" }
   - name: "导出轨迹信息-负向-addr为空"
     scenario: "empty_addr"
     addr: ""

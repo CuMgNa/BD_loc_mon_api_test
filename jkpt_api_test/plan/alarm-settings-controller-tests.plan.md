@@ -115,14 +115,14 @@ flowchart LR
 
 | name | 要点 | expected（初稿，负向非 3001 需联调回填） |
 |------|------|------------------------------------------|
-| 报警通知设置-列表-正向 | 默认鉴权 | `code: 0`，`error_msg: "成功"`；可附加「`$.data` 为 list 且 length>=1」 |
+| 报警通知设置-列表-正向 | 默认鉴权 | `code: 0`，`msg: "成功"`；可附加「`$.data` 为 list 且 length>=1」 |
 | 报警通知设置-列表-负向-无Token | `no_auth: true` | `code: 3001`，`error_msg: "没有访问权限"`（对齐字段模板模块） |
 
 ### `edit_alarm_settings_cases`（5 条）
 
 | name | 要点 | expected |
 |------|------|----------|
-| 报警通知设置-编辑-正向 | `settingId: "{{alarm_setting_id}}"`；代码内取反四开关 + 还原 | `code: 0`，`error_msg: "成功"` |
+| 报警通知设置-编辑-正向 | `settingId: "{{alarm_setting_id}}"`；代码内取反四开关 + 还原 | `code: 0`，`msg: "成功"` |
 | 报警通知设置-编辑-负向-非法id | `settingId: "000000000000000000000000"` | `code: 999`，`error_msg: "失败"`（TODO 联调） |
 | 报警通知设置-编辑-负向-缺alarmVoice | `omit_alarm_voice: true` | `code: 1001` + 具体 msg（TODO 联调） |
 | 报警通知设置-编辑-负向-缺emailNoti | `omit_email_noti: true` | 同上 TODO |
@@ -136,7 +136,7 @@ edit_alarm_settings_cases:
     setting_id: "{{alarm_setting_id}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 ```
 
 Python 侧兼容 `settingId` / `setting_id`；四开关由代码根据 `alarm_setting_original` 计算，**不在 YAML 写死 true/false**（避免与环境初始状态耦合）。

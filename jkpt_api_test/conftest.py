@@ -12,6 +12,11 @@ from common.captcha_util import CaptchaRecognizer, generate_captcha_id
 from common.logger_util import sep, key, print_request, print_response
 from common.bd_protocol_client import BDProtocolClient
 from common.protocol_transport import BDProtocolTransport
+from common.rescue_platform_client import (
+    RescuePlatformSession,
+    RescueUplinkClient,
+    generate_rescue_sn,
+)
 import jsonpath
 
 # 修复 jsonpath API 兼容性
@@ -41,7 +46,7 @@ ocr = CaptchaRecognizer()
 ENABLE_AUTO_CLEANUP = os.getenv("ENABLE_AUTO_CLEANUP", "true").lower() == "true"
 ENABLE_GLHT_CLEANUP = os.getenv("ENABLE_GLHT_CLEANUP", "false").lower() == "true"
 
-JKPT_ACCOUNT = os.getenv("JKPT_ACCOUNT", "tmn")
+JKPT_ACCOUNT = os.getenv("JKPT_ACCOUNT", "user1752216001906")
 JKPT_PASSWORD = os.getenv("JKPT_PASSWORD", "4f9cb165cd6249312e5804fcf9416c5e")
 GLHT_ACCOUNT = os.getenv("GLHT_ACCOUNT", "admin")
 GLHT_PASSWORD = os.getenv("GLHT_PASSWORD", "123abc!!")
@@ -414,6 +419,155 @@ def bd_client(base_url, auth_headers):
     """北斗协议客户端（11 种 content 一站式发送）"""
     transport = BDProtocolTransport(base_url=base_url, headers=auth_headers, http=http)
     return BDProtocolClient(transport=transport)
+
+
+# ==================== 卫星救援终端（10304）造数 fixtures ====================
+RESCUE_PLATFORM_USER = os.getenv("RESCUE_PLATFORM_USER", "admin")
+RESCUE_PLATFORM_PASSWORD = os.getenv("RESCUE_PLATFORM_PASSWORD", "admin@0415")
+
+
+@pytest.fixture(scope="session")
+def rescue_client():
+    """10304 上行模拟造数客户端（U0~U5 报文一站式发送）。
+
+    session 级单例；结束时自动断开所有活跃模拟会话。
+    语音样本注入：用例侧如需 send_speech，先调 set_speech_sample()。
+    """
+    sep(" 🛰️ 初始化救援平台客户端 ")
+    mgr = RescuePlatformSession(RESCUE_PLATFORM_USER, RESCUE_PLATFORM_PASSWORD)
+    client = RescueUplinkClient(mgr, http=http)
+    key("救援平台", "120.77.17.225:10304")
+    yield client
+    # session 末：断开所有活跃模拟会话
+    n = client.disconnect_all()
+    if n:
+        key("救援平台会话清理", f"断开 {n} 个会话")
+
+
+@pytest.fixture(scope="session")
+def rescue_sat_terminal(base_url, auth_headers, group_fixture, pytestconfig):
+    """入库+添加一台卫星救援终端（TT_RESCUE_STICK），返回 sn（12位纯数字）。
+
+    链：GET mock-in-storage（remark=天通救援棒-tmn）→ POST groups/{one_id}/terminals。
+    任一步失败 pytest.fail（不静默复用）。sn 存 pytestconfig.stash 供 glht 精确清理。
+    """
+    sep(" 🛰️ 创建卫星救援终端 ")
+    sn = generate_rescue_sn()
+    key("救援终端 sn", sn)
+
+    # ① 入库
+    r = http.send_request(
+        method="get",
+        url=f"{base_url}/api/monitor/mock-in-storage",
+        params={
+            "Authorization": auth_headers.get("Authorization"),
+            "addr": sn, "sn": sn, "name": "救援测试",
+            "remark": "天通救援棒-tmn",
+            "terminalType": "TT_RESCUE_STICK",
+            "useScope": "STEAMER",
+        },
+        headers=auth_headers,
+        case_name="救援终端入库",
+        log_level="none",
+    )
+    json_data = parse_response_json(r, context="救援终端入库")
+    code = _jsonpath_parse(json_data, "$.code")[0]
+    if code != 0:
+        msg = _jsonpath_parse(json_data, "$.msg")
+        pytest.fail(f"救援终端入库失败: code={code}, msg={msg[0] if msg else '未知'}")
+    key("入库", f"sn={sn} type=TT_RESCUE_STICK")
+
+    # ② 添加到 one_id 分组（复用 _create_terminal 模板，仅换类型）
+    group_id = group_fixture["one_id"]
+    body = {
+        "sn": sn, "remark": "天通救援棒-tmn", "groupId": group_id,
+        "terminalType": "TT_RESCUE_STICK", "useScope": "STEAMER",
+        "fromAddr": "", "trackColor": "#141323", "trackSize": 5,
+        "groupCallNumber": "", "ipAddress": "", "gatewayParam": {}, "fieldJson": "",
+    }
+    r = http.send_request(
+        method="post",
+        url=f"{base_url}/api/monitor/groups/{group_id}/terminals",
+        json=body, headers=auth_headers,
+        case_name="救援终端添加", log_level="none",
+    )
+    json_data = parse_response_json(r, context="救援终端添加")
+    code = _jsonpath_parse(json_data, "$.code")[0]
+    if code != 0:
+        msg = _jsonpath_parse(json_data, "$.msg")
+        pytest.fail(f"救援终端添加失败: code={code}, msg={msg[0] if msg else '未知'}")
+    key("添加", f"sn={sn} → group={group_id}")
+
+    # sn 存 stash 供 glht 清理精确匹配（terminal-inventory-cleanup 实施时消费）
+    pytestconfig.stash.setdefault("rescue_terminal_sns", []).append(sn)
+    return sn
+
+
+@pytest.fixture(scope="session")
+def emergency_chat_item(base_url, auth_headers, rescue_sat_terminal, rescue_client):
+    """造一个求救群聊并提取 chatItemId。
+
+    链：rescue_client.send_sos(sn, kind=1) → 轮询 item/page?itemName=sn（3次×2s）。
+    返回 {"chatItemId": ..., "sn": ..., "itemName": ..., "status": 1}。
+    失败 pytest.fail 并附 10304 会话/消息日志上下文（归因依据）。
+    """
+    sn = rescue_sat_terminal
+    sep(" 🆘 造求救群聊 ")
+
+    result = rescue_client.send_sos(sn, kind=1)
+    if not result.success:
+        # 归因：打 10304 会话记录与消息日志
+        records = rescue_client.session_records(terminal_id=sn, page_size=3)
+        logs = rescue_client.message_logs(terminal_id=sn, page_size=3)
+        pytest.fail(
+            f"SOS发送失败: code={result.code}, msg={result.message}\n"
+            f"  会话记录: {records}\n  消息日志: {logs}"
+        )
+    key("SOS已发", f"sn={sn} sid={result.session_id}")
+
+    # 轮询搜群（3次×2s，复用 alarm 短轮询模式）
+    chat_item = None
+    for i in range(3):
+        time.sleep(2)
+        r = http.send_request(
+            method="get",
+            url=f"{base_url}/api/monitor/emergency/chat/item/page",
+            params={"Authorization": auth_headers.get("Authorization"),
+                    "itemName": sn, "page": 1, "pageSize": 10},
+            headers=auth_headers,
+            case_name=f"搜群第{i+1}轮",
+            log_level="none",
+        )
+        json_data = parse_response_json(r, context="搜群")
+        items = _jsonpath_parse(json_data, "$.data.items[*]") or \
+                _jsonpath_parse(json_data, "$.data.records[*]") or []
+        if items:
+            chat_item = items[0]
+            break
+
+    if not chat_item:
+        records = rescue_client.session_records(terminal_id=sn, page_size=3)
+        pytest.fail(f"搜群超时: sn={sn} 未找到群聊。10304会话记录: {records}")
+
+    chat_id = chat_item.get("id")
+    item_name = chat_item.get("itemName")
+    status = chat_item.get("status")
+    key("群聊创建成功", f"chatItemId={chat_id} itemName={item_name} status={status}")
+
+    # chatItemId 写 extract.yaml 供同文件下游用例消费
+    from common.yaml_util import write_yaml
+    write_yaml("./extract.yaml", {
+        "emergency_chat_item_id": chat_id,
+        "emergency_chat_sn": sn,
+        "emergency_chat_item_name": item_name,
+    }, mode="append")
+
+    return {
+        "chatItemId": chat_id,
+        "sn": sn,
+        "itemName": item_name,
+        "status": status,
+    }
 
 
 # ==================== 自动清理 ====================

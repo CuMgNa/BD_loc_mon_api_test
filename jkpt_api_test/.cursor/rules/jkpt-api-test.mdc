@@ -19,7 +19,8 @@ globs: testcases/**, yaml/**, common/**, conftest.py, skills/api-test-framework/
 
 - HTTP 请求入口：`from common.requests_util import BaseRequest`
 - 统一断言：`from common.allure_assert_util import assert_api_result`
-- YAML 读取：`from common.yaml_util import read_yaml, write_yaml, clear_yaml`
+- YAML 读取：`from common.yaml_util import read_yaml, write_yaml, clear_yaml, read_expected_msg`
+- 正向 YAML：`expected.msg`；负向 YAML：`expected.error_msg`（禁止正向写 `error_msg: "成功"`）
 - 日志：`from common.logger_util import sep, key, print_request, print_response`
 - 数据驱动：`@pytest.mark.parametrize("case", read_yaml("./yaml/test_xxx.yaml")["xxx_cases"])`
 - 用例模式：**模式 A**（无状态）或 **模式 B / B′**（CRUD / `extract.yaml` 链路）
@@ -57,6 +58,7 @@ globs: testcases/**, yaml/**, common/**, conftest.py, skills/api-test-framework/
 
 - 仅引用 `common.*` 与 `pytest`、`jsonpath`、标准库
 - YAML 顶层 key 与 `parametrize` 一一对应
+- 正向 `expected.msg`、负向 `expected.error_msg`
 - `no_auth` 路径与正向路径在同一方法内分支
 - 协议用例不出现 `auth_headers`
 - 没有 `run_case` / `pytest_plugin` / `version: "1.0"`

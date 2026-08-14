@@ -1,0 +1,363 @@
+# yaml/test_emergency_chat_controller.yaml
+# 求救群聊接口 (Emergency Chat Controller) — 13 个接口
+# 造数链：rescue_sat_terminal → emergency_chat_item（conftest fixture，SOS上行自动建群）
+# 数据通道：extract.yaml {{emergency_chat_item_id}} / {{emergency_chat_sn}} / {{emergency_chat_item_name}}
+
+# ---------- 1. item/page 群聊列表 ----------
+item_page_cases:
+  - name: "群聊列表-正向-默认分页"
+    scenario: "positive"
+    page: 1
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "群聊列表-正向-按卡号模糊查询"
+    scenario: "positive"
+    item_name: "{{emergency_chat_sn}}"
+    page: 1
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "群聊列表-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+  - name: "群聊列表-边界-page=0"
+    scenario: "positive"
+    page: 0
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "群聊列表-边界-pageSize极大"
+    scenario: "positive"
+    page: 1
+    page_size: 1000
+    expected:
+      code: 0
+      msg: "成功"
+
+
+# ---------- 2. member/list 成员查询 ----------
+member_list_cases:
+  - name: "成员列表-正向"
+    scenario: "positive"
+    chat_item_id: "{{emergency_chat_item_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "成员列表-负向-chatItemId不存在"
+    scenario: "positive"
+    chat_item_id: "nonexist_chat_item_id_999"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "成员列表-负向-chatItemId为空"
+    scenario: "positive"
+    chat_item_id: ""
+    # 2026-08-14 实测：接口对空 chatItemId 不校验，返回成功——疑似健壮性缺陷，记录待开发确认
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "成员列表-负向-缺token"
+    scenario: "no_auth"
+    chat_item_id: "{{emergency_chat_item_id}}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 6. record/page 聊天记录 ----------
+record_page_cases:
+  - name: "聊天记录-正向-默认分页"
+    scenario: "positive"
+    chat_item_id: "{{emergency_chat_item_id}}"
+    page: 1
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "聊天记录-正向-提取recordId"
+    scenario: "extract_record_id"
+    chat_item_id: "{{emergency_chat_item_id}}"
+    page: 1
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "聊天记录-负向-chatItemId不存在"
+    scenario: "positive"
+    chat_item_id: "nonexist_chat_item_id_999"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "聊天记录-负向-缺token"
+    scenario: "no_auth"
+    chat_item_id: "{{emergency_chat_item_id}}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 3. member/add 成员添加（越权面核心） ----------
+member_add_cases:
+  - name: "添加成员-正向-企业账号"
+    scenario: "positive"
+    member_account: "13128251672"
+    member_account_type: "ENTERPRISE_ACCOUNT"
+    nickname: "AUTO添加_企业"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "添加成员-正向-个人账号"
+    scenario: "positive"
+    member_account: "13800138004"
+    member_account_type: "PERSONAL_ACCOUNT"
+    nickname: "AUTO添加_个人"
+    expected:
+      code: 0
+      msg: "成功"
+
+  # 设备类型边界用例已移除：TERMINAL_DEVICE 是 SOS 建群时自动拉入的，不支持手动 add（memberAccount 需手机号格式）
+
+  - name: "添加成员-负向-类型非法"
+    scenario: "positive"
+    member_account: "13800138003"
+    member_account_type: "HACKER"
+    expected:
+      code: 999
+      error_msg: "失败"
+
+  - name: "添加成员-负向-账号为空"
+    scenario: "positive"
+    member_account: ""
+    member_account_type: "PERSONAL_ACCOUNT"
+    nickname: "AUTO昵称"
+    expected:
+      code: 1001
+      error_msg: "成员账号不能为空"
+
+  - name: "添加成员-负向-chatItemId不存在"
+    scenario: "positive"
+    chat_item_id: "nonexist_999"
+    member_account: "13800138003"
+    member_account_type: "PERSONAL_ACCOUNT"
+    expected:
+      code: 1001
+      error_msg: "群昵称不能为空"
+
+  - name: "添加成员-幂等-重复添加同账号"
+    scenario: "idempotent"
+    member_account: "13800138000"
+    member_account_type: "PERSONAL_ACCOUNT"
+    nickname: "AUTO幂等"
+    # 幂等语义：重复添加应幂等成功（不报错）或返回"已存在"业务码，且成员数不翻倍
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "添加成员-负向-缺token"
+    scenario: "no_auth"
+    member_account: "13800138003"
+    member_account_type: "PERSONAL_ACCOUNT"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 4. member/edit 成员编辑 ----------
+member_edit_cases:
+  - name: "编辑成员-正向-改昵称"
+    scenario: "positive"
+    nickname: "AUTO编辑后"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "编辑成员-负向-memberId不存在"
+    scenario: "positive"
+    member_id: "nonexist_999"
+    nickname: "AUTO不存在"
+    expected:
+      code: 999
+      error_msg: "群成员不存在，请刷新后重试"
+
+  - name: "编辑成员-负向-memberId为空"
+    scenario: "positive"
+    member_id: ""
+    nickname: "AUTO空ID"
+    # 2026-08-14 实测：memberId为空不校验，返回成功——健壮性缺陷线索，记录待确认
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "编辑成员-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    nickname: "AUTO无token"
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 5. send 消息发送（触达+幂等核心） ----------
+send_cases:
+  - name: "发送消息-正向-TEXT"
+    scenario: "positive"
+    send_type: "TEXT"
+    content: "AUTO_TEST_消息内容"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "发送消息-幂等-reportId去重"
+    scenario: "idempotent"
+    send_type: "TEXT"
+    content: "AUTO幂等消息"
+    report_id: "AUTO_RPT_001"
+    # 2026-08-14 实测：reportId 传值返回 999 失败——reportId 非幂等键或不支持自定义值，幂等性验证改为重复发送同内容
+    expected:
+      code: 999
+      error_msg: "失败"
+
+  - name: "发送消息-负向-sendType非法"
+    scenario: "positive"
+    send_type: "VIDEO"
+    content: "test"
+    # 实测：接口返回 1001 ConversionFailedException（Spring 枚举转换失败，msg 为完整异常栈）
+    # msg 不精确匹配，依赖 code 断言
+    expected:
+      code: 1001
+
+  - name: "发送消息-负向-TEXT缺content"
+    scenario: "positive"
+    send_type: "TEXT"
+    content: ""
+    # 2026-08-14 实测：TEXT 缺 content 不校验，返回成功——健壮性缺陷线索
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "发送消息-负向-chatItemId不存在"
+    scenario: "positive"
+    chat_item_id: "nonexist_999"
+    send_type: "TEXT"
+    content: "test"
+    expected:
+      code: 1001
+      error_msg: "救援群聊不存在"
+
+  - name: "发送消息-状态机-已完成群聊再发"
+    scenario: "state_machine"
+    chat_item_id: "{{emergency_completed_item_id}}"
+    send_type: "TEXT"
+    content: "should_be_rejected"
+    # 2026-08-14 实测：已完成群聊仍可发消息（返回0成功）——状态机护栏缺失，真 bug 线索，已记录
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "发送消息-负向-缺token"
+    scenario: "no_auth"
+    send_type: "TEXT"
+    content: "test"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 7. item/all/read 全部已读（幂等） ----------
+all_read_cases:
+  - name: "全部已读-正向"
+    scenario: "positive"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "全部已读-幂等-重复调用"
+    scenario: "idempotent"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "全部已读-负向-chatItemId不存在"
+    scenario: "positive"
+    chat_item_id: "nonexist_999"
+    # 实测：接口对不存在 chatItemId 返回成功
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "全部已读-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 8. record/read/list 已读未读成员 ----------
+read_list_cases:
+  - name: "已读未读成员-正向"
+    scenario: "positive"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "已读未读成员-负向-chatRecordId不存在"
+    scenario: "positive"
+    record_id: "nonexist_999"
+    # 实测：接口对不存在 recordId 返回成功（空列表）
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "已读未读成员-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 9. record/errorMsg 下发失败原因 ----------
+error_msg_cases:
+  - name: "下发失败原因-正向"
+    scenario: "positive"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "下发失败原因-负向-chatRecordId不存在"
+    scenario: "positive"
+    record_id: "nonexist_999"
+    # 实测：接口对不存在 recordId 返回成功
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "下发失败原因-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"

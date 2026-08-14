@@ -69,3 +69,12 @@ def resolve_extract_value(
                 pytest.skip(f"依赖的变量 {var_name} 不存在，请先执行相关正向用例")
             return value
     return yaml_value
+
+
+def read_expected_msg(expected: Any) -> str:
+    """读 YAML expected 的文案：正向用 `msg`，负向用 `error_msg`。两者都有时优先 `msg`。"""
+    if not isinstance(expected, dict):
+        return ""
+    if expected.get("msg") not in (None, ""):
+        return str(expected["msg"])
+    return str(expected.get("error_msg") or "")

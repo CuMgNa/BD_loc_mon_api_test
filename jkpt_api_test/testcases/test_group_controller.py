@@ -3,7 +3,7 @@ import jsonpath
 import pytest
 import time
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml, write_yaml, resolve_extract_value
+from common.yaml_util import read_yaml, write_yaml, resolve_extract_value, read_expected_msg
 from common.logger_util import sep, key, print_request, print_response
 from common.allure_assert_util import assert_api_result
 
@@ -254,13 +254,13 @@ class TestGroupController:
         sep(" 断言结果 ")
         key("预期 code", case["expected"]["code"])
         key("实际 code", code)
-        key("预期 msg", case["expected"]["error_msg"])
+        key("预期 msg", read_expected_msg(case["expected"]))
         key("实际 msg", msg)
 
         assert_api_result(
             case_name=case["name"],
             expected_code=case["expected"]["code"],
-            expected_msg=case["expected"]["error_msg"],
+            expected_msg=read_expected_msg(case["expected"]),
             actual_code=code,
             actual_msg=msg
         )

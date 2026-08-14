@@ -108,7 +108,7 @@ flowchart LR
 batch_import_cases:
   - name: "批量导入设备-正向"
     file_path: "fixtures/batch_import_template.xlsx"
-    expected: { code: 0, error_msg: "成功" }
+    expected: { code: 0, msg: "成功" }
   - name: "批量导入设备-负向-未上传文件"
     file_path: ""
     expected: { code: 1001, error_msg: "导入文件不能为空" }
@@ -116,7 +116,7 @@ batch_import_cases:
 batch_details_cases:
   - name: "批量查询详情-正向"
     addrs: "{{batch_addrs}}"
-    expected: { code: 0, error_msg: "成功" }
+    expected: { code: 0, msg: "成功" }
   - name: "批量查询详情-负向-addrs为空"
     addrs: ""
     expected: { code: 1001, error_msg: "设备地址不能为空" }
@@ -129,13 +129,13 @@ batch_lnglat_cases:
       - { lat: 23.5, lng: 114.9 }
     page: 1
     pageSize: 100
-    expected: { code: 0, error_msg: "成功" }
+    expected: { code: 0, msg: "成功" }
 
 batch_move_group_cases:
   - name: "批量移动分组-正向"
     addrs: "{{batch_addrs}}"
     newGroupId: "{{one_id}}"
-    expected: { code: 0, error_msg: "成功" }
+    expected: { code: 0, msg: "成功" }
 
 batch_export_cases:
   - name: "批量导出-正向"
@@ -146,7 +146,7 @@ batch_export_cases:
 batch_delete_cases:
   - name: "批量解绑设备-正向"
     addrs: "{{batch_addrs}}"
-    expected: { code: 0, error_msg: "成功" }
+    expected: { code: 0, msg: "成功" }
 ```
 
 > 实际错误码 / 错误文案以服务返回为准，首次跑通后回填（与现有 `test_terminal_controller.yaml` 同处理方式）。

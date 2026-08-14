@@ -9,14 +9,14 @@ alarm_list_cases:
     page_size: 10
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "分页查询报警列表-负向-addr为空"
     scenario: "empty_addr"
     addr: ""
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "分页查询报警列表-负向-缺token"
     scenario: "no_auth"
@@ -35,14 +35,14 @@ alarm_history_cases:
     page_size: 10
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "查询设备历史报警-负向-addr为空"
     scenario: "empty_addr"
     addr: ""
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
 
 alarm_latest_cases:
@@ -51,7 +51,7 @@ alarm_latest_cases:
     addr: "{{msg_test_terminal}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
 
 alarm_handle_cases:
@@ -61,7 +61,7 @@ alarm_handle_cases:
     handle_result: "已处理"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
   
   - name: "处理报警-负向-报警记录重复处理"
     scenario: "duplicate_handle"
@@ -95,7 +95,7 @@ alarm_batch_handle_cases:
     handle_result: "批量已处理"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "按类型批量处理-负向-报警类型为空"
     scenario: "invalid_type"
@@ -121,7 +121,7 @@ alarm_batch_handle_ids_cases:
     ids: "{{alarm_batch_ids}}"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "按ID批量处理-负向-空列表"
     scenario: "empty_ids"
@@ -137,7 +137,7 @@ alarm_batch_info_cases:
     scenario: "positive"
     expected:
       code: 0
-      error_msg: "成功"
+      msg: "成功"
 
   - name: "获取报警类型统计-负向-缺token"
     scenario: "no_auth"
