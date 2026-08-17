@@ -3,6 +3,7 @@ import json
 import logging
 import time
 from typing import Optional, Dict, Any
+from urllib.parse import urlparse
 
 import requests
 
@@ -178,6 +179,18 @@ class BaseRequest:
             "elapsed_ms": elapsed_ms,
         }
 
+    @staticmethod
+    def _allure_attach_title(kind: str, request_context: Dict[str, Any]) -> str:
+        """Allure 附件标题：方法 + 路径 + 可选用例名，便于一条用例里多请求时区分。"""
+        method = (request_context.get("method") or "?").upper()
+        raw_url = request_context.get("url") or ""
+        path = urlparse(raw_url).path or raw_url
+        title = f"[{kind}] {method} {path}"
+        case_name = (request_context.get("case_name") or "").strip()
+        if case_name:
+            title = f"{title} · {case_name}"
+        return title
+
     def _attach_allure_context(
         self,
         request_context: Dict[str, Any],
@@ -188,19 +201,21 @@ class BaseRequest:
             return
         allure.attach(
             self._to_pretty_json(request_context),
-            name="request.json",
+            name=self._allure_attach_title("请求", request_context),
             attachment_type=allure.attachment_type.JSON
         )
         if response_context is not None:
+            status = response_context.get("status_code")
+            kind = f"响应 {status}" if status is not None else "响应"
             allure.attach(
                 self._to_pretty_json(response_context),
-                name="response.json",
+                name=self._allure_attach_title(kind, request_context),
                 attachment_type=allure.attachment_type.JSON
             )
         if error_context is not None:
             allure.attach(
                 self._to_pretty_json(error_context),
-                name="request_error.json",
+                name=self._allure_attach_title("请求失败", request_context),
                 attachment_type=allure.attachment_type.JSON
             )
 

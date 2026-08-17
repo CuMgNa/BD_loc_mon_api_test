@@ -1,7 +1,12 @@
 # testcases/test_alarm_settings_controller.py
-# 报警通知设置管理接口测试
-# test_as_a_list 提取 id + 四开关原值写入 extract.yaml
-# test_as_b_edit 快照 + 取反 + 断言 + 还原
+# 报警通知设置管理接口 — S3 拆类范式（一接口一 TestClass，allure 按接口分组）
+#
+# 类序即执行序：List → Edit（Edit 依赖 List 提取的 extract 键，见下）
+# 依赖声明（extract 链）：
+#   TestAs01AlarmSettingsList  正向提取 id + 四开关原值 → extract.yaml
+#     alarm_setting_id / alarm_setting_original
+#   TestAs02AlarmSettingsEdit  消费上述两键（快照→取反→断言→还原）
+# YAML 映射：list_alarm_settings_cases → TestAs01 / edit_alarm_settings_cases → TestAs02
 import jsonpath
 import pytest
 from common.requests_util import BaseRequest
@@ -15,21 +20,41 @@ http = BaseRequest()
 # 四开关字段名（与 AlarmSettingRespDto 对齐）
 _SWITCH_FIELDS = ["alarmVoice", "emailNoti", "popupWindow", "smsNoti"]
 
+_TEST_DATA = read_yaml("./yaml/test_alarm_settings_controller.yaml")
 
-class TestAlarmSettingsController:
-    """报警通知设置管理接口测试"""
 
-    test_data = read_yaml("./yaml/test_alarm_settings_controller.yaml")
+class _AlarmSettingsHelpers:
+    """不被 pytest 收集；供接口类复用断言。"""
 
-    # ---------- a. 获取报警通知设置列表（GET /api/monitor/alarm-settings） ----------
-    @pytest.mark.parametrize("case", test_data["list_alarm_settings_cases"])
-    def test_as_a_list_alarm_settings(self, base_url, auth_headers, case):
+    def _assert_and_report(self, case, res):
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        raw_msg = _jsonpath_parse(json_data, "$.msg")
+        msg = raw_msg[0] if raw_msg else "未知错误"
+
+        sep(" 断言结果 ")
+        key("预期 code", case["expected"]["code"])
+        key("实际 code", code)
+        key("预期 msg", read_expected_msg(case["expected"]))
+        key("实际 msg", msg)
+
+        assert_api_result(
+            case_name=case["name"],
+            expected_code=case["expected"]["code"],
+            expected_msg=read_expected_msg(case["expected"]),
+            actual_code=code,
+            actual_msg=msg,
+        )
+
+
+class TestAs01AlarmSettingsList(_AlarmSettingsHelpers):
+    """GET /api/monitor/alarm-settings — 获取报警通知设置列表"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["list_alarm_settings_cases"])
+    def test_list_alarm_settings(self, base_url, auth_headers, case):
         """获取列表；正向提取 id + 四开关原值写入 extract.yaml"""
         url = f"{base_url}/api/monitor/alarm-settings"
-        if case.get("no_auth"):
-            headers = {}
-        else:
-            headers = {**auth_headers}
+        headers = {} if case.get("no_auth") else {**auth_headers}
 
         sep(f" 测试用例: {case['name']}")
         print_request("GET", url, headers=headers)
@@ -45,7 +70,7 @@ class TestAlarmSettingsController:
         json_data = res.json()
         code = _jsonpath_parse(json_data, "$.code")[0]
 
-        # 正向：提取 id + 四开关快照写入 extract.yaml
+        # 正向：提取 id + 四开关快照写入 extract.yaml（供 TestAs02 消费）
         if code == 0 and case.get("name") == "报警通知设置-列表-正向":
             items = _jsonpath_parse(json_data, "$.data[*]")
             if not items:
@@ -64,17 +89,21 @@ class TestAlarmSettingsController:
 
         self._assert_and_report(case, res)
 
-    # ---------- b. 编辑报警通知设置（PUT /api/monitor/alarm-settings/{id}） ----------
-    @pytest.mark.parametrize("case", test_data["edit_alarm_settings_cases"])
-    def test_as_b_edit_alarm_settings(self, base_url, auth_headers, case):
+
+class TestAs02AlarmSettingsEdit(_AlarmSettingsHelpers):
+    """PUT /api/monitor/alarm-settings/{id} — 编辑报警通知设置
+
+    依赖 TestAs01 提取的 {{alarm_setting_id}} / {{alarm_setting_original}}。
+    正向：快照→取反→断言→还原。
+    """
+
+    @pytest.mark.parametrize("case", _TEST_DATA["edit_alarm_settings_cases"])
+    def test_edit_alarm_settings(self, base_url, auth_headers, case):
         """编辑报警通知设置；正向：快照→取反→断言→还原"""
         raw_id = case.get("setting_id")
         tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
 
-        if case.get("no_auth"):
-            headers = {}
-        else:
-            headers = {**auth_headers}
+        headers = {} if case.get("no_auth") else {**auth_headers}
 
         # ---------- 取原始快照 ----------
         orig_snapshot = None
@@ -146,23 +175,3 @@ class TestAlarmSettingsController:
             key("还原结果", "成功")
 
         self._assert_and_report(case, res)
-
-    def _assert_and_report(self, case, res):
-        json_data = res.json()
-        code = _jsonpath_parse(json_data, "$.code")[0]
-        raw_msg = _jsonpath_parse(json_data, "$.msg")
-        msg = raw_msg[0] if raw_msg else "未知错误"
-
-        sep(" 断言结果 ")
-        key("预期 code", case["expected"]["code"])
-        key("实际 code", code)
-        key("预期 msg", read_expected_msg(case["expected"]))
-        key("实际 msg", msg)
-
-        assert_api_result(
-            case_name=case["name"],
-            expected_code=case["expected"]["code"],
-            expected_msg=read_expected_msg(case["expected"]),
-            actual_code=code,
-            actual_msg=msg,
-        )

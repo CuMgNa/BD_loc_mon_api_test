@@ -1,5 +1,16 @@
 # testcases/test_enclosure_controller.py
-# 围栏管理 — 方法名 test_enc_a_* … test_enc_g_* 保证 pytest 收集顺序
+# 围栏管理接口 — S3 拆类范式（一接口一 TestClass，allure 按接口分组）
+#
+# 类序即执行序：Add → List → Update → Terminals → Export → AddByCode → Delete
+# 依赖声明（extract 链）：
+#   TestEn01EnclosureAdd     正向提取 enclosure_id/enclosure_name/enclosure_share_code → extract.yaml
+#   TestEn02EnclosureList    消费 {{enclosure_id}}（断言列表包含）
+#   TestEn03/04/05/07        消费 {{enclosure_id}}（编辑/绑设备/导出/删除）
+#   TestEn06EnclosureAddByCode 正向提取 enclosure_cloned_id（分享码克隆围栏）
+#   module 级 _cleanup_enclosures 兜底删除全部测试围栏（含克隆）
+# YAML 映射：add_enclosure_cases→TestEn01 / list_enclosure_cases→TestEn02 / update_enclosure_cases→TestEn03
+#           add_enclosure_terminals_cases→TestEn04 / export_enclosure_cases→TestEn05
+#           add_enclosure_by_code_cases→TestEn06 / delete_enclosure_cases→TestEn07
 import jsonpath
 import pytest
 import re
@@ -14,6 +25,8 @@ _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
 _STALE_NAME_RE = re.compile(r"^[EU]\d{10}$")
 _STALE_NAMES = {"A", "1234567890123"}
+
+_TEST_DATA = read_yaml("./yaml/test_enclosure_controller.yaml")
 
 
 def _jp_first(data, expr):
@@ -96,197 +109,8 @@ def _cleanup_enclosures(base_url, auth_headers):
         _silent_delete(base_url, auth_headers, eid, eid)
 
 
-class TestEnclosureController:
-    """围栏管理接口测试（7 个接口）"""
-
-    test_data = read_yaml("./yaml/test_enclosure_controller.yaml")
-
-    # ---------- a. 添加围栏 ----------
-    @pytest.mark.parametrize("case", test_data["add_enclosure_cases"])
-    def test_enc_a_add(self, base_url, auth_headers, case):
-        """POST /enclosures，query: name + pointJson"""
-        url = f"{base_url}/api/monitor/enclosures"
-        headers = self._headers(auth_headers, case)
-        ename = self._resolve_enclosure_name(case.get("enclosureName"))
-        params = {"name": ename}
-        if case.get("pointJson"):
-            params["pointJson"] = case["pointJson"]
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("POST", url, params=params, headers=headers)
-        res = http.send_request(
-            "post",
-            url,
-            params=params,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-
-        json_data = res.json()
-        code = _jp_first(json_data, "$.code")
-        if code == 0:
-            eid = _jp_first(json_data, "$.data.id")
-            _append_cleanup_id(eid)
-            if case["name"] == "围栏-创建-正向":
-                if not eid:
-                    pytest.fail("创建围栏成功但未返回 data.id")
-                payload = {"enclosure_id": eid, "enclosure_name": ename}
-                share_code = _jp_first(json_data, "$.data.shareCode")
-                if share_code:
-                    payload["enclosure_share_code"] = share_code
-                write_yaml("./extract.yaml", payload, mode="append")
-
-        self._assert_and_report(case, res)
-
-    # ---------- b. 围栏列表 ----------
-    @pytest.mark.parametrize("case", test_data["list_enclosure_cases"])
-    def test_enc_b_list(self, base_url, auth_headers, case):
-        """GET /enclosures"""
-        url = f"{base_url}/api/monitor/enclosures"
-        headers = self._headers(auth_headers, case)
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, headers=headers)
-        res = http.send_request(
-            "get",
-            url,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-        if case.get("no_auth"):
-            return
-        eid = resolve_extract_value(case.get("enclosureId"), required=True)
-        ids = self._list_ids(res.json())
-        assert str(eid) in ids, f"列表未包含创建的围栏 id={eid}，实际 ids={ids[:20]}"
-
-    # ---------- c. 编辑围栏 ----------
-    @pytest.mark.parametrize("case", test_data["update_enclosure_cases"])
-    def test_enc_c_update(self, base_url, auth_headers, case):
-        """PUT /enclosures/{id}，JSON body: name + pointJson"""
-        raw_id = case.get("enclosureId")
-        tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
-        url = f"{base_url}/api/monitor/enclosures/{tid}"
-        headers = self._headers(auth_headers, case)
-        ename = self._resolve_enclosure_name(case.get("enclosureName"))
-        body = {"name": ename}
-        if case.get("pointJson"):
-            body["pointJson"] = case["pointJson"]
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("PUT", url, json=body, headers=headers)
-        res = http.send_request(
-            "put",
-            url,
-            json=body,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- d. 绑/清设备 ----------
-    @pytest.mark.parametrize("case", test_data["add_enclosure_terminals_cases"])
-    def test_enc_d_terminals(self, base_url, auth_headers, msg_test_terminal, case):
-        """PUT /enclosures/{id}/terminals，JSON body 的 addrs 为逗号字符串"""
-        tid = resolve_extract_value(case.get("enclosureId"), required=True)
-        url = f"{base_url}/api/monitor/enclosures/{tid}/terminals"
-        headers = self._headers(auth_headers, case)
-        addrs = case.get("addrs")
-        if isinstance(addrs, str) and addrs.strip() == "{{msg_test_terminal}}":
-            addrs = msg_test_terminal
-        body = {"addrs": addrs if addrs is not None else ""}
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("PUT", url, json=body, headers=headers)
-        res = http.send_request(
-            "put",
-            url,
-            json=body,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- e. 导出 KML ----------
-    @pytest.mark.parametrize("case", test_data["export_enclosure_cases"])
-    def test_enc_e_export(self, base_url, auth_headers, case):
-        """GET /enclosures/{id}/export；正向按 KML/XML 流断言，禁止 xlsx PK"""
-        raw_id = case.get("enclosureId")
-        tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
-        url = f"{base_url}/api/monitor/enclosures/{tid}/export"
-        headers = self._headers(auth_headers, case)
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, headers=headers)
-        res = http.send_request(
-            "get",
-            url,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_kml_or_json(case, res)
-
-    # ---------- f. 分享码添加 ----------
-    @pytest.mark.parametrize("case", test_data["add_enclosure_by_code_cases"])
-    def test_enc_f_add_by_code(self, base_url, auth_headers, case):
-        """POST /enclosures/codes/{shareCode}；正向他账号字面量，反向自己的码"""
-        raw_code = case.get("shareCode")
-        share = resolve_extract_value(raw_code, required=is_extract_placeholder(raw_code))
-        url = f"{base_url}/api/monitor/enclosures/codes/{share}"
-        headers = self._headers(auth_headers, case)
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("POST", url, headers=headers)
-        res = http.send_request(
-            "post",
-            url,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-
-        json_data = res.json()
-        code = _jp_first(json_data, "$.code")
-        if code == 0:
-            cloned_id = _jp_first(json_data, "$.data.id")
-            _append_cleanup_id(cloned_id)
-            if case["name"] == "围栏-分享码添加-正向" and cloned_id:
-                write_yaml("./extract.yaml", {"enclosure_cloned_id": cloned_id}, mode="append")
-
-        self._assert_and_report(case, res)
-
-    # ---------- g. 删除围栏 ----------
-    @pytest.mark.parametrize("case", test_data["delete_enclosure_cases"])
-    def test_enc_g_delete(self, base_url, auth_headers, case):
-        """DELETE /enclosures/{id}；正向只删主围栏"""
-        raw_id = case.get("enclosureId")
-        tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
-        url = f"{base_url}/api/monitor/enclosures/{tid}"
-        headers = self._headers(auth_headers, case)
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("DELETE", url, headers=headers)
-        res = http.send_request(
-            "delete",
-            url,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
+class _EnclosureHelpers:
+    """不被 pytest 收集；供 7 个接口类复用断言/取数。"""
 
     # ---------- 辅助 ----------
     @staticmethod
@@ -352,3 +176,211 @@ class TestEnclosureController:
         assert "kml" in preview or "<?xml" in preview, (
             f"[{case['name']}] 预期 KML/XML，实际前缀={trimmed[:80]!r}"
         )
+
+
+class TestEn01EnclosureAdd(_EnclosureHelpers):
+    """POST /api/monitor/enclosures — 添加围栏（正向提取 enclosure_id/share_code）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["add_enclosure_cases"])
+    def test_enclosure_add(self, base_url, auth_headers, case):
+        """POST /enclosures，query: name + pointJson"""
+        url = f"{base_url}/api/monitor/enclosures"
+        headers = self._headers(auth_headers, case)
+        ename = self._resolve_enclosure_name(case.get("enclosureName"))
+        params = {"name": ename}
+        if case.get("pointJson"):
+            params["pointJson"] = case["pointJson"]
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("POST", url, params=params, headers=headers)
+        res = http.send_request(
+            "post",
+            url,
+            params=params,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+
+        json_data = res.json()
+        code = _jp_first(json_data, "$.code")
+        if code == 0:
+            eid = _jp_first(json_data, "$.data.id")
+            _append_cleanup_id(eid)
+            if case["name"] == "围栏-创建-正向":
+                if not eid:
+                    pytest.fail("创建围栏成功但未返回 data.id")
+                payload = {"enclosure_id": eid, "enclosure_name": ename}
+                share_code = _jp_first(json_data, "$.data.shareCode")
+                if share_code:
+                    payload["enclosure_share_code"] = share_code
+                write_yaml("./extract.yaml", payload, mode="append")
+
+        self._assert_and_report(case, res)
+
+
+class TestEn02EnclosureList(_EnclosureHelpers):
+    """GET /api/monitor/enclosures — 围栏列表（消费 {{enclosure_id}} 断言包含）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["list_enclosure_cases"])
+    def test_enclosure_list(self, base_url, auth_headers, case):
+        """GET /enclosures"""
+        url = f"{base_url}/api/monitor/enclosures"
+        headers = self._headers(auth_headers, case)
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, headers=headers)
+        res = http.send_request(
+            "get",
+            url,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+        if case.get("no_auth"):
+            return
+        eid = resolve_extract_value(case.get("enclosureId"), required=True)
+        ids = self._list_ids(res.json())
+        assert str(eid) in ids, f"列表未包含创建的围栏 id={eid}，实际 ids={ids[:20]}"
+
+
+class TestEn03EnclosureUpdate(_EnclosureHelpers):
+    """PUT /api/monitor/enclosures/{id} — 编辑围栏（消费 {{enclosure_id}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["update_enclosure_cases"])
+    def test_enclosure_update(self, base_url, auth_headers, case):
+        """PUT /enclosures/{id}，JSON body: name + pointJson"""
+        raw_id = case.get("enclosureId")
+        tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
+        url = f"{base_url}/api/monitor/enclosures/{tid}"
+        headers = self._headers(auth_headers, case)
+        ename = self._resolve_enclosure_name(case.get("enclosureName"))
+        body = {"name": ename}
+        if case.get("pointJson"):
+            body["pointJson"] = case["pointJson"]
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("PUT", url, json=body, headers=headers)
+        res = http.send_request(
+            "put",
+            url,
+            json=body,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestEn04EnclosureTerminals(_EnclosureHelpers):
+    """PUT /api/monitor/enclosures/{id}/terminals — 绑/清设备（消费 {{enclosure_id}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["add_enclosure_terminals_cases"])
+    def test_enclosure_terminals(self, base_url, auth_headers, msg_test_terminal, case):
+        """PUT /enclosures/{id}/terminals，JSON body 的 addrs 为逗号字符串"""
+        tid = resolve_extract_value(case.get("enclosureId"), required=True)
+        url = f"{base_url}/api/monitor/enclosures/{tid}/terminals"
+        headers = self._headers(auth_headers, case)
+        addrs = case.get("addrs")
+        if isinstance(addrs, str) and addrs.strip() == "{{msg_test_terminal}}":
+            addrs = msg_test_terminal
+        body = {"addrs": addrs if addrs is not None else ""}
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("PUT", url, json=body, headers=headers)
+        res = http.send_request(
+            "put",
+            url,
+            json=body,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestEn05EnclosureExport(_EnclosureHelpers):
+    """GET /api/monitor/enclosures/{id}/export — 导出 KML（消费 {{enclosure_id}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["export_enclosure_cases"])
+    def test_enclosure_export(self, base_url, auth_headers, case):
+        """GET /enclosures/{id}/export；正向按 KML/XML 流断言，禁止 xlsx PK"""
+        raw_id = case.get("enclosureId")
+        tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
+        url = f"{base_url}/api/monitor/enclosures/{tid}/export"
+        headers = self._headers(auth_headers, case)
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, headers=headers)
+        res = http.send_request(
+            "get",
+            url,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_kml_or_json(case, res)
+
+
+class TestEn06EnclosureAddByCode(_EnclosureHelpers):
+    """POST /api/monitor/enclosures/codes/{shareCode} — 分享码添加（消费 {{enclosure_share_code}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["add_enclosure_by_code_cases"])
+    def test_enclosure_add_by_code(self, base_url, auth_headers, case):
+        """POST /enclosures/codes/{shareCode}；正向他账号字面量，反向自己的码"""
+        raw_code = case.get("shareCode")
+        share = resolve_extract_value(raw_code, required=is_extract_placeholder(raw_code))
+        url = f"{base_url}/api/monitor/enclosures/codes/{share}"
+        headers = self._headers(auth_headers, case)
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("POST", url, headers=headers)
+        res = http.send_request(
+            "post",
+            url,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+
+        json_data = res.json()
+        code = _jp_first(json_data, "$.code")
+        if code == 0:
+            cloned_id = _jp_first(json_data, "$.data.id")
+            _append_cleanup_id(cloned_id)
+            if case["name"] == "围栏-分享码添加-正向" and cloned_id:
+                write_yaml("./extract.yaml", {"enclosure_cloned_id": cloned_id}, mode="append")
+
+        self._assert_and_report(case, res)
+
+
+class TestEn07EnclosureDelete(_EnclosureHelpers):
+    """DELETE /api/monitor/enclosures/{id} — 删除围栏（消费 {{enclosure_id}}，正向只删主围栏）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["delete_enclosure_cases"])
+    def test_enclosure_delete(self, base_url, auth_headers, case):
+        """DELETE /enclosures/{id}；正向只删主围栏"""
+        raw_id = case.get("enclosureId")
+        tid = resolve_extract_value(raw_id, required=is_extract_placeholder(raw_id))
+        url = f"{base_url}/api/monitor/enclosures/{tid}"
+        headers = self._headers(auth_headers, case)
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("DELETE", url, headers=headers)
+        res = http.send_request(
+            "delete",
+            url,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)

@@ -99,6 +99,16 @@ record_page_cases:
       code: 0
       msg: "成功"
 
+  - name: "聊天记录-边界-翻页守恒"
+    scenario: "paging_conserve"
+    chat_item_id: "{{emergency_chat_item_id}}"
+    page: 1
+    page_size: 1
+    # Python 侧断言：pageSize=1 两页各恰1条、无重叠、均属本群全量集（计划 6-2）
+    expected:
+      code: 0
+      msg: "成功"
+
   - name: "聊天记录-负向-chatItemId不存在"
     scenario: "positive"
     chat_item_id: "nonexist_chat_item_id_999"
@@ -128,7 +138,7 @@ member_add_cases:
 
   - name: "添加成员-正向-个人账号"
     scenario: "positive"
-    member_account: "13800138004"
+    member_account: "13200000003"
     member_account_type: "PERSONAL_ACCOUNT"
     nickname: "AUTO添加_个人"
     expected:
@@ -204,10 +214,19 @@ member_edit_cases:
     scenario: "positive"
     member_id: ""
     nickname: "AUTO空ID"
-    # 2026-08-14 实测：memberId为空不校验，返回成功——健壮性缺陷线索，记录待确认
+    # 2026-08-17 复测纠正旧记录：空 memberId 实际返回 999「群成员不存在」
+    # （旧「返回成功」系回退逻辑编辑了自己的假结论）
     expected:
-      code: 0
-      msg: "成功"
+      code: 999
+      error_msg: "群成员不存在，请刷新后重试"
+
+  - name: "编辑成员-越权-编辑他人昵称被拒"
+    scenario: "forbidden"
+    nickname: "AUTO不该生效"
+    # 2026-08-17 实测：接口归属校验「仅能编辑自己的群昵称」（999）；Python 侧断言对方昵称未被改
+    expected:
+      code: 999
+      error_msg: "仅能编辑自己的群昵称"
 
   - name: "编辑成员-负向-缺token"
     scenario: "no_auth"
@@ -264,16 +283,6 @@ send_cases:
     expected:
       code: 1001
       error_msg: "救援群聊不存在"
-
-  - name: "发送消息-状态机-已完成群聊再发"
-    scenario: "state_machine"
-    chat_item_id: "{{emergency_completed_item_id}}"
-    send_type: "TEXT"
-    content: "should_be_rejected"
-    # 2026-08-14 实测：已完成群聊仍可发消息（返回0成功）——状态机护栏缺失，真 bug 线索，已记录
-    expected:
-      code: 0
-      msg: "成功"
 
   - name: "发送消息-负向-缺token"
     scenario: "no_auth"
@@ -361,3 +370,107 @@ error_msg_cases:
     expected:
       code: 3001
       error_msg: "没有访问权限"
+
+
+# ---------- 10. item/complete 救援完成（状态机核心 ⭐） ----------
+complete_cases:
+  - name: "救援完成-正向-前后状态闭环"
+    scenario: "positive"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "救援完成-幂等-重复complete"
+    scenario: "idempotent"
+    # 注：本用例在正向之后跑（群已完成），首次调用即「重复 complete」。
+    # 2026-08-17 实测：code=999 "救援群聊已完成，无需重复操作"——明确业务拒绝码，符合计划10-3
+    # 「幂等成功或明确已完成码」语义；Python 侧断言群终态保持 isCompleted=true
+    expected:
+      code: 999
+      error_msg: "救援群聊已完成，无需重复操作"
+
+  - name: "救援完成-负向-chatItemId不存在"
+    scenario: "positive"
+    chat_item_id: "nonexist_999"
+    # 2026-08-17 实测：code=999, msg=救援群聊不存在（msg 同预期，code 与 send 接口的 1001 不同）
+    expected:
+      code: 999
+      error_msg: "救援群聊不存在"
+
+  - name: "救援完成-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 11. complete/status 完成按钮状态 ----------
+complete_status_cases:
+  - name: "完成状态-语义-hasPermission基线"
+    scenario: "semantic"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "完成状态-负向-chatItemId不存在"
+    scenario: "positive"
+    chat_item_id: "nonexist_999"
+    # 2026-08-17 实测：接口对不存在 chatItemId 返回成功（空 data）——健壮性线索，与 member/list 同类
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "完成状态-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 13. clear/all-unread 清空全部未读（PUT，幂等） ----------
+clear_unread_cases:
+  - name: "清空未读-正向"
+    scenario: "positive"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "清空未读-幂等-重复调用"
+    scenario: "idempotent"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "清空未读-负向-缺token"
+    scenario: "no_auth"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+
+# ---------- 14. test/expiration 自动关闭（测试桩，兼清理） ----------
+expiration_cases:
+  - name: "自动关闭-正向-inactiveMillis=1"
+    scenario: "positive"
+    inactive_millis: 1
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "自动关闭-负向-inactiveMillis=0"
+    scenario: "positive"
+    inactive_millis: 0
+    # 2026-08-17 实测：测试桩不校验 0/负值，直接成功——健壮性线索，与 member/list 空 ID 同类
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "自动关闭-负向-inactiveMillis负数"
+    scenario: "positive"
+    inactive_millis: -1
+    expected:
+      code: 0
+      msg: "成功"

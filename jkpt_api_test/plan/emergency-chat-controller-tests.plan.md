@@ -454,3 +454,37 @@ send_cases:
 - 10304 平台 `v3/api-docs`（登录后拉取），2026-08-14：`uplink-sim/send`（UplinkSimForm）、`disconnect`、`sessions`、`mock-terminal` CRUD、`ui-defaults`
 - tag `应急-求救群聊接口` 13 个；tag `A-测试关闭求救群聊` → test/expiration；tag `模拟终端入库` → mock-in-storage
 - DTO：`EmergencyChatItemMemberAddDto`（4 枚举）、`MemberEditDto`、`EmergencyChatItemCompleteByAddrDto`（addrs 唯一数组）、`EmergencyChatItemCompleteStatusDto`（hasPermission/isCompleted）、`EmergencyChatItemDto`（status: 0完成/1救援中，unreadCount）、`UplinkSimForm`（terminalId/hardwareId/serverHost/serverPort/messageType/reportFlag/坐标等）
+
+---
+
+## 执行记录（2026-08-17 收官）
+
+### 终态：13 接口全落地，全量回归 62 passed / 0 failed
+
+| 产物 | 内容 |
+|------|------|
+| `testcases/test_emergency_chat_controller.py` | a0 + 13 接口 + 状态机反例 + VOICE + 取消SOS，共 62 用例 |
+| `yaml/test_emergency_chat_controller.yaml` | 14 个顶层 key，负向码全部按 2026-08-17 实测校准 |
+| `conftest.py` | +2 fixture（rescue_sat_terminal / emergency_chat_item）+ `_close_rescue_chats_teardown` session 级兜底清理 |
+| `common/rescue_platform_client.py` | 10304 客户端（登录/U0-U5 上行/会话管理/归因日志） |
+
+### 关键实测发现（均已锁定为断言基线或留痕）
+
+| # | 发现 | 处置 |
+|---|------|------|
+| 1 | **旧「已完成群可发消息」bug 记录系假阳性**：真实行为 `1001 "救援已结束，无法发送消息"`，状态机护栏存在。根因：`resolve_extract_value` 缺键静默回退活跃群 → 已修复为状态机场景显式 skip，不回退 | 断言改为 code!=0 + msg 锁实测值 |
+| 2 | **complete/addr 全量 3001**：web 账号无管理后台权限（风险7实锤）；无 token 时返回 999（与其它接口 3001 不一致，鉴权层级差异线索） | 权限探测先行；管理账号矩阵移交 combo 计划 |
+| 3 | **S6 实测定稿**：send VOICE 的 file **唯一正确传法是 form-data 文件上传**（query 纯 hex → 1001 类型转换异常；仅 fileSize → 1001 保存失败） | test_5_2 落地 |
+| 4 | **S4.6 已销（通过）**：U5 语音上行正常落库；计划断言字段 `lastChatType` 系误记，真实字段为 **`sendType`**（VOICE 记录 content 为 oss 路径） | 断言按真实字段修正 |
+| 5 | **S4.7 已销**：reportFlag=10 取消 SOS 后群 status 翻 0（等价 complete），且群内再发消息被拦截（状态机护栏双保险） | test_u4 落地 |
+| 6 | **造数链隐含前置**：设备必须挂分组，仅入库不挂组 SOS 不建群（S2 变体实锤） | fixture 链含③挂组；Spike 脚本已删 |
+| 7 | **测试桩/查询类健壮性线索**：member/list 空 ID、expiration 0/负值、read_list/errorMsg 不存在 ID 等均不校验直接成功 | YAML 注释留痕待开发确认 |
+
+### 遗留清单
+
+| # | 项 | 去向 |
+|---|-----|------|
+| 1 | complete/addr 业务语义（正向 status=0 副作用、幂等）未验证——单 web 账号无权限 | 移交 combo 计划的管理账号矩阵 |
+| 2 | glht 入库记录按 sn 精确清理（terminal-inventory-cleanup.plan pending） | 独立计划实施时消费 `pytestconfig.stash["rescue_terminal_sns"]` |
+| 3 | 双账号水平越权矩阵 | combo 计划 |
+| 4 | 触达失败场景（9-2 设备离线 errorMsg）依赖环境 | 环境具备时补测 |

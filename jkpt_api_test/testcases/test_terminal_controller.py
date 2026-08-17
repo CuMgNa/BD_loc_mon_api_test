@@ -1,4 +1,16 @@
 # testcases/test_terminal_controller.py
+# 设备管理接口 — S3 拆类范式（一接口一 TestClass，allure 按接口分组）
+#
+# 类序即执行序：Add → Update → BatchAdd → Follow → Move → List → EnumAdd
+# 依赖声明（extract 链）：
+#   TestTm01AddTerminal     首个成功提取 devices_addr（类级标记防重复）→ extract.yaml
+#   TestTm02/04/05          消费 {{devices_addr}}（编辑/关注/移动分组）
+#   TestTm03BatchAddTerminals 提取 addrList（SN 批量添加成功的 addr 串）
+#   TestTm07AddTerminalByEnum  枚举入库+添加（terminal_type_enum_cases fixture，无 YAML expected）
+#   groupId 全部走 group_fixture（three_id/two_id/one_id，fixture 依赖非 extract）
+# YAML 映射：add_terminal_cases→TestTm01 / update_terminal_cases→TestTm02 / batch_add_terminals_cases→TestTm03
+#           follow_terminal_cases→TestTm04 / move_terminal_cases→TestTm05
+#           list_terminals_cases→TestTm06 / (枚举走 fixture)→TestTm07
 import jsonpath
 import pytest
 import time
@@ -11,15 +23,63 @@ from common.common_data import get_current_datetime
 _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
 
+_TEST_DATA = read_yaml("./yaml/test_terminal_controller.yaml")
 
-class TestTerminalController:
-    """设备管理接口测试 (Terminal Controller)"""
 
-    test_data = read_yaml("./yaml/test_terminal_controller.yaml")
+class _TerminalHelpers:
+    """不被 pytest 收集；供 7 个接口类复用断言/取组。"""
+
+    @staticmethod
+    def _resolve_group_id(case_value, fixture_value):
+        placeholder = f"{{{{{fixture_value[0]}}}}}" if False else None  # noqa: 保留占位说明
+        return fixture_value if case_value and str(fixture_value) in str(case_value) else case_value
+
+    def _assert_and_report_res(self, res, case_name):
+        """接受 Response 对象的断言（枚举用例无 YAML expected）"""
+        try:
+            json_data = parse_response_json(res, context=case_name)
+        except NonJsonResponseError as e:
+            pytest.fail(str(e))
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        msg = _jsonpath_parse(json_data, "$.msg")[0]
+        sep(" 断言结果 ")
+        key("实际 code", code)
+        key("实际 msg", msg)
+        assert_api_result(
+            case_name=case_name,
+            expected_code=0,
+            expected_msg="成功",
+            actual_code=code,
+            actual_msg=msg,
+        )
+
+    def _assert_and_report(self, case, res):
+        """统一断言并输出报告"""
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        msg = _jsonpath_parse(json_data, "$.msg")[0]
+
+        sep(" 断言结果 ")
+        key("预期 code", case["expected"]["code"])
+        key("实际 code", code)
+        key("预期 msg", read_expected_msg(case["expected"]))
+        key("实际 msg", msg)
+
+        assert_api_result(
+            case_name=case["name"],
+            expected_code=case["expected"]["code"],
+            expected_msg=read_expected_msg(case["expected"]),
+            actual_code=code,
+            actual_msg=msg
+        )
+
+
+class TestTm01AddTerminal(_TerminalHelpers):
+    """POST /api/monitor/groups/{groupId}/terminals — 添加单个设备（提取 devices_addr）"""
+
     _first_addr_extracted = False  # 控制只提取第一个成功的设备地址
 
-    # ==================== 添加单个设备 ====================
-    @pytest.mark.parametrize("case", test_data["add_terminal_cases"])
+    @pytest.mark.parametrize("case", _TEST_DATA["add_terminal_cases"])
     def test_add_terminal(self, base_url, auth_headers, group_fixture, case):
         """添加单个设备"""
         group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
@@ -53,16 +113,19 @@ class TestTerminalController:
         # 成功时提取 addr 供后续编辑用例使用
         json_data = res.json()
         code = _jsonpath_parse(json_data, "$.code")[0]
-        if code == 0 and not self._first_addr_extracted:
+        if code == 0 and not TestTm01AddTerminal._first_addr_extracted:
             terminal_addr = _jsonpath_parse(json_data, "$.data.addr")
             if terminal_addr:
                 write_yaml("./extract.yaml", {"devices_addr": terminal_addr[0]}, mode="append")
-                self._first_addr_extracted = True
+                TestTm01AddTerminal._first_addr_extracted = True
 
         self._assert_and_report(case, res)
 
-    # ==================== 编辑设备 ====================
-    @pytest.mark.parametrize("case", test_data["update_terminal_cases"])
+
+class TestTm02UpdateTerminal(_TerminalHelpers):
+    """PUT /api/monitor/groups/{groupId}/terminals — 编辑设备（消费 {{devices_addr}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["update_terminal_cases"])
     def test_update_terminal(self, base_url, auth_headers, group_fixture, case):
         """编辑设备"""
         group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
@@ -97,8 +160,11 @@ class TestTerminalController:
 
         self._assert_and_report(case, res)
 
-    # ==================== 手动输入SN码批量添加 ====================
-    @pytest.mark.parametrize("case", test_data["batch_add_terminals_cases"])
+
+class TestTm03BatchAddTerminals(_TerminalHelpers):
+    """POST /api/monitor/groups/{groupId}/terminals/batch — 手动 SN 批量添加（提取 addrList）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_add_terminals_cases"])
     def test_batch_add_terminals(self, base_url, auth_headers, group_fixture, case):
         """手动输入SN码批量添加"""
         group_id = group_fixture.get("two_id") if "{{two_id}}" in str(case.get("groupId")) else case.get("groupId")
@@ -143,8 +209,11 @@ class TestTerminalController:
 
         self._assert_and_report(case, res)
 
-    # ==================== 关注/收藏设备 ====================
-    @pytest.mark.parametrize("case", test_data["follow_terminal_cases"])
+
+class TestTm04FollowTerminal(_TerminalHelpers):
+    """PUT .../terminals/{addr}/follow — 关注/收藏设备（消费 {{devices_addr}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["follow_terminal_cases"])
     def test_follow_terminal(self, base_url, auth_headers, group_fixture, case):
         """关注/收藏设备"""
         group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
@@ -164,8 +233,11 @@ class TestTerminalController:
 
         self._assert_and_report(case, res)
 
-    # ==================== 移动设备分组(单个) ====================
-    @pytest.mark.parametrize("case", test_data["move_terminal_cases"])
+
+class TestTm05MoveTerminal(_TerminalHelpers):
+    """PUT .../terminals/{addr}/move — 移动设备分组（消费 {{devices_addr}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["move_terminal_cases"])
     def test_move_terminal(self, base_url, auth_headers, group_fixture, case):
         """移动设备分组"""
         group_id = group_fixture.get("three_id") if "{{three_id}}" in str(case.get("groupId")) else case.get("groupId")
@@ -188,9 +260,12 @@ class TestTerminalController:
         print_response(res)
 
         self._assert_and_report(case, res)
-    
-    # ==================== 分页获取分组下设备列表 ====================
-    @pytest.mark.parametrize("case", test_data["list_terminals_cases"])
+
+
+class TestTm06ListTerminals(_TerminalHelpers):
+    """GET /api/monitor/groups/{groupId}/terminals — 分页获取分组下设备列表"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["list_terminals_cases"])
     def test_list_terminals(self, base_url, auth_headers, group_fixture, case):
         """分页获取分组下设备列表"""
         group_id = group_fixture.get("two_id") if "{{two_id}}" in str(case.get("groupId")) else case.get("groupId")
@@ -216,11 +291,12 @@ class TestTerminalController:
         )
         print_response(res)
 
-        json_data = res.json()
-        code = _jsonpath_parse(json_data, "$.code")[0]
         self._assert_and_report(case, res)
 
-    # ==================== 枚举类型入库并添加 ====================
+
+class TestTm07AddTerminalByEnum(_TerminalHelpers):
+    """枚举 terminalType 入库 → 正式添加（terminal_type_enum_cases fixture，非 YAML 驱动）"""
+
     def test_add_terminal_by_enum(self, base_url, auth_headers, group_fixture, terminal_type_enum_cases):
         """每种 terminalType 入库 -> 正式添加（循环遍历枚举用例）"""
         group_id = group_fixture["three_id"]
@@ -292,43 +368,3 @@ class TestTerminalController:
             )
             print_response(r_add)
             self._assert_and_report_res(r_add, f"枚举添加-{case['terminalType']}")
-
-    # ==================== 辅助方法 ====================
-    def _assert_and_report_res(self, res, case_name):
-        """接受 Response 对象的断言（枚举用例无 YAML expected）"""
-        try:
-            json_data = parse_response_json(res, context=case_name)
-        except NonJsonResponseError as e:
-            pytest.fail(str(e))
-        code = _jsonpath_parse(json_data, "$.code")[0]
-        msg = _jsonpath_parse(json_data, "$.msg")[0]
-        sep(" 断言结果 ")
-        key("实际 code", code)
-        key("实际 msg", msg)
-        assert_api_result(
-            case_name=case_name,
-            expected_code=0,
-            expected_msg="成功",
-            actual_code=code,
-            actual_msg=msg,
-        )
-
-    def _assert_and_report(self, case, res):
-        """统一断言并输出报告"""
-        json_data = res.json()
-        code = _jsonpath_parse(json_data, "$.code")[0]
-        msg = _jsonpath_parse(json_data, "$.msg")[0]
-
-        sep(" 断言结果 ")
-        key("预期 code", case["expected"]["code"])
-        key("实际 code", code)
-        key("预期 msg", read_expected_msg(case["expected"]))
-        key("实际 msg", msg)
-
-        assert_api_result(
-            case_name=case["name"],
-            expected_code=case["expected"]["code"],
-            expected_msg=read_expected_msg(case["expected"]),
-            actual_code=code,
-            actual_msg=msg
-        )

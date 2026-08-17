@@ -567,7 +567,160 @@ def emergency_chat_item(base_url, auth_headers, rescue_sat_terminal, rescue_clie
         "sn": sn,
         "itemName": item_name,
         "status": status,
+        "created_at": time.time(),  # 建群时刻（U2上报时刻近似）——供上报间隔合规计算
     }
+
+
+@pytest.fixture(scope="session")
+def emergency_chat_voice(base_url, auth_headers, emergency_chat_item, rescue_client) -> dict:
+    """主群 complete 前上行一条终端语音（U5）——TestEc10ItemComplete 正向 case 消费。
+
+    协议约束（2026-08-17 主人定稿）：终端上报消息间隔必须 >60s。
+    - 间隔合规：距建群（U2 SOS 上报）不足 VOICE_DELAY_SECONDS(默认60s) 时补足等待；
+      全量跑 Ec01~Ec09 天然间隔足够，仅单跑 Ec10 时会真正等待。
+    - 落库闸门：轮询 record/page 确认新增 sendType=VOICE 记录后才放行 complete
+      （complete 是状态机闸门，语音必须在途完成落库，否则完结拦截行为未验证）。
+    - 会话兜底：60s 空闲后 uplink-sim 会话可能超时——send_speech 失败时
+      login_terminal(sn) 重建会话后重发 1 次。
+    返回 {"voiceRecordId":..., "chatItemId":..., "sn":...}。
+    """
+    import os as _os
+    sn = emergency_chat_item["sn"]
+    chat_id = emergency_chat_item["chatItemId"]
+    delay = float(_os.getenv("VOICE_DELAY_SECONDS", "60"))
+
+    elapsed = time.time() - emergency_chat_item.get("created_at", 0)
+    wait = delay - elapsed
+    if wait > 0:
+        sep(f" 🎙️ 终端语音上报间隔合规等待 {wait:.0f}s（协议约束：上报间隔>60s） ")
+        time.sleep(wait)
+    else:
+        key("间隔合规", f"距建群已 {elapsed:.0f}s，满足 >{delay:.0f}s 约束，无需等待")
+
+    # 上报（失败→重建会话→重发1次）
+    result = rescue_client.send_speech(sn)
+    if not result.success:
+        key("会话兜底", f"send_speech 失败(code={result.code})，login_terminal 重建后重发")
+        rescue_client.login_terminal(sn)
+        result = rescue_client.send_speech(sn)
+    if not result.success:
+        pytest.fail(f"终端语音上报失败(含会话重建重试): code={result.code}, msg={result.message}")
+
+    # 落库闸门：轮询 record 确认 VOICE 落库（发送成功≠落地，机制认知#1）
+    voice_record = None
+    for i in range(3):
+        time.sleep(2)
+        r = http.send_request(
+            method="get",
+            url=f"{base_url}/api/monitor/emergency/chat/record/page",
+            params={"Authorization": auth_headers.get("Authorization"),
+                    "chatItemId": chat_id, "page": 1, "pageSize": 20},
+            headers=auth_headers,
+            case_name=f"语音落库确认第{i+1}轮",
+            log_level="none",
+        )
+        items = _jsonpath_parse(r.json(), "$.data.items[*]") or []
+        voice_record = next((it for it in items if it.get("sendType") == "VOICE"
+                             and str(it.get("avatarInfo", {}).get("memberAccount") or "") == sn), None)
+        if voice_record:
+            break
+    if not voice_record:
+        records = rescue_client.session_records(terminal_id=sn, page_size=3)
+        pytest.fail(f"终端语音未落库(3×2s轮询超时): sn={sn} chatItemId={chat_id}。"
+                    f"10304会话记录: {records}")
+
+    key("终端语音已落库", f"recordId={voice_record.get('id')}")
+    return {
+        "voiceRecordId": voice_record.get("id"),
+        "chatItemId": chat_id,
+        "sn": sn,
+    }
+
+
+def _close_rescue_chats_teardown(base_url, auth_headers, sns) -> tuple:
+    """session 末兜底：按 sn 关闭本 session 造的所有遗留活跃求救群。
+
+    计划§数据清理策略 session 级要求——正常链路中 test_10/test_14 恰好关群是巧合不是保证：
+    批次中途 fail 时活跃群会泄漏。此函数作为安全网，在删设备前执行（设备删除后无法再按 sn 收尾）。
+    优先 complete/addr 批量完成（管理后台语义）；web 账号无权限（3001，2026-08-17 实测）时
+    降级走 test/expiration 测试桩逐群关闭。返回 (关闭数, 仍活跃数)。
+    """
+    closed, still_active = 0, 0
+    for sn in sns:
+        try:
+            r = http.send_request(
+                method="get",
+                url=f"{base_url}/api/monitor/emergency/chat/item/page",
+                params={"Authorization": auth_headers.get("Authorization"),
+                        "itemName": sn, "page": 1, "pageSize": 50},
+                headers=auth_headers,
+                case_name=f"收尾查群-{sn}",
+                log_level="none",
+            )
+            items = _jsonpath_parse(r.json(), "$.data.items[*]") or []
+        except Exception as e:
+            key(f"⚠️ 收尾查群失败 {sn}", str(e)[:120])
+            continue
+
+        active = [it for it in items if it.get("status") == 1]
+        if not active:
+            continue
+        key(f"发现遗留活跃群 {sn}", len(active))
+
+        # 路线1：complete/addr 批量完成（首选）
+        addr_ok = False
+        try:
+            r = http.send_request(
+                method="post",
+                url=f"{base_url}/api/monitor/emergency/chat/item/complete/addr",
+                json={"addrs": [sn], "handleResult": "AUTO会话收尾"},
+                headers=auth_headers,
+                case_name=f"收尾批量完成-{sn}",
+                log_level="none",
+            )
+            addr_ok = _jsonpath_parse(r.json(), "$.code")[0] == 0
+        except Exception:
+            addr_ok = False
+
+        # 路线2：无权限（3001）降级测试桩逐群关闭
+        for it in active:
+            if addr_ok:
+                closed += 1
+                continue
+            try:
+                r = http.send_request(
+                    method="get",
+                    url=f"{base_url}/api/monitor/test/emergency-chat-item/expiration",
+                    params={"Authorization": auth_headers.get("Authorization"),
+                            "chatItemId": it.get("id"), "inactiveMillis": 1},
+                    headers=auth_headers,
+                    case_name=f"收尾关闭群-{it.get('id')}",
+                    log_level="none",
+                )
+                closed += _jsonpath_parse(r.json(), "$.code")[0] == 0
+            except Exception as e:
+                key(f"⚠️ 收尾关闭失败 {it.get('id')}", str(e)[:120])
+                still_active += 1
+
+        if not addr_ok:
+            # 测试桩路线复核：仍有活跃则计数（下次运行可见泄漏量）
+            try:
+                r = http.send_request(
+                    method="get",
+                    url=f"{base_url}/api/monitor/emergency/chat/item/page",
+                    params={"Authorization": auth_headers.get("Authorization"),
+                            "itemName": sn, "page": 1, "pageSize": 50},
+                    headers=auth_headers,
+                    case_name=f"收尾复核-{sn}",
+                    log_level="none",
+                )
+                remain = [x for x in (_jsonpath_parse(r.json(), "$.data.items[*]") or [])
+                          if x.get("status") == 1]
+                still_active += len(remain)
+                closed -= max(0, len(remain))  # 扣回测试桩关而未闭的
+            except Exception:
+                pass
+    return closed, still_active
 
 
 # ==================== 自动清理 ====================
@@ -680,6 +833,11 @@ def cleanup_test_data(base_url, auth_headers, group_fixture, pytestconfig):
 
     sep(" 🧹 开始清理测试数据 ")
     group_dict = pytestconfig.stash.get("test_group_ids", group_fixture)
+
+    sep(" 步骤0: 关闭本 session 遗留活跃求救群 ")
+    rescue_sns = pytestconfig.stash.get("rescue_terminal_sns", [])
+    closed, leaked = _close_rescue_chats_teardown(base_url, auth_headers, rescue_sns)
+    key("求救群收尾统计", f"关闭: {closed}, 仍活跃: {leaked}")
 
     sep(" 步骤1: 删除设备 ")
     total_deleted_terminals = 0

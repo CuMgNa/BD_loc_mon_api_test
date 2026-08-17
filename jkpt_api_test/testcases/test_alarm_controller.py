@@ -1,3 +1,15 @@
+# testcases/test_alarm_controller.py
+# 报警管理接口 — S3 拆类范式（一接口一 TestClass，allure 按接口分组）
+#
+# 类序即执行序：Seed(造数) → List → History → Latest → Handle → BatchHandle → BatchHandleIds → BatchInfo
+# 依赖声明：
+#   TestAl00SeedProtocolAlarms  前置造数（bd 协议给 msg+bd 设备写报警，降低查询空数据概率）
+#   TestAl04AlarmHandle         正向自提取 alarm_single_id（无需外部 extract 预置）
+#   TestAl06AlarmBatchHandleIds 正向自提取 alarm_batch_ids（两设备最新报警合并去重）
+#   其余查询类接口相互独立，均消费 msg_test_terminal 造数
+# YAML 映射：alarm_list_cases→TestAl01 / alarm_history_cases→TestAl02 / alarm_latest_cases→TestAl03
+#           alarm_handle_cases→TestAl04 / alarm_batch_handle_cases→TestAl05
+#           alarm_batch_handle_ids_cases→TestAl06 / alarm_batch_info_cases→TestAl07
 import time
 
 import jsonpath
@@ -11,265 +23,11 @@ from common.yaml_util import read_yaml, write_yaml, resolve_extract_value, read_
 _jsonpath_parse = jsonpath.jsonpath
 http = BaseRequest()
 
+_TEST_DATA = read_yaml("./yaml/test_alarm_controller.yaml")
 
-class TestAlarmController:
-    """报警管理接口测试（7 个接口）"""
 
-    test_data = read_yaml("./yaml/test_alarm_controller.yaml")
-
-    # ---------- a0. 前置造数 ----------
-    def test_alarm_a0_seed_protocol_alarms(
-        self, bd_client, msg_test_terminal, bd_test_terminal, base_url
-    ):
-        """前置造数：先给 msg+bd 设备写入报警，减少后续查询空数据概率"""
-        case_name = "报警前置造数-msg+bd"
-        result = bd_client.send_alarm_13_batch(
-            from_addrs=[msg_test_terminal, bd_test_terminal],
-            phone="13250703582",
-            case_name=case_name,
-        )
-        sep(f" 测试用例: {case_name}")
-        print_request("POST", f"{base_url}/api/datas/bd", json=result.request_body)
-        print_response_info = {
-            "code": result.code,
-            "msg": result.msg,
-            "success": result.success,
-            "status_code": result.status_code,
-        }
-        key("前置造数结果", str(print_response_info))
-        assert result.success, f"前置造数失败：code={result.code}, msg={result.msg}"
-
-    # ---------- a. 分页查询所有设备的报警信息 ----------
-    @pytest.mark.parametrize("case", test_data["alarm_list_cases"])
-    def test_alarm_a_list(self, base_url, auth_headers, msg_test_terminal, case):
-        """分页查询报警列表"""
-        url = f"{base_url}/api/monitor/alarms"
-        headers = {**auth_headers}
-        if case.get("no_auth"):
-            headers = {k: v for k, v in headers.items() if k.lower() != "authorization"}
-
-        addr = self._resolve_addr(case.get("addr"), msg_test_terminal)
-        params = self._build_query_params(headers, addr, case)
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, params=params, headers=headers)
-        res = http.send_request(
-            "get",
-            url,
-            params=params,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- b. 分页查询设备历史报警信息 ----------
-    @pytest.mark.parametrize("case", test_data["alarm_history_cases"])
-    def test_alarm_b_history(self, base_url, auth_headers, msg_test_terminal, case):
-        """查询设备历史报警"""
-        addr = self._resolve_addr(case.get("addr"), msg_test_terminal)
-        url = f"{base_url}/api/monitor/alarms/{addr}"
-        headers = {**auth_headers}
-        params = self._build_pagination(headers, case)
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, params=params, headers=headers)
-        res = http.send_request(
-            "get",
-            url,
-            params=params,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- c. 获取最新一条报警 ----------
-    @pytest.mark.parametrize("case", test_data["alarm_latest_cases"])
-    def test_alarm_c_latest(self, base_url, auth_headers, msg_test_terminal, case):
-        """获取最新报警"""
-        addr = self._resolve_addr(case.get("addr"), msg_test_terminal)
-        url = f"{base_url}/api/monitor/alarms/latest/{addr}"
-        headers = {**auth_headers}
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, headers=headers)
-        res = http.send_request(
-            "get",
-            url,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- d. 处理报警 ----------
-    @pytest.mark.parametrize("case", test_data["alarm_handle_cases"])
-    def test_alarm_d_handle(
-        self, base_url, auth_headers, bd_client, msg_test_terminal, case
-    ):
-        """处理报警"""
-        handle_result = case.get("handle_result", case.get("handleResult", ""))
-        headers = {**auth_headers}
-
-        if case.get("scenario") == "positive":
-            # 单条处理固定使用 msg 设备报警，避免与批量链路抢数据
-            self._seed_alarm_for_addr(
-                bd_client=bd_client,
-                from_addr=msg_test_terminal,
-                case_name=f"{case['name']}-seed",
-            )
-            # 先从接口动态提取单条报警ID，再写入 extract.yaml 供当前用例读取
-            alarm_id = self._extract_single_alarm_id_with_retry(
-                base_url=base_url,
-                headers=headers,
-                addr=msg_test_terminal,
-                bd_client=bd_client,
-                retry_seed_addr=msg_test_terminal,
-            )
-            write_yaml("./extract.yaml", {"alarm_single_id": alarm_id}, mode="append")
-            alarm_id = resolve_extract_value("{{alarm_single_id}}", required=True)
-        else:
-            alarm_id = resolve_extract_value(case.get("id"), required=True)
-
-        url = f"{base_url}/api/monitor/alarms/{alarm_id}"
-        params = {"handleResult": handle_result}
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("PUT", url, params=params, headers=headers)
-        res = http.send_request(
-            "put",
-            url,
-            params=params,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- e. 按类型批量处理 ----------
-    @pytest.mark.parametrize("case", test_data["alarm_batch_handle_cases"])
-    def test_alarm_e_batch_handle(
-        self, base_url, auth_headers, bd_client, msg_test_terminal, case
-    ):
-        """按类型批量处理报警"""
-        url = f"{base_url}/api/monitor/alarms/batch-handle"
-        headers = {**auth_headers}
-        alarm_type = case.get("alarmTypes", "")
-        handle_result = case.get("handle_result", case.get("handleResult", "批量已处理"))
-
-        if case.get("scenario") == "positive":
-            self._seed_alarm_for_addr(
-                bd_client=bd_client,
-                from_addr=msg_test_terminal,
-                case_name=f"{case['name']}-seed",
-            )
-
-        body = {"alarmTypes": alarm_type, "handleResult": handle_result}
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("PUT", url, json=body, headers=headers)
-        res = http.send_request(
-            "put",
-            url,
-            json=body,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- f. 按 ID 批量处理 ----------
-    @pytest.mark.parametrize("case", test_data["alarm_batch_handle_ids_cases"])
-    def test_alarm_f_batch_handle_ids(
-        self, base_url, auth_headers, bd_client, msg_test_terminal, bd_test_terminal, case
-    ):
-        """按 ID 批量处理报警"""
-        url = f"{base_url}/api/monitor/alarms/batch-handle/ids"
-        headers = {**auth_headers}
-        handle_result = case.get("handle_result", case.get("handleResult", "批量已处理"))
-
-        if case.get("scenario") == "positive":
-            # 批量处理先造两设备报警，确保至少有2个可处理ID
-            self._seed_alarm_for_two_terminals(
-                bd_client=bd_client,
-                msg_addr=msg_test_terminal,
-                bd_addr=bd_test_terminal,
-                case_name=f"{case['name']}-seed-batch",
-            )
-            # 优先取两台设备“最新报警ID”，尽量避免混入历史脏数据
-            ids = []
-            latest_msg_id = self._query_latest_alarm_id(base_url, headers, msg_test_terminal)
-            latest_bd_id = self._query_latest_alarm_id(base_url, headers, bd_test_terminal)
-            if latest_msg_id is not None:
-                ids.append(latest_msg_id)
-            if latest_bd_id is not None and latest_bd_id not in ids:
-                ids.append(latest_bd_id)
-            if len(ids) < 2:
-                # 兜底：改走“查询列表+状态过滤+重试补造”提取
-                ids = self._extract_batch_alarm_ids_with_retry(
-                    base_url=base_url,
-                    headers=headers,
-                    addr=bd_test_terminal,
-                    need_count=2,
-                    bd_client=bd_client,
-                    msg_addr=msg_test_terminal,
-                    bd_addr=bd_test_terminal,
-                )
-            write_yaml("./extract.yaml", {"alarm_batch_ids": ids}, mode="append")
-            ids = resolve_extract_value("{{alarm_batch_ids}}", required=True)
-            if not isinstance(ids, list):
-                pytest.fail(f"alarm_batch_ids 解析结果不是列表: {ids}")
-            # Apifox 契约：字段必须是 idStr（逗号拼接），不是 ids
-            payload = {
-                "idStr": ",".join([str(x) for x in ids[:2]]),
-                "handleResult": handle_result,
-            }
-        else:
-            raw_ids = case.get("ids", [])
-            payload = {
-                "idStr": ",".join([str(x) for x in raw_ids]) if isinstance(raw_ids, list) else str(raw_ids),
-                "handleResult": handle_result,
-            }
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("PUT", url, json=payload, headers=headers)
-        res = http.send_request(
-            "put",
-            url,
-            json=payload,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
-
-    # ---------- g. 获取报警类型及设备数量 ----------
-    @pytest.mark.parametrize("case", test_data["alarm_batch_info_cases"])
-    def test_alarm_g_batch_info(self, base_url, auth_headers, case):
-        """获取报警类型统计"""
-        url = f"{base_url}/api/monitor/alarms/batch-info"
-        headers = {**auth_headers}
-        if case.get("no_auth"):
-            headers = {k: v for k, v in headers.items() if k.lower() != "authorization"}
-
-        sep(f" 测试用例: {case['name']}")
-        print_request("GET", url, headers=headers)
-        res = http.send_request(
-            "get",
-            url,
-            headers=headers,
-            case_name=case["name"],
-            log_level="none",
-        )
-        print_response(res)
-        self._assert_and_report(case, res)
+class _AlarmHelpers:
+    """不被 pytest 收集；供 7 个接口类复用造数/查询/断言。"""
 
     # ---------- 辅助 ----------
     @staticmethod
@@ -303,6 +61,10 @@ class TestAlarmController:
             params["page"] = case.get("page", 1)
         if "page_size" in case or "pageSize" in case:
             params["pageSize"] = case.get("page_size", case.get("pageSize", 100))
+
+    def _no_auth_headers(self, auth_headers):
+        headers = {**auth_headers}
+        return {k: v for k, v in headers.items() if k.lower() != "authorization"}
 
     @staticmethod
     def _seed_alarm_for_addr(bd_client, from_addr, case_name):
@@ -537,3 +299,281 @@ class TestAlarmController:
             actual_msg=msg,
             biz_context={"请求用例": case["name"]},
         )
+
+
+class TestAl00SeedProtocolAlarms(_AlarmHelpers):
+    """前置造数：bd 协议给 msg+bd 设备写报警（非接口用例，降低后续查询空数据概率）"""
+
+    def test_seed_protocol_alarms(
+        self, bd_client, msg_test_terminal, bd_test_terminal, base_url
+    ):
+        """前置造数：先给 msg+bd 设备写入报警，减少后续查询空数据概率"""
+        case_name = "报警前置造数-msg+bd"
+        result = bd_client.send_alarm_13_batch(
+            from_addrs=[msg_test_terminal, bd_test_terminal],
+            phone="13250703582",
+            case_name=case_name,
+        )
+        sep(f" 测试用例: {case_name}")
+        print_request("POST", f"{base_url}/api/datas/bd", json=result.request_body)
+        print_response_info = {
+            "code": result.code,
+            "msg": result.msg,
+            "success": result.success,
+            "status_code": result.status_code,
+        }
+        key("前置造数结果", str(print_response_info))
+        assert result.success, f"前置造数失败：code={result.code}, msg={result.msg}"
+
+
+class TestAl01AlarmList(_AlarmHelpers):
+    """GET /api/monitor/alarms — 分页查询所有设备的报警信息"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["alarm_list_cases"])
+    def test_alarm_list(self, base_url, auth_headers, msg_test_terminal, case):
+        """分页查询报警列表"""
+        url = f"{base_url}/api/monitor/alarms"
+        headers = {**auth_headers}
+        if case.get("no_auth"):
+            headers = self._no_auth_headers(headers)
+
+        addr = self._resolve_addr(case.get("addr"), msg_test_terminal)
+        params = self._build_query_params(headers, addr, case)
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, params=params, headers=headers)
+        res = http.send_request(
+            "get",
+            url,
+            params=params,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestAl02AlarmHistory(_AlarmHelpers):
+    """GET /api/monitor/alarms/{addr} — 分页查询设备历史报警信息"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["alarm_history_cases"])
+    def test_alarm_history(self, base_url, auth_headers, msg_test_terminal, case):
+        """查询设备历史报警"""
+        addr = self._resolve_addr(case.get("addr"), msg_test_terminal)
+        url = f"{base_url}/api/monitor/alarms/{addr}"
+        headers = {**auth_headers}
+        params = self._build_pagination(headers, case)
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, params=params, headers=headers)
+        res = http.send_request(
+            "get",
+            url,
+            params=params,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestAl03AlarmLatest(_AlarmHelpers):
+    """GET /api/monitor/alarms/latest/{addr} — 获取最新一条报警"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["alarm_latest_cases"])
+    def test_alarm_latest(self, base_url, auth_headers, msg_test_terminal, case):
+        """获取最新报警"""
+        addr = self._resolve_addr(case.get("addr"), msg_test_terminal)
+        url = f"{base_url}/api/monitor/alarms/latest/{addr}"
+        headers = {**auth_headers}
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, headers=headers)
+        res = http.send_request(
+            "get",
+            url,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestAl04AlarmHandle(_AlarmHelpers):
+    """PUT /api/monitor/alarms/{id} — 处理报警（正向自提取 alarm_single_id）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["alarm_handle_cases"])
+    def test_alarm_handle(
+        self, base_url, auth_headers, bd_client, msg_test_terminal, case
+    ):
+        """处理报警"""
+        handle_result = case.get("handle_result", case.get("handleResult", ""))
+        headers = {**auth_headers}
+
+        if case.get("scenario") == "positive":
+            # 单条处理固定使用 msg 设备报警，避免与批量链路抢数据
+            self._seed_alarm_for_addr(
+                bd_client=bd_client,
+                from_addr=msg_test_terminal,
+                case_name=f"{case['name']}-seed",
+            )
+            # 先从接口动态提取单条报警ID，再写入 extract.yaml 供当前用例读取
+            alarm_id = self._extract_single_alarm_id_with_retry(
+                base_url=base_url,
+                headers=headers,
+                addr=msg_test_terminal,
+                bd_client=bd_client,
+                retry_seed_addr=msg_test_terminal,
+            )
+            write_yaml("./extract.yaml", {"alarm_single_id": alarm_id}, mode="append")
+            alarm_id = resolve_extract_value("{{alarm_single_id}}", required=True)
+        else:
+            alarm_id = resolve_extract_value(case.get("id"), required=True)
+
+        url = f"{base_url}/api/monitor/alarms/{alarm_id}"
+        params = {"handleResult": handle_result}
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("PUT", url, params=params, headers=headers)
+        res = http.send_request(
+            "put",
+            url,
+            params=params,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestAl05AlarmBatchHandle(_AlarmHelpers):
+    """PUT /api/monitor/alarms/batch-handle — 按类型批量处理报警"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["alarm_batch_handle_cases"])
+    def test_alarm_batch_handle(
+        self, base_url, auth_headers, bd_client, msg_test_terminal, case
+    ):
+        """按类型批量处理报警"""
+        url = f"{base_url}/api/monitor/alarms/batch-handle"
+        headers = {**auth_headers}
+        alarm_type = case.get("alarmTypes", "")
+        handle_result = case.get("handle_result", case.get("handleResult", "批量已处理"))
+
+        if case.get("scenario") == "positive":
+            self._seed_alarm_for_addr(
+                bd_client=bd_client,
+                from_addr=msg_test_terminal,
+                case_name=f"{case['name']}-seed",
+            )
+
+        body = {"alarmTypes": alarm_type, "handleResult": handle_result}
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("PUT", url, json=body, headers=headers)
+        res = http.send_request(
+            "put",
+            url,
+            json=body,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestAl06AlarmBatchHandleIds(_AlarmHelpers):
+    """PUT /api/monitor/alarms/batch-handle/ids — 按 ID 批量处理（正向自提取 alarm_batch_ids）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["alarm_batch_handle_ids_cases"])
+    def test_alarm_batch_handle_ids(
+        self, base_url, auth_headers, bd_client, msg_test_terminal, bd_test_terminal, case
+    ):
+        """按 ID 批量处理报警"""
+        url = f"{base_url}/api/monitor/alarms/batch-handle/ids"
+        headers = {**auth_headers}
+        handle_result = case.get("handle_result", case.get("handleResult", "批量已处理"))
+
+        if case.get("scenario") == "positive":
+            # 批量处理先造两设备报警，确保至少有2个可处理ID
+            self._seed_alarm_for_two_terminals(
+                bd_client=bd_client,
+                msg_addr=msg_test_terminal,
+                bd_addr=bd_test_terminal,
+                case_name=f"{case['name']}-seed-batch",
+            )
+            # 优先取两台设备“最新报警ID”，尽量避免混入历史脏数据
+            ids = []
+            latest_msg_id = self._query_latest_alarm_id(base_url, headers, msg_test_terminal)
+            latest_bd_id = self._query_latest_alarm_id(base_url, headers, bd_test_terminal)
+            if latest_msg_id is not None:
+                ids.append(latest_msg_id)
+            if latest_bd_id is not None and latest_bd_id not in ids:
+                ids.append(latest_bd_id)
+            if len(ids) < 2:
+                # 兜底：改走“查询列表+状态过滤+重试补造”提取
+                ids = self._extract_batch_alarm_ids_with_retry(
+                    base_url=base_url,
+                    headers=headers,
+                    addr=bd_test_terminal,
+                    need_count=2,
+                    bd_client=bd_client,
+                    msg_addr=msg_test_terminal,
+                    bd_addr=bd_test_terminal,
+                )
+            write_yaml("./extract.yaml", {"alarm_batch_ids": ids}, mode="append")
+            ids = resolve_extract_value("{{alarm_batch_ids}}", required=True)
+            if not isinstance(ids, list):
+                pytest.fail(f"alarm_batch_ids 解析结果不是列表: {ids}")
+            # Apifox 契约：字段必须是 idStr（逗号拼接），不是 ids
+            payload = {
+                "idStr": ",".join([str(x) for x in ids[:2]]),
+                "handleResult": handle_result,
+            }
+        else:
+            raw_ids = case.get("ids", [])
+            payload = {
+                "idStr": ",".join([str(x) for x in raw_ids]) if isinstance(raw_ids, list) else str(raw_ids),
+                "handleResult": handle_result,
+            }
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("PUT", url, json=payload, headers=headers)
+        res = http.send_request(
+            "put",
+            url,
+            json=payload,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)
+
+
+class TestAl07AlarmBatchInfo(_AlarmHelpers):
+    """GET /api/monitor/alarms/batch-info — 获取报警类型及设备数量"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["alarm_batch_info_cases"])
+    def test_alarm_batch_info(self, base_url, auth_headers, case):
+        """获取报警类型统计"""
+        url = f"{base_url}/api/monitor/alarms/batch-info"
+        headers = {**auth_headers}
+        if case.get("no_auth"):
+            headers = self._no_auth_headers(headers)
+
+        sep(f" 测试用例: {case['name']}")
+        print_request("GET", url, headers=headers)
+        res = http.send_request(
+            "get",
+            url,
+            headers=headers,
+            case_name=case["name"],
+            log_level="none",
+        )
+        print_response(res)
+        self._assert_and_report(case, res)

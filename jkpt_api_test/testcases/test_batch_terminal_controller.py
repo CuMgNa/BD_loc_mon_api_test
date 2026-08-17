@@ -1,5 +1,15 @@
 # testcases/test_batch_terminal_controller.py
-# 设备批量管理接口 — 方法名 test_batch_a_* … test_batch_h_* 保证 pytest 收集顺序 a→h
+# 设备批量管理接口 — S3 拆类范式（一接口一 TestClass，allure 按接口分组）
+#
+# 类序即执行序：Import → Details → Remark → AggrPoint → LngLat → MoveGroup → Export → Delete(解绑)
+# 依赖声明（extract 链）：
+#   TestBt01BatchImport   正向提取 batch_addrs（首个正向写一次，类级标记防重复）→ extract.yaml
+#   TestBt02~07           消费 {{batch_addrs}}（详情/备注/聚合点/经纬度/移动分组/导出）
+#   TestBt08BatchDelete   消费 {{batch_addrs}}（批量解绑，放在最后防数据自毁）
+#   TestBt06MoveGroup     newGroupId 走 group_fixture["one_id"]（fixture 依赖，非 extract）
+# YAML 映射：batch_import_cases→TestBt01 / batch_details_cases→TestBt02 / batch_remark_cases→TestBt03
+#           batch_aggr_point_cases→TestBt04 / batch_lnglat_cases→TestBt05
+#           batch_move_group_cases→TestBt06 / batch_export_cases→TestBt07 / batch_delete_cases→TestBt08
 import io
 import jsonpath
 import os
@@ -16,16 +26,50 @@ http = BaseRequest()
 _FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 _TEMPLATE_XLSX = r"C:\Users\33606\Desktop\BD_loc_mon_api_test\jkpt_api_test\yaml\import-device-template2026_5_1.xlsx"
 
+_TEST_DATA = read_yaml("./yaml/test_batch_terminal_controller.yaml")
 
-class TestBatchTerminalController:
-    """设备批量管理接口测试 - 共 8 个接口"""
 
-    test_data = read_yaml("./yaml/test_batch_terminal_controller.yaml")
+class _BatchTerminalHelpers:
+    """不被 pytest 收集；供 8 个接口类复用断言。"""
+
+    def _assert_and_report(self, case, res):
+        json_data = res.json()
+        code = _jsonpath_parse(json_data, "$.code")[0]
+        msg = _jsonpath_parse(json_data, "$.msg")[0]
+
+        sep(" 断言结果 ")
+        key("预期 code", case["expected"]["code"])
+        key("实际 code", code)
+        key("预期 msg", read_expected_msg(case["expected"]))
+        key("实际 msg", msg)
+
+        assert_api_result(
+            case_name=case["name"],
+            expected_code=case["expected"]["code"],
+            expected_msg=read_expected_msg(case["expected"]),
+            actual_code=code,
+            actual_msg=msg,
+            biz_context={"请求用例": case["name"]},
+        )
+
+    def _assert_export_response(self, case, res, addr_list=None):
+        """导出接口统一走公共断言，不再只看 HTTP 200。"""
+        assert_export_response(
+            case_name=case["name"],
+            response=res,
+            expected=case["expected"],
+            require_binary=bool(case.get("binary_response")),
+            addr_count=len(addr_list) if addr_list else None,
+        )
+
+
+class TestBt01BatchImport(_BatchTerminalHelpers):
+    """POST /api/monitor/terminals/batch/import — 批量导入设备（提取 batch_addrs）"""
+
     _first_batch_addrs_written = False
 
-    # ---------- a. 批量导入设备（POST /api/monitor/terminals/batch/import） ----------
-    @pytest.mark.parametrize("case", test_data["batch_import_cases"])
-    def test_batch_a_import(self, base_url, auth_headers, case):
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_import_cases"])
+    def test_batch_import(self, base_url, auth_headers, case):
         """批量导入设备（正向提取 batch_addrs 写入 extract.yaml）"""
         url = f"{base_url}/api/monitor/terminals/batch/import"
         headers = {**auth_headers}
@@ -82,18 +126,21 @@ class TestBatchTerminalController:
         json_data = res.json()
         code = _jsonpath_parse(json_data, "$.code")[0]
 
-        if scenario == "positive" and code == 0 and not self._first_batch_addrs_written:
+        if scenario == "positive" and code == 0 and not TestBt01BatchImport._first_batch_addrs_written:
             addrs = _jsonpath_parse(json_data, "$.data.addedTerminals[*].addr") or []
             addrs = [addr for addr in addrs if addr]
             if addrs:
                 write_yaml("./extract.yaml", {"batch_addrs": ",".join(addrs)}, mode="append")
-                self._first_batch_addrs_written = True
+                TestBt01BatchImport._first_batch_addrs_written = True
 
         self._assert_and_report(case, res)
 
-    # ---------- b. 批量查询设备详情（POST /api/monitor/terminals/batch/details） ----------
-    @pytest.mark.parametrize("case", test_data["batch_details_cases"])
-    def test_batch_b_query_details(self, base_url, auth_headers, case):
+
+class TestBt02BatchDetails(_BatchTerminalHelpers):
+    """POST /api/monitor/terminals/batch/details — 批量查询设备详情（消费 {{batch_addrs}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_details_cases"])
+    def test_batch_query_details(self, base_url, auth_headers, case):
         """批量查询设备详细信息"""
         url = f"{base_url}/api/monitor/terminals/batch/details"
         headers = {**auth_headers, "Content-Type": "application/json"}
@@ -114,9 +161,12 @@ class TestBatchTerminalController:
         print_response(res)
         self._assert_and_report(case, res)
 
-    # ---------- c. 批量查询设备备注（POST /api/monitor/terminals/batch/remark） ----------
-    @pytest.mark.parametrize("case", test_data["batch_remark_cases"])
-    def test_batch_c_query_remark(self, base_url, auth_headers, case):
+
+class TestBt03BatchRemark(_BatchTerminalHelpers):
+    """POST /api/monitor/terminals/batch/remark — 批量查询设备备注（消费 {{batch_addrs}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_remark_cases"])
+    def test_batch_query_remark(self, base_url, auth_headers, case):
         """批量查询设备备注信息"""
         url = f"{base_url}/api/monitor/terminals/batch/remark"
         headers = {**auth_headers, "Content-Type": "application/json"}
@@ -137,9 +187,12 @@ class TestBatchTerminalController:
         print_response(res)
         self._assert_and_report(case, res)
 
-    # ---------- d. 聚合点批量查询设备详情（POST /api/monitor/terminals/batch/aggr-point-details） ----------
-    @pytest.mark.parametrize("case", test_data["batch_aggr_point_cases"])
-    def test_batch_d_aggr_point(self, base_url, auth_headers, case):
+
+class TestBt04BatchAggrPoint(_BatchTerminalHelpers):
+    """POST /api/monitor/terminals/batch/aggr-point-details — 聚合点批量查询（消费 {{batch_addrs}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_aggr_point_cases"])
+    def test_batch_aggr_point(self, base_url, auth_headers, case):
         """根据聚合点批量查询设备详细信息"""
         url = f"{base_url}/api/monitor/terminals/batch/aggr-point-details"
         headers = {**auth_headers, "Content-Type": "application/json"}
@@ -164,9 +217,12 @@ class TestBatchTerminalController:
         print_response(res)
         self._assert_and_report(case, res)
 
-    # ---------- e. 经纬度批量查询设备详情（POST /api/monitor/terminals/batch/lnglat-details） ----------
-    @pytest.mark.parametrize("case", test_data["batch_lnglat_cases"])
-    def test_batch_e_lnglat(self, base_url, auth_headers, case):
+
+class TestBt05BatchLngLat(_BatchTerminalHelpers):
+    """POST /api/monitor/terminals/batch/lnglat-details — 经纬度批量查询"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_lnglat_cases"])
+    def test_batch_lnglat(self, base_url, auth_headers, case):
         """根据经纬度批量查询设备详细信息"""
         url = f"{base_url}/api/monitor/terminals/batch/lnglat-details"
         headers = {**auth_headers, "Content-Type": "application/json"}
@@ -192,9 +248,12 @@ class TestBatchTerminalController:
         print_response(res)
         self._assert_and_report(case, res)
 
-    # ---------- f. 批量移动设备分组（PUT /api/monitor/terminals/batch/move-group） ----------
-    @pytest.mark.parametrize("case", test_data["batch_move_group_cases"])
-    def test_batch_f_move_group(self, base_url, auth_headers, group_fixture, case):
+
+class TestBt06BatchMoveGroup(_BatchTerminalHelpers):
+    """PUT /api/monitor/terminals/batch/move-group — 批量移动分组（消费 {{batch_addrs}} + group_fixture）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_move_group_cases"])
+    def test_batch_move_group(self, base_url, auth_headers, group_fixture, case):
         """批量移动分组"""
         url = f"{base_url}/api/monitor/terminals/batch/move-group"
         headers = {**auth_headers, "Content-Type": "application/json"}
@@ -222,9 +281,12 @@ class TestBatchTerminalController:
         print_response(res)
         self._assert_and_report(case, res)
 
-    # ---------- g. 批量导出设备信息（POST /api/monitor/terminals/batch/export） ----------
-    @pytest.mark.parametrize("case", test_data["batch_export_cases"])
-    def test_batch_g_export(self, base_url, auth_headers, case):
+
+class TestBt07BatchExport(_BatchTerminalHelpers):
+    """POST /api/monitor/terminals/batch/export — 批量导出设备（消费 {{batch_addrs}}）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_export_cases"])
+    def test_batch_export(self, base_url, auth_headers, case):
         """批量导出设备信息（成功为二进制流或 JSON 错误）"""
         url = f"{base_url}/api/monitor/terminals/batch/export"
         headers = {**auth_headers, "Content-Type": "application/json", "Time-Zone": "Asia/Shanghai","time-zone-utc": "+08:00"}
@@ -248,9 +310,12 @@ class TestBatchTerminalController:
         print_response(res)
         self._assert_export_response(case, res, addr_list=addr_list)
 
-    # ---------- h. 批量解绑设备（DELETE /api/monitor/terminals/batch） ----------
-    @pytest.mark.parametrize("case", test_data["batch_delete_cases"])
-    def test_batch_h_delete(self, base_url, auth_headers, case):
+
+class TestBt08BatchDelete(_BatchTerminalHelpers):
+    """DELETE /api/monitor/terminals/batch — 批量解绑设备（消费 {{batch_addrs}}，置于最后防数据自毁）"""
+
+    @pytest.mark.parametrize("case", _TEST_DATA["batch_delete_cases"])
+    def test_batch_delete(self, base_url, auth_headers, case):
         """批量解绑设备"""
         url = f"{base_url}/api/monitor/terminals/batch"
         headers = {**auth_headers, "Content-Type": "application/json"}
@@ -270,34 +335,3 @@ class TestBatchTerminalController:
         )
         print_response(res)
         self._assert_and_report(case, res)
-
-    # ---------- 辅助方法 ----------
-    def _assert_and_report(self, case, res):
-        json_data = res.json()
-        code = _jsonpath_parse(json_data, "$.code")[0]
-        msg = _jsonpath_parse(json_data, "$.msg")[0]
-
-        sep(" 断言结果 ")
-        key("预期 code", case["expected"]["code"])
-        key("实际 code", code)
-        key("预期 msg", read_expected_msg(case["expected"]))
-        key("实际 msg", msg)
-
-        assert_api_result(
-            case_name=case["name"],
-            expected_code=case["expected"]["code"],
-            expected_msg=read_expected_msg(case["expected"]),
-            actual_code=code,
-            actual_msg=msg,
-            biz_context={"请求用例": case["name"]},
-        )
-
-    def _assert_export_response(self, case, res, addr_list=None):
-        """导出接口统一走公共断言，不再只看 HTTP 200。"""
-        assert_export_response(
-            case_name=case["name"],
-            response=res,
-            expected=case["expected"],
-            require_binary=bool(case.get("binary_response")),
-            addr_count=len(addr_list) if addr_list else None,
-        )
