@@ -12,13 +12,12 @@
 
 | 类别 | 名称 |
 |------|------|
-| **配置 hook** | `pytest_configure` |
+| **配置 hook** | `pytest_configure`（开跑清空 `temps/`、`allure-results/`） |
 | **基础 fixture** | `base_url`、`accept_language` |
 | **认证** | `auth_token`、`auth_headers`（`generate_captcha_id` 在 `common.captcha_util`） |
 | **失败上下文 hook** | `pytest_runtest_makereport` |
 | **业务前置** | `group_fixture`、`terminal_types`、`terminal_use_scopes`、`terminal_type_enum_cases`、`bd_test_terminal`、`msg_test_terminal`、`bd_client` |
-| **会话清理** | `clear_data_per_session`（autouse）、`cleanup_test_data`（autouse）、`glht_cleanup_test_data`（autouse，默认不登录 glht） |
-| **内部辅助函数（用例勿调）** | `get_terminals_by_group`、`cleanup_terminals_batch`、`delete_groups_in_order` |
+| **会话清理** | `clear_data_per_session`（autouse）、`cleanup_test_data`（autouse，实为 `common/cleanup/` 包一行调度）、`glht_cleanup_test_data`（autouse，默认不登录 glht） |
 
 ### 全局常量与环境
 
@@ -28,7 +27,7 @@
 | `JKPT_ACCOUNT` / `JKPT_PASSWORD` | 监控平台登录凭据（密码按接口要求传，本地可设 fallback） |
 | `accept_language` | `zh-CN` |
 | `BD_TEST_ADDR` | BD 协议测试设备 SN（固定值，见源码 `TEST_TERMINALS`） |
-| `ENABLE_AUTO_CLEANUP` | 环境变量，默认 `true`；`false` 时跳过 jkpt session 末设备/分组清理 |
+| `ENABLE_AUTO_CLEANUP` | 环境变量，默认 `true`；`false` 时跳过 jkpt session 末：登记待支付单收尾、设备/分组清理 |
 | `ENABLE_GLHT_CLEANUP` | 环境变量，默认 `false`。为 `true` 时才登录 glht 并清理入库记录 |
 | `GLHT_BASE_URL` / `GLHT_ACCOUNT` / `GLHT_PASSWORD` | glht 登录（仅 `ENABLE_GLHT_CLEANUP=true` 时使用；密码为明文，conftest 内 MD5） |
 | 全局 `http` | `BaseRequest()` 单实例，供本 conftest 内部直接调用（用例不要复用） |
@@ -102,6 +101,8 @@ flowchart TD
 ### 4.1 `base_url(pytestconfig) -> str`
 
 返回 `pytestconfig.base_url`，由 `pytest_configure` 写入。
+
+`pytest_configure` 还会按 `config.rootpath` 删除 `temps/` 与 `allure-results/`（Allure raw，防跨轮叠加）。不删 `reports/`。`--clean-alluredir` 仍只清当前 `--alluredir`，本钩子补上 stray `allure-results/`。
 
 ```python
 def test_xxx(self, base_url, auth_headers):
@@ -251,14 +252,16 @@ def test_protocol_alarm(self, bd_client, bd_test_terminal):
 
 ### 4.12 `cleanup_test_data(...)` — session autouse
 
-`yield` 之后执行；通过 `ENABLE_AUTO_CLEANUP=false` 跳过。
+`yield` 之后执行；通过 `ENABLE_AUTO_CLEANUP=false` 跳过。函数体只是一行调度：构造
+`common.cleanup.CleanupContext` 后调 `run_session_cleanup(ctx)`，真正的清理逻辑全在
+`common/cleanup/` 子包（各域 `tier`/`register`/`cleaner` 详见
+[cleanup-framework.md](./cleanup-framework.md)）。tier 升序执行：
 
-清理顺序：
+1. **tier 100**：`rescue_chat_{sn}`（关求救群）、`unpaid_order_{no}`（收待支付单，逐单 cancel→delete）、`intercom_group_{gid}`（收对讲群，逐群 close→delete）
+2. **tier 200**：`terminals`/`b_terminals`（删设备，按 `three_id → two_id → one_id` 聚合分组批量删）
+3. **tier 300**：`groups`/`b_groups`（删分组，按 `three_id → two_id → one_id` 倒序）
 
-1. **删设备**：`get_terminals_by_group` → `cleanup_terminals_batch`，按 `three_id → two_id → one_id`
-2. **删分组**：`delete_groups_in_order`，按 `three_id → two_id → one_id`
-
-`group_fixture` 返回的字典通过 `pytestconfig.stash["test_group_ids"]` 持久化，防止 fixture 失效。
+`group_fixture` 返回的字典通过 `pytestconfig.stash["test_group_ids"]` 持久化，防止 fixture 失效。要留本轮待支付单给人工扫码：`ENABLE_AUTO_CLEANUP=false`。
 
 ### 4.13 `glht_cleanup_test_data` — session autouse（默认空转）
 
@@ -268,16 +271,18 @@ def test_protocol_alarm(self, bd_client, bd_test_terminal):
 
 ---
 
-## 5. 内部辅助函数（用例**勿直接调用**）
+## 5. 清理逻辑辅助函数（用例**勿直接调用**）
 
-这些是 conftest 内部清理逻辑，**不是 fixture**，**不在 `common/`**，禁止在 testcase import：
+这些已在 `common/cleanup/` 子包（`terminal.py`/`group.py`），**不是 fixture**，仅供各域 `cleaner`
+内部复用，禁止在 testcase import：
 
 | 函数 | 用途 |
 |------|------|
-| `get_terminals_by_group(base_url, auth_headers, group_id)` | 取分组下所有设备 addr |
-| `cleanup_terminals_batch(base_url, auth_headers, group_id, addrs)` | 批量删除设备 |
-| `delete_groups_in_order(base_url, auth_headers, group_ids)` | 倒序删除三级分组 |
+| `terminal.get_terminals_by_group(base_url, auth_headers, group_id)` | 取分组下所有设备 addr |
+| `terminal.cleanup_terminals_batch(base_url, auth_headers, group_id, addrs)` | 批量删除设备 |
+| `group.delete_groups_in_order(base_url, auth_headers, group_ids)` | 倒序删除三级分组 |
 
+新增清理域先看 [cleanup-framework.md](./cleanup-framework.md) 的 2×2 矩阵选模板，不要现场发明新登记方式。
 若 testcase 确需类似能力，请抽到 `common/`（按 [CONTRIBUTING.md](../CONTRIBUTING.md) 流程）。
 
 ---

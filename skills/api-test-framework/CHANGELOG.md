@@ -1,3 +1,70 @@
+## [Unreleased] — 2026-08-19 清理框架统一化
+
+### Fixed
+- `unpaid_order.register()` 从未接入 `registry.register_cleanup`，导致待支付订单从不进入 session 收尾调度——迁移为逐项 domain 后正式接入
+
+### Added
+- `registry.py`：`register_cleanup_once`（挂载前查重）、`unregister_cleanup`（按 domain 精确移除）
+- `references/cleanup-framework.md`：新增清理域的 2×2 决策矩阵 + 三套模板 + checklist + 可移植性说明
+
+### Changed
+- `unpaid_order.py` / `intercom_group.py` 从「共享 domain + 模块内平行列表」迁移为「动态·逐项 domain」，复用 `registry.py` 新原语
+- `b_terminals`/`b_groups` 清理逻辑从 `conftest.py` 内联函数挪进 `common/cleanup/terminal.py`/`group.py`（`cleaner_b` 变体）
+- `references/conftest-jkpt.md`：同步过期的「内部辅助函数不在 common/」描述，补链接到 `cleanup-framework.md`
+
+### Breaking
+- `cleanup-report.yaml` / session 清理报告的 domain 粒度从「聚合一行」变为「逐项一行」（如 `intercom_groups: ...` 变成多条 `intercom_group_<gid>: ...`）；无代码依赖旧 key 名（已检索确认），仅影响人工读报告时的行数
+
+---
+
+## [Unreleased] — 2026-08-18 开跑清空 Allure raw
+
+### Added
+- `common.run_artifact_util.wipe_allure_raw_dirs`：按项目根删除 `temps/`、`allure-results/`
+- `pytest_configure` 开跑调用（`config.rootpath`）；不删 `reports/`，session 结束不删
+
+---
+
+## [Unreleased] — 2026-08-18 下单限频共享冷却钟
+
+### Added
+- `common.buy_cooldown_util`：`wait_buy_cooldown` / `mark_bought`（进程内 65s 钟；套餐/星豆/订单 lifecycle 共用）
+
+### Changed
+- 商城 `TestEcm05Buy`、星豆 `TestSb03Buy`、订单 `ensure_lifecycle_*` 改为共享钟；lifecycle 遇 999 再买一次再 skip
+
+---
+
+## [Unreleased] — 2026-08-18 待支付单 session 收尾
+
+### Added
+- `common.order_cleanup_util`：`register_unpaid_order_no` / `cleanup_registered_unpaid_orders`（进程内名单，不写 extract）
+- `cleanup_test_data` 步骤 0.5：对本轮登记单 cancel→delete；`ENABLE_AUTO_CLEANUP=false` 时保留给人工扫码
+
+### Changed
+- 商城 / 星豆正向 buy 成功后登记订单号；用例内仍不 cancel `combo_order_no` / `star_bean_order_no`
+
+---
+
+## [Unreleased] — 2026-08-18 Suites 四层对齐
+
+### Added
+- `SKILL.md` 第 4 层「Allure Suites 四层对齐」：文件→类→方法→parametrize 为通用轴；默认一类一报告分组单元
+- `yaml-conventions.md` §8：jkpt 填法（一类一 HTTP 接口、`TestEn01` 前缀、不传 ids）
+- HTTP 模板改为多类骨架（`Test01`/`Test02` 占位前缀 + `_XxxHelpers` + module 清理）
+
+### Changed
+- 有状态默认改为模式 B′（文件内多类 + extract）；模式 B 单类切片标为勿用于 Suites
+- YAML `name` 不再写成「Allure 标题」；叶子不传中文 `ids=`、不用 `@allure.title(name)`
+- `jkpt-api-test.mdc`：拆类 / 禁止切片 / 禁止中文 ids 写入必须与禁止
+- `CONTRIBUTING.md`：编码模式变更须同步 mdc
+- `methods-reference.md`：`case_name` 只说明附件标题
+
+### Deprecated
+- 同一 Test 类内 `test_data[:N]` 切片 CRUD（Allure 会摊平）；改用一类一 `*_cases`
+
+---
+
 ## [Unreleased] — 2026-08-14 正向 expected.msg / 负向 expected.error_msg
 
 ### Added
