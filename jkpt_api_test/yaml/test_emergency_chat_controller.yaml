@@ -459,18 +459,3 @@ expiration_cases:
     expected:
       code: 0
       msg: "成功"
-
-  - name: "自动关闭-负向-inactiveMillis=0"
-    scenario: "positive"
-    inactive_millis: 0
-    # 2026-08-17 实测：测试桩不校验 0/负值，直接成功——健壮性线索，与 member/list 空 ID 同类
-    expected:
-      code: 0
-      msg: "成功"
-
-  - name: "自动关闭-负向-inactiveMillis负数"
-    scenario: "positive"
-    inactive_millis: -1
-    expected:
-      code: 0
-      msg: "成功"

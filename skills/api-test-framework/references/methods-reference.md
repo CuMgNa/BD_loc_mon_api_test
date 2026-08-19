@@ -17,6 +17,9 @@
 - [18. common/protocol_codec.py](#18-commonprotocol_codecpy)
 - [19. common/protocol_types.py](#19-commonprotocol_typespy)
 - [20. common/export_assert_util.py（xlsx 导出断言）](#20-commonexport_assert_utilpy)
+- [21. common/order_cleanup_util.py（待支付单登记）](#21-commonorder_cleanup_utilpy)
+- [22. common/buy_cooldown_util.py（下单限频冷却）](#22-commonbuy_cooldown_utilpy)
+- [23. common/run_artifact_util.py（开跑清空 Allure raw）](#23-commonrun_artifact_utilpy)
 
 ### 适配层（仅 jkpt）
 - [15. conftest.py 常用fixture和hook](#15-conftestpy-常用fixture和hook)（详细见 [conftest-jkpt.md](conftest-jkpt.md)）
@@ -44,8 +47,11 @@ class BaseRequest:
         
         标准requests参数: method, url, params, json, data, headers, files, timeout
         框架参数:
-          - case_name: str  用例名称 (默认 '未知用例')
+          - case_name: str  用例名称 (默认 '未知用例')；进日志与 Allure **附件标题**，不是 Suites 树节点
           - log_level: str  "full"|"simple"|"none" (默认 'full')
+        
+        附件标题形态：`[请求] METHOD /path · case_name`（见 `_allure_attach_title`）。
+        Suites 目录结构由 Test 类拆分决定，见 SKILL 第4层「四层对齐」。
         
         与核心层client.py的区别:
           - 使用emoji风格日志 (🚀✅🟢🔴❌)
@@ -483,3 +489,63 @@ class XlsxSheetSnapshot:
 ### `assert_export_response(*, case_name, response, expected, require_binary=False, addr_count=None) -> None`
 
 导出接口统一入口：响应体像 JSON 时走业务码断言；否则按二进制 xlsx 结构断言。`require_binary=True` 时若收到 JSON 直接失败。
+
+---
+
+## 21. common/order_cleanup_util.py
+
+本 session 待支付订单登记。**进程内名单，不写 `extract.yaml`**（同 key last-wins 会漏星豆第一张）。conftest **禁止**写 extract；收尾由 `cleanup_test_data` 调用。
+
+导入：`from common.order_cleanup_util import register_unpaid_order_no`
+
+### `register_unpaid_order_no(order_no) -> None`
+
+buy 成功后登记。空值忽略，同号去重。商城正向 buy、星豆**每条**正向 buy、订单 helper 两张 lifecycle 单都要调。
+
+### `registered_unpaid_order_nos() -> list[str]`
+
+返回当前名单副本。
+
+### `cleanup_registered_unpaid_orders(base_url, auth_headers) -> None`
+
+对名单逐张 `POST /api/monitor/order/cancel` 再 `DELETE /api/monitor/order/delete`（query `orderNo`，Header token）。单条失败只打日志。只动本轮登记单，不扫账号历史 UNPAID。`ENABLE_AUTO_CLEANUP=false` 时 conftest 不调用本函数。
+
+---
+
+## 22. common/buy_cooldown_util.py
+
+同一测试账号连续 `POST .../buy`（套餐商城 / 星豆 / 订单 lifecycle helper）会返回 `999 下单过于频繁`。冷却约 65s（现网实测）。**进程内共享钟**，三个模块一起 wait/mark，不要各自记时间。
+
+导入：`from common.buy_cooldown_util import wait_buy_cooldown, mark_bought`
+
+### `wait_buy_cooldown() -> None`
+
+距上次 `mark_bought` 不足 65s 则阻塞；从未 mark 则立即返回。
+
+### `mark_bought() -> None`
+
+一次 buy **请求已发出**后调用（成功、业务失败、999 都算）。`no_auth` / 未真正下单的参数校验负向不要 mark。
+
+```python
+wait_buy_cooldown()
+try:
+    res = http.send_request("post", buy_url, json=body, headers=headers, ...)
+finally:
+    mark_bought()
+```
+
+订单 lifecycle 遇 999 可再 wait+buy 一次；仍 999 再 skip。不要改去 cancel `combo_order_no` / `star_bean_order_no`。
+
+---
+
+## 23. common/run_artifact_util.py
+
+开跑前删除项目根下 Allure raw 目录，避免 `temps/` 与 stray `allure-results/` 跨轮叠加。**不删** `reports/`。由 `pytest_configure` 调用；用例勿调。
+
+导入：`from common.run_artifact_util import wipe_allure_raw_dirs`
+
+### `wipe_allure_raw_dirs(root) -> list`
+
+按 `root`（`config.rootpath`）删除 `temps/`、`allure-results/`（`ignore_errors`）。返回实际动手的目录名；缺目录返回 `[]`。
+
+

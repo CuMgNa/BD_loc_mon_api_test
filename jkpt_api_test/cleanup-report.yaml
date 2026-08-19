@@ -1,0 +1,242 @@
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 2, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 2, close 2, delete 2
+  rescue_chat_819134235979: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134236371: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134238302: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 1, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 2, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 4, close 4, delete 4
+  rescue_chat_819134519158: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134519487: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134521162: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 1, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 2, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 5, close 5, delete 5
+  rescue_chat_819134704671: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134705075: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134706872: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134708252: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134708392: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134708532: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819134708670: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 6, close 6, delete 6
+  rescue_chat_819144820516: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819144855052: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145108155: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145204726: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145259171: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145306621: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145313372: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145320188: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 4, close 4, delete 4
+  rescue_chat_819145041837: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145119335: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145319626: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145358383: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145558521: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145605533: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145611484: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819145616672: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 7, close 6, delete 7
+  rescue_chat_819150159099: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150232824: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150429995: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150522715: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150644306: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150652825: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150659362: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150705562: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 2, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 4, close 4, delete 4
+  rescue_chat_819150519196: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150604415: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150802637: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819150855337: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151016512: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151023181: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151028630: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151033687: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: 'FAILED: (''Connection aborted.'', RemoteDisconnected(''Remote end closed
+    connection without response''))'
+  intercom_groups: 登记 5, close 5, delete 5
+  rescue_chat_819151018847: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151049973: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151318047: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151413390: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151537396: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151544219: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151549529: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819151556803: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 6, close 6, delete 6
+  rescue_chat_819152058606: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152132260: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152346404: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152428650: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152602958: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152611943: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152623056: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152629067: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 4, close 4, delete 4
+  rescue_chat_819152511844: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152545493: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152807576: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819152858414: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153000909: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153006085: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153012024: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153018496: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 6, close 6, delete 6
+  rescue_chat_819153019832: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153058226: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153307519: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153359778: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153600727: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153605390: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153610642: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153617200: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_groups: 登记 6, close 6, delete 6
+  rescue_chat_819153523049: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153610626: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153836587: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819153934658: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819154134528: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819154141781: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819154148179: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819154153438: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_group_6a8566add76e0c3dcfe1f54c: close=True, delete=True
+  intercom_group_6a8566f1d76e0c3dcfe1fd51: close=True, delete=False
+  intercom_group_6a8566ffd76e0c3dcfe204f0: close=True, delete=True
+  intercom_group_6a856724d76e0c3dcfe20b40: close=True, delete=True
+  rescue_chat_819161458988: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161528145: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161737268: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161828305: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161949846: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161954446: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162001684: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162007489: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+  unpaid_order_2089991349102231552: cancel=True, delete=True
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 2, 失败: 1'
+  intercom_group_6a856594d76e0c3dcfe1bf0d: close=True, delete=True
+  intercom_group_6a8565f3d76e0c3dcfe1cd5a: close=True, delete=True
+  intercom_group_6a856673d76e0c3dcfe1e37a: close=True, delete=True
+  intercom_group_6a8566bcd76e0c3dcfe1f566: close=True, delete=True
+  intercom_group_6a8566d9d76e0c3dcfe1fcf2: close=True, delete=True
+  intercom_group_6a8566e6d76e0c3dcfe1fd0e: close=True, delete=True
+  intercom_group_6a856700d76e0c3dcfe204f8: close=True, delete=True
+  rescue_chat_819161352518: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161433352: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161640903: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161735488: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161913393: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161919829: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161925354: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819161930771: '关闭: 0, 仍活跃: 0'
+  terminals: 'FAILED: (''Connection aborted.'', RemoteDisconnected(''Remote end closed
+    connection without response''))'
+  unpaid_order_2089991216897769472: cancel=True, delete=True
+  unpaid_order_2089991502500511744: cancel=True, delete=True
+  unpaid_order_2089991793174167552: cancel=True, delete=True
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_group_6a8568fad76e0c3dcfe2657e: close=True, delete=True
+  intercom_group_6a856939d76e0c3dcfe269e0: close=True, delete=True
+  intercom_group_6a856949d76e0c3dcfe2715c: close=True, delete=True
+  rescue_chat_819162452972: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162528028: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162727804: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162816884: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162858784: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162904306: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162909064: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162915254: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+  unpaid_order_2089993737393455104: cancel=True, delete=True
+  unpaid_order_2089994021540773888: cancel=True, delete=True
+  unpaid_order_2089994307244179456: cancel=True, delete=True
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  groups: '成功: 3, 失败: 0'
+  intercom_group_6a856814d76e0c3dcfe2393e: close=True, delete=True
+  intercom_group_6a856862d76e0c3dcfe241b2: close=True, delete=True
+  intercom_group_6a8568e9d76e0c3dcfe25f61: close=True, delete=True
+  intercom_group_6a856936d76e0c3dcfe269ce: close=True, delete=True
+  intercom_group_6a856955d76e0c3dcfe2719e: close=True, delete=True
+  intercom_group_6a856961d76e0c3dcfe27955: close=True, delete=True
+  intercom_group_6a856979d76e0c3dcfe27f70: close=True, delete=True
+  rescue_chat_819162415895: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162452936: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162709194: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162810433: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162947374: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819162953770: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819163001272: '关闭: 0, 仍活跃: 0'
+  rescue_chat_819163012104: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 5, 失败: 0'
+  unpaid_order_2089993935356215296: cancel=True, delete=True
+  unpaid_order_2089994219067326464: cancel=True, delete=True
+  unpaid_order_2089994504774926336: cancel=True, delete=True

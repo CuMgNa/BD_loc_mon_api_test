@@ -1,0 +1,389 @@
+# yaml/test_intercom_group_controller.yaml
+# 对讲群批 1：cost/create/update/invite/list/remainder/nickname/remove/close/delete
+# 对讲群批 2：B 支路 invite + 通知域 + handler
+# {{ig_group_id}} 由 TestIg02 写入；{{ig_member_id}} 由 TestIg05 写入
+# {{ig_group_id_b2}} 由 Ig04 B 支路写入；{{ig_invite_notice_id}} 由 Ig11 写入
+# {{rescue_sat_terminal}} / _b / _b2 / {{bd_test_terminal}} 由 _IgHelpers 注入，不走 extract
+# 群名占位 AUTO_IG_{ts} 由代码 replace；负向 id 一律字面量
+# 现网基线见 plan/intercom-group-tests.plan.md §5
+
+intercom_cost_cases:
+  - name: "对讲群-扣费信息-正向"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-扣费信息-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_create_cases:
+  - name: "对讲群-创建-正向"
+    intercomGroupName: "AUTO_IG_{ts}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-创建-负向-缺群名"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "对讲群-创建-负向-群名超长16字"
+    intercomGroupName: "AUTO_IG_X_16CHARS!"
+    expected:
+      code: 1001
+      error_msg: "群名称不能超过15个字符"
+
+  - name: "对讲群-创建-负向-无Token"
+    intercomGroupName: "AUTO_IG_{ts}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_update_cases:
+  - name: "对讲群-改名-正向"
+    intercomGroupId: "{{ig_group_id}}"
+    intercomGroupName: "IG_REN_{ts}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-改名-负向-假群id"
+    intercomGroupId: "0"
+    intercomGroupName: "AUTO_IG_{ts}"
+    expected:
+      code: 3003
+      error_msg: "群聊不存在"
+
+  - name: "对讲群-改名-负向-缺群名"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "对讲群-改名-负向-群名超长"
+    intercomGroupId: "{{ig_group_id}}"
+    intercomGroupName: "AUTO_IG_RENAMED_TOOLONG_12345"
+    expected:
+      code: 1001
+      error_msg: "群名称不能超过15个字符"
+
+  - name: "对讲群-改名-负向-无Token"
+    intercomGroupId: "0"
+    intercomGroupName: "AUTO_IG_{ts}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_invite_cases:
+  - name: "对讲群-邀请-正向-A支路自己的救援棒"
+    addrInfos:
+      - addr: "{{rescue_sat_terminal}}"
+    force: false
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-邀请-正向-B支路他人救援棒"
+    branch: B
+    addrInfos:
+      - addr: "{{rescue_sat_terminal_b}}"
+    force: false
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-邀请-负向-假群id"
+    intercomGroupId: "0"
+    addrInfos:
+      - addr: "{{rescue_sat_terminal}}"
+    force: false
+    expected:
+      code: 3003
+      error_msg: "群聊不存在"
+
+  - name: "对讲群-邀请-负向-空addrInfos"
+    addrInfos: []
+    force: false
+    expected:
+      code: 1001
+      error_msg: "最少邀请一个设备进入群聊"
+
+  - name: "对讲群-邀请-负向-非救援棒设备"
+    intercomGroupId: "{{ig_group_id}}"
+    addrInfos:
+      - addr: "{{bd_test_terminal}}"
+    force: false
+    expected:
+      code: 1001
+      error_msg: "仅支持天通应急救援棒设备"
+
+  - name: "对讲群-邀请-负向-无Token"
+    intercomGroupId: "0"
+    addrInfos:
+      - addr: "{{rescue_sat_terminal}}"
+    force: false
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+  # 方案 A：须排在 A/B 正向之后。error_msg 含 SN 的由 testcase 替换 {{rescue_sat_terminal_b}}
+  - name: "对讲群-邀请-负向-设备已在本群"
+    scene: dup_in_group
+    expect_deduct: false
+    addrInfos:
+      - addr: "{{rescue_sat_terminal}}"
+    force: false
+    expected:
+      code: 1001
+      error_msg: "设备已经加入该群聊，无需重复邀请"
+
+  - name: "对讲群-邀请-负向-设备邀请中"
+    scene: dup_pending
+    expect_deduct: false
+    addrInfos:
+      - addr: "{{rescue_sat_terminal_b}}"
+    force: false
+    expected:
+      code: 1001
+      error_msg: "该设备“{{rescue_sat_terminal_b}}”邀请中/待对方确认"
+
+intercom_terminal_list_cases:
+  - name: "对讲群-成员列表-正向"
+    intercomGroupId: "{{ig_group_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-成员列表-负向-假群id"
+    intercomGroupId: "0"
+    expected:
+      code: 3003
+      error_msg: "群聊不存在"
+
+  - name: "对讲群-成员列表-负向-无Token"
+    intercomGroupId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_remainder_cases:
+  - name: "对讲群-余额状态-正向"
+    intercomGroupId: "{{ig_group_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-余额状态-负向-假群id"
+    intercomGroupId: "0"
+    expected:
+      code: 3003
+      error_msg: "群聊不存在"
+
+  - name: "对讲群-余额状态-负向-无Token"
+    intercomGroupId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_nickname_cases:
+  - name: "对讲群-成员昵称-正向-改自己设备"
+    intercomGroupMemberId: "{{ig_member_id}}"
+    newNickname: "NICK_{ts}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-成员昵称-负向-假成员id"
+    intercomGroupMemberId: "0"
+    newNickname: "NICK_{ts}"
+    expected:
+      code: 3003
+      error_msg: "成员不存在"
+
+  - name: "对讲群-成员昵称-负向-无Token"
+    intercomGroupMemberId: "0"
+    newNickname: "NICK_{ts}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_addr_remove_cases:
+  - name: "对讲群-移除设备-正向"
+    intercomGroupId: "{{ig_group_id}}"
+    addr: "{{rescue_sat_terminal}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-移除设备-负向-假群id"
+    intercomGroupId: "0"
+    addr: "{{rescue_sat_terminal}}"
+    expected:
+      code: 3003
+      error_msg: "群聊不存在"
+
+  - name: "对讲群-移除设备-负向-假addr"
+    intercomGroupId: "{{ig_group_id}}"
+    addr: "000000000000"
+    expected:
+      code: 3003
+      error_msg: "成员不存在"
+
+  - name: "对讲群-移除设备-负向-无Token"
+    intercomGroupId: "0"
+    addr: "{{rescue_sat_terminal}}"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_close_cases:
+  # 顺序硬约束：路人必须在群主正向之前（失败才不毁主链）；重复关闭必须在群主正向之后
+  - name: "对讲群-关闭-负向-非群主-路人"
+    scene: not_owner_stranger
+    intercomGroupId: "{{ig_group_id}}"
+    expect_status: 1
+    expected:
+      code: 999
+      error_msg: "只有群主可以查看详情"
+
+  - name: "对讲群-关闭-正向-群主"
+    intercomGroupId: "{{ig_group_id}}"
+    expect_status: 0
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-关闭-负向-假群id"
+    intercomGroupId: "0"
+    expected:
+      code: 3003
+      error_msg: "群聊不存在"
+
+  - name: "对讲群-关闭-负向-无Token"
+    intercomGroupId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+  - name: "对讲群-关闭-负向-重复关闭"
+    scene: already_closed
+    intercomGroupId: "{{ig_group_id}}"
+    expect_status: 0
+    expected:
+      code: 1001
+      error_msg: "群聊已结束，无法操作"
+
+  - name: "对讲群-关闭-负向-非群主-被邀请人"
+    scene: not_owner_invitee
+    expect_status: 1
+    expected:
+      code: 999
+      error_msg: "只有群主可以查看详情"
+
+intercom_delete_cases:
+  - name: "对讲群-删除-正向"
+    intercomGroupId: "{{ig_group_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-删除-负向-假群id"
+    intercomGroupId: "0"
+    expected:
+      code: 3003
+      error_msg: "群聊不存在"
+
+  - name: "对讲群-删除-负向-无Token"
+    intercomGroupId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_notice_list_cases:
+  - name: "对讲群-邀请通知列表-正向-B待确认"
+    status: "PENDING"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-邀请通知列表-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_pending_count_cases:
+  - name: "对讲群-待确认数量-正向"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-待确认数量-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_send_invitation_list_cases:
+  - name: "对讲群-我发送的邀请-正向"
+    intercomGroupId: "{{ig_group_id_b2}}"
+    status: "PENDING"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-我发送的邀请-负向-无Token"
+    intercomGroupId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_invite_handler_cases:
+  - name: "对讲群-处理邀请-B同意-正向"
+    handlerType: AGREED
+    invitationNoticeId: "{{ig_invite_notice_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-处理邀请-B拒绝-正向"
+    action: reject
+    handlerType: REJECTED
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群-处理邀请-负向-假通知id"
+    handlerType: AGREED
+    invitationNoticeId: "0"
+    expected:
+      code: 3003
+      error_msg: "邀请记录不存在"
+
+  - name: "对讲群-处理邀请-负向-无Token"
+    handlerType: AGREED
+    invitationNoticeId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_full_invite_cases:
+  - name: "对讲群-邀请-负向-成员已满"
+    expected:
+      code: 1001
+      error_msg: "群成员数将超出上限{maxMembers}人，无法邀请1人，请调整邀请数量后重试"
+

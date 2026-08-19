@@ -1,0 +1,143 @@
+# yaml/test_emergency_order_controller.yaml
+# 应急套餐订单：page / detail / cancel / delete
+# {{combo_order_no}} 由商城 TestEcm05 写入，本文件只读、禁止用例内 cancel/delete
+# {{eo_page_order_no}} 由 page 正向-UNPAID 写入
+# {{eo_lifecycle_order_no}} / {{eo_lifecycle_star_bean_order_no}} 由 helper buy 写入；不 register_unpaid_order_no
+# {{rescue_sat_terminal}} 由 _EoHelpers 注入，不走 extract
+# 负向码 2026-08-18 现网探针；Token 只 Header
+
+emergency_order_page_cases:
+  - name: "套餐订单-分页-正向-无过滤"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-分页-正向-UNPAID"
+    orderStatus: "UNPAID"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-分页-正向-CANCELLED"
+    orderStatus: "CANCELLED"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-分页-负向-orderStatus非法"
+    orderStatus: "FOO"
+    expected:
+      code: 1001
+      error_msg: "未知参数错误"
+
+  - name: "套餐订单-分页-负向-pageSize为0"
+    pageSize: 0
+    expected:
+      code: 999
+      error_msg: "失败"
+
+  - name: "套餐订单-分页-负向-缺token"
+    orderStatus: "UNPAID"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+emergency_order_detail_cases:
+  - name: "套餐订单-详情-正向-商城待支付单"
+    orderNo: "{{combo_order_no}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-详情-正向-分页抽出单"
+    orderNo: "{{eo_page_order_no}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-详情-负向-缺orderNo"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "套餐订单-详情-负向-假orderNo"
+    orderNo: "0"
+    expected:
+      code: 999
+      error_msg: "订单不存在，请刷新页面重试"
+
+  - name: "套餐订单-详情-负向-缺token"
+    orderNo: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+emergency_order_cancel_cases:
+  - name: "套餐订单-取消-正向-套餐自造单"
+    orderNo: "{{eo_lifecycle_order_no}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-取消-正向-星豆自造单"
+    orderNo: "{{eo_lifecycle_star_bean_order_no}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-取消-负向-已取消再取消"
+    orderNo: "{{eo_lifecycle_order_no}}"
+    expected:
+      code: 999
+      error_msg: "订单状态异常，请稍后重试"
+
+  - name: "套餐订单-取消-负向-缺orderNo"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "套餐订单-取消-负向-假orderNo"
+    orderNo: "0"
+    expected:
+      code: 999
+      error_msg: "订单不存在，请刷新页面重试"
+
+  - name: "套餐订单-取消-负向-缺token"
+    orderNo: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+emergency_order_delete_cases:
+  - name: "套餐订单-删除-正向-套餐生命周期单"
+    orderNo: "{{eo_lifecycle_order_no}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-删除-正向-星豆生命周期单"
+    orderNo: "{{eo_lifecycle_star_bean_order_no}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "套餐订单-删除-负向-缺orderNo"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "套餐订单-删除-负向-假orderNo"
+    orderNo: "0"
+    expected:
+      code: 999
+      error_msg: "订单不存在，请刷新页面重试"
+
+  - name: "套餐订单-删除-负向-缺token"
+    orderNo: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"

@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "jkpt_api_test 运行时架构",
+    "output": "jkpt-api-test.architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "http-main",
+        "label": "主请求路径",
+        "focus": ["pytest", "cases", "http", "jkpt"],
+        "note": "YAML 驱动的用例经 BaseRequest 调用监控平台 /api/monitor。"
+      },
+      {
+        "id": "auth-captcha",
+        "label": "登录鉴权",
+        "focus": ["cases", "http", "ocr", "jkpt"],
+        "note": "session 级 captcha → ddddocr → /api/monitor/web-user/login，注入 Authorization。"
+      },
+      {
+        "id": "emergency-uplink",
+        "label": "应急上行",
+        "focus": ["cases", "rescue_cli", "rescue_plat", "jkpt"],
+        "note": "10304 造数后，在监控平台 item/page 轮询确认异步建群。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "pytest",
+      "type": "frontend",
+      "label": "pytest / run.py",
+      "sublabel": "testcases/",
+      "pos": [48, 292],
+      "size": [132, 64]
+    },
+    {
+      "id": "yaml",
+      "type": "database",
+      "label": "YAML 用例",
+      "sublabel": "yaml/*.yaml",
+      "pos": [248, 132],
+      "size": [132, 60]
+    },
+    {
+      "id": "cases",
+      "type": "backend",
+      "label": "用例 + conftest",
+      "sublabel": "fixtures / parametrize",
+      "pos": [248, 292],
+      "size": [140, 64],
+      "tag": "session"
+    },
+    {
+      "id": "extract",
+      "type": "database",
+      "label": "extract.yaml",
+      "sublabel": "链路变量",
+      "pos": [248, 452],
+      "size": [132, 60]
+    },
+    {
+      "id": "ocr",
+      "type": "security",
+      "label": "ddddocr",
+      "sublabel": "CaptchaRecognizer",
+      "pos": [468, 132],
+      "size": [140, 60],
+      "tag": "captcha"
+    },
+    {
+      "id": "http",
+      "type": "backend",
+      "label": "BaseRequest",
+      "sublabel": "common/requests_util",
+      "pos": [468, 292],
+      "size": [148, 64]
+    },
+    {
+      "id": "bd",
+      "type": "backend",
+      "label": "BD 协议客户端",
+      "sublabel": "POST /api/datas/bd",
+      "pos": [468, 452],
+      "size": [148, 64]
+    },
+    {
+      "id": "rescue_cli",
+      "type": "backend",
+      "label": "RescueUplinkClient",
+      "sublabel": "U0–U5 上行",
+      "pos": [468, 612],
+      "size": [160, 64]
+    },
+    {
+      "id": "allure",
+      "type": "cloud",
+      "label": "Allure",
+      "sublabel": "temps → reports",
+      "pos": [48, 452],
+      "size": [132, 60]
+    },
+    {
+      "id": "jkpt",
+      "type": "external",
+      "label": "监控平台 JKPT",
+      "sublabel": "JKPT_BASE_URL",
+      "pos": [712, 292],
+      "size": [156, 64],
+      "tag": "SUT"
+    },
+    {
+      "id": "rescue_plat",
+      "type": "external",
+      "label": "救援平台",
+      "sublabel": ":10304 cookie",
+      "pos": [712, 612],
+      "size": [148, 64]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "本机测试运行时 · jkpt_api_test",
+      "wraps": ["pytest", "yaml", "cases", "extract", "ocr", "http", "bd", "rescue_cli", "allure"]
+    },
+    {
+      "kind": "security-group",
+      "label": "信任边界 · 外部被测系统",
+      "wraps": ["jkpt", "rescue_plat"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "run-cases",
+      "from": "pytest",
+      "to": "cases",
+      "label": "加载用例",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cases-yaml",
+      "from": "cases",
+      "to": "yaml",
+      "label": "parametrize",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelAt": [270, 200]
+    },
+    {
+      "id": "cases-extract",
+      "from": "cases",
+      "to": "extract",
+      "label": "读写占位符",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [220, 400]
+    },
+    {
+      "id": "cases-http",
+      "from": "cases",
+      "to": "http",
+      "label": "发请求"
+    },
+    {
+      "id": "cases-ocr",
+      "from": "cases",
+      "to": "ocr",
+      "label": "识别验证码",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "http-jkpt",
+      "from": "http",
+      "to": "jkpt",
+      "label": "/api/monitor",
+      "variant": "emphasis",
+      "labelDy": 56
+    },
+    {
+      "id": "cases-bd",
+      "from": "cases",
+      "to": "bd",
+      "label": "组帧",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "bd-jkpt",
+      "from": "bd",
+      "to": "jkpt",
+      "label": "POST /api/datas/bd",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "labelAt": [640, 530]
+    },
+    {
+      "id": "cases-rescue",
+      "from": "cases",
+      "to": "rescue_cli",
+      "label": "造数",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "rescue-plat",
+      "from": "rescue_cli",
+      "to": "rescue_plat",
+      "label": "登录 / 位置 / 语音",
+      "labelDy": 56
+    },
+    {
+      "id": "rescue-to-jkpt",
+      "from": "rescue_plat",
+      "to": "jkpt",
+      "label": "异步建群（观测）",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "pytest-allure",
+      "from": "pytest",
+      "to": "allure",
+      "label": "--alluredir",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "主路径",
+      "items": [
+        "pytest 读取 testcases/ 与 yaml/*.yaml",
+        "BaseRequest 调用监控平台 /api/monitor",
+        "正向 expected.msg，负向 expected.error_msg"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "信任边界",
+      "items": [
+        "JKPT：验证码登录后 Authorization",
+        "救援平台：cookie（JSESSIONID），无验证码",
+        "extract.yaml 仅本机，不跨平台共享"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "侧路",
+      "items": [
+        "北斗：本地组帧后 POST /api/datas/bd",
+        "应急：10304 上行成功 ≠ 群聊已建，须轮询 item/page",
+        "Allure：temps 原始结果 → reports 静态报告"
+      ]
+    }
+  ]
+}

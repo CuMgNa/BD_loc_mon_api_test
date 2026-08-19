@@ -5,4 +5,5 @@ __pycache__/
 .pytest_cache/
 jkpt_api_test/reports/
 jkpt_api_test/temps/
+jkpt_api_test/allure-results/
 jkpt_api_test/extract.yaml

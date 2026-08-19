@@ -20,7 +20,7 @@ description: >
 - 断言：`from common.allure_assert_util import assert_api_result`
 - 日志：`from common.logger_util import sep, key, print_request, print_response`
 - 数据：`from common.yaml_util import read_yaml, write_yaml, clear_yaml, resolve_extract_value, read_expected_msg`
-- 用例模式：模式 A（无状态）/ 模式 B（CRUD/有状态）
+- 用例模式：模式 A（无状态）/ 模式 B′（文件内多类 + extract）；模式 B 单类切片勿用于 Suites
 - 协议层（如项目使用）：`bd_client` + `bd_test_terminal`（详见 [conftest-jkpt.md](references/conftest-jkpt.md)）
 
 **适配层**（仅 jkpt，其他项目参考格式自建）：
@@ -160,6 +160,32 @@ exp_msg = read_expected_msg(case["expected"])
 
 # 清空extract.yaml（每轮测试前调用）
 clear_yaml()
+```
+
+### 2.2b 待支付单登记（jkpt 订单收尾）
+
+**文件**: `common/order_cleanup_util.py`
+**导入**: `from common.order_cleanup_util import register_unpaid_order_no`
+
+buy 成功后登记（进程内名单，避免 extract last-wins 漏单）。session 末由 `cleanup_test_data` 收；`ENABLE_AUTO_CLEANUP=false` 时保留给人工扫码。
+
+```python
+register_unpaid_order_no(order_no)
+```
+
+### 2.2c 下单限频冷却（jkpt 同一账号 buy）
+
+**文件**: `common/buy_cooldown_util.py`
+**导入**: `from common.buy_cooldown_util import wait_buy_cooldown, mark_bought`
+
+同一账号连续套餐/星豆 buy 会 `999 下单过于频繁`（约 65s）。商城、星豆、订单 lifecycle helper **共用**这根钟；`no_auth` 不要 mark。
+
+```python
+wait_buy_cooldown()
+try:
+    res = http.send_request("post", buy_url, json=body, headers=headers, ...)
+finally:
+    mark_bought()
 ```
 
 ---
@@ -328,106 +354,85 @@ pytest --host=192.168.1.100    # 手动指定目标主机IP
 
 ## 第4层：用例编码模式
 
+模式 A / B′ 管 **数据怎么流**。下面四层管 **Allure Suites 怎么长**。两件事正交：有状态用文件级 `extract.yaml`，不要靠「一个 Test 类装下整个控制器」。
+
+完整骨架见 [assets/templates/test_case_simple.tpl.py](assets/templates/test_case_simple.tpl.py)（单接口）与 [test_case_crud.tpl.py](assets/templates/test_case_crud.tpl.py)（多接口 + extract）。
+
+### Allure Suites 四层对齐（本技能栈默认）
+
+allure-pytest 的 Suites 按 pytest 收集产物分层，**最后一层文件夹是 class**。同一类里再写多少个 `test_*`，报告里都还是平铺叶子。文件夹和叶子都按 **显示名** 排序，不是按源码顺序。
+
+| 层 | pytest 产物 | Suites | 默认代表 |
+|----|-------------|--------|----------|
+| 文件 | `test_*.py` + 一份 YAML | suite | 一个模块 / 一个 controller |
+| 类 | `class Test*` | **最后一层文件夹** | 一个**报告分组单元** |
+| 方法 | `def test_*` | 叶子前缀 | 一个 YAML 顶层 `*_cases` |
+| 参数化 | `@pytest.mark.parametrize("case", …)` | 叶子 | YAML 一行 = 一片叶子 |
+
+**默认（pytest + YAML + 以 Suites 为主视图）：**
+
+- 一个 YAML 顶层 `*_cases` ↔ **一个 class** ↔ **一个方法** ↔ **一次** `parametrize("case", …)`。禁止把多个接口的 case 切成 `test_data[:N]` 塞进同一类。
+- 多接口文件必须拆类。单接口文件（登录、一个协议探测）一类即可，不必为拆而拆。
+- class 名带 **可排序前缀**（补零数字，如 `Test01` / `Test02`）。前缀字母表由项目适配层定义，**不要**把某项目的 `TestEc` 抄到新项目。
+- 共享逻辑放在不以 `Test` 开头的 Helpers（`python_classes = Test*` 时不会被收集）。
+- YAML `name` 给人读：日志、`send_request(case_name=…)` 附件、`assert_api_result`。**不是** Suites 树标题。
+- 叶子 id：不要用中文场景名当 `ids=` 或 `@allure.title`（Unicode 转义后按字符串排序会乱序）。默认 **不传 `ids=`**；不传并不保证所有 pytest 版本都显示 `[case0]`，换项目或升级后应核一次 nodeid。超过 9 条时注意 `case10` 会排到 `case2` 前。
+- 场景名插到 YAML 列表 **开头** 会平移下标，Allure 历史会错位；接受，或改用 ASCII slug（适配层定）。
+- extract 作用域是 **文件**。写 extract 的那一类用类级/模块级「只写一次」标志；**不要**用单类上的 `created_id` 跨类共享。
+- 清理用 **module / session** fixture，不要只挂在「最后一个 Test 类」（`-k` 不跑该类时 teardown 不会走）。
+- 文件内有 extract 链时，不要按 class 做 pytest-xdist；有副作用的叶子慎用 rerun。
+
+`@allure.epic` / `feature` / `story` 可选，**不能代替**拆类。团队主视图若是 Behaviors，先改适配层，不要假定 Suites 规则失效。
+
+换项目时只改「每一层代表什么」（适配层），不改这根轴。jkpt 填法见 [yaml-conventions.md](references/yaml-conventions.md)。
+
 ### 模式A：简单无状态接口（如登录、查询）
 
-**适用**: 接口之间无依赖，每个用例独立运行。
+**适用**: 接口之间无依赖。单接口 → 一类；同一文件多个查询接口 → 仍按上一节拆类（无状态也可以拆）。
 
 **文件结构**: 一个 `test_xxx.py` + 一个 `yaml/test_xxx.yaml`
 
-**Python模板**:
+**Python模板**（单接口；多接口用 crud 模板的多类骨架，每类绑定自己的 `*_cases`）:
 ```python
 import jsonpath
 import pytest
 from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml
+from common.yaml_util import read_yaml, read_expected_msg
+from common.allure_assert_util import assert_api_result
 
-_jsonpath_parse = jsonpath.jsonpath   # ← 项目统一别名，用函数式API
+_jsonpath_parse = jsonpath.jsonpath
+_TEST_DATA = read_yaml("./yaml/test_xxx.yaml")
 
-class Test_xxxAPI:
-    test_data = read_yaml("./yaml/test_xxx.yaml")["xxx_cases"]
-
-    @pytest.mark.parametrize("case", test_data)
+class Test01Xxx:
+    @pytest.mark.parametrize("case", _TEST_DATA["xxx_cases"])  # 不要 ids=
     def test_xxx(self, base_url, case):
         url = f"{base_url}/your/api/path"
-        payload = { /* 从case构建 */ }
-        
+        payload = { /* 从 case 构建，不要改 case 字典 */ }
         res = BaseRequest().send_request(
             method="post", url=url, params=payload,
             case_name=case["name"], log_level="simple"
         )
-        
-        code = _jsonpath_parse(res.json(), "$.code")[0]
-        if code == 0:
-            assert code == case["expected"]["code"]
-            # 成功时的额外断言...
-        else:
-            assert code == case["expected"]["code"]
-            assert read_expected_msg(case["expected"]) == res.json()["msg"]
-```
-
-### 模式B：有状态CRUD接口（增删改查有关联）
-
-**适用**: 后面的接口依赖前面接口返回的ID。
-
-**关键机制**:
-- **类变量**共享ID: `Test_xxxAPI.created_id = ...`
-- **关键字匹配**动态修改数据: `if "xxx成功" in case["name"]: case["field"] = dynamic_value`
-- **fixture注入**前置数据: def test_xxx(self, ..., groupid1):
-
-```python
-import jsonpath
-import pytest
-from common.common_data import get_current_datetime
-from common.requests_util import BaseRequest
-from common.yaml_util import read_yaml
-
-_jsonpath_parse = jsonpath.jsonpath   # ← 项目统一别名，用函数式API
-
-class Test_crudAPI:
-    created_id = None           # ← 类变量，跨方法共享
-    
-    test_data = read_yaml("./yaml/test_xxx.yaml")["cases"]
-
-    # CREATE
-    @pytest.mark.parametrize("case", test_data[:N])
-    def test_create(self, base_url, auth_headers, case):
-        if case.get("name") == "创建成功":
-            case["name_field"] = f"测试_{get_current_datetime()}"  # 保证唯一性
-        
-        res = BaseRequest().send_request(method="post", url=..., ...)
         json_data = res.json()
         code = _jsonpath_parse(json_data, "$.code")[0]
-        if code == 0:
-            Test_crudAPI.created_id = _jsonpath_parse(json_data, "$.data.id")[0]
-            assert code == case["expected"]["code"]
-        else:
-            assert code == case["expected"]["code"]
-            assert read_expected_msg(case["expected"]) == res.json()["msg"]
-
-    # UPDATE (依赖CREATE的结果)
-    @pytest.mark.parametrize("case", test_data[N:M])
-    def test_update(self, base_url, auth_headers, case):
-        if "编辑成功" in case.get("name", ""):
-            case["id"] = Test_crudAPI.created_id   # ← 注入上一步的ID
-        
-        res = BaseRequest().send_request(method="put", url=f".../{case['id']}", ...)
-        # 断言同上...
-
-    # DELETE (可能需要conftest的前置fixture)
-    @pytest.mark.parametrize("case", test_data[M:])
-    def test_delete(self, base_url, auth_headers, case, groupid1):  # ← 注入fixture
-        if "删除空资源" in case.get("name", ""):
-            case["id"] = Test_crudAPI.created_id
-        elif "删除非空资源" in case.get("name", ""):
-            case["id"] = groupid1                        # ← 用fixture的数据
-        
-        res = BaseRequest().send_request(method="delete", url=f".../{case['id']}", ...)
-        # 断言同上...
+        msg = _jsonpath_parse(json_data, "$.msg")[0]
+        assert_api_result(
+            case_name=case["name"],
+            expected_code=case["expected"]["code"],
+            expected_msg=read_expected_msg(case["expected"]),
+            actual_code=code,
+            actual_msg=msg,
+        )
 ```
 
-### 模式B′（本项目）：`conftest` fixture + `extract.yaml`
+### 模式B：单类 + 类变量 + 切片 — 勿用于 Suites 主视图
 
-上节为**通用教学示例**（类变量 + 改 `case` 字典）。本仓库真实用例（如 `test_group_controller.py`、`test_terminal_controller.py`）用**两条数据通道**达到同样的「有状态依赖」目标：**fixture 注入** 与 **`extract.yaml` + `{{占位符}}`**。
+> ⚠️ 同一 `Test` 类里 `test_data[:N]` / `[N:M]` 切 CREATE/UPDATE/DELETE，Allure Suites 会把所有接口摊在一个文件夹。类变量也无法跨拆开的类共享。
+>
+> **本技能栈有状态默认用模式 B′**（文件内多类 + `extract.yaml`）。仅当项目明确不以 Suites 分组、且坚持一类到底时，才允许单类切片。
+
+### 模式B′：`conftest` fixture + `extract.yaml`（有状态默认）
+
+本仓库真实用例（如 `test_group_controller.py`）用**两条数据通道**：**fixture 注入** 与 **`extract.yaml` + `{{占位符}}`**。每个 `*_cases` 对应一个带排序前缀的 Test 类，不要退回模式 B 单类。
 
 下面先写**原则与扩展方式**，再给出**参照示例**（示例仅对齐现有风格，**不是**唯一命名或唯一写法；新模块可自行约定 fixture 名、`extract` 键名与 YAML 占位符）。
 
@@ -455,7 +460,7 @@ class Test_crudAPI:
 - **写入**：上游 `code == 0` 时 `write_yaml("./extract.yaml", {"变量名": 值}, mode="append")`；键名自定，须与 YAML 里 `{{变量名}}` 一致。
 - **读取**：`resolve_extract_value(case.get("某字段"), required=True)` 或 `resolve_extract_value("{{devices_addr}}", required=True)`。
 - **跳过**：`required=True` 且变量不存在时 `pytest.skip`。
-- **只写一次**：若需防止后续正向用例覆盖关键变量，可用类级布尔（如 `_first_addr_extracted`）。
+- **只写一次**：写 extract 的那一个 Test 类上用类级布尔，或用模块级变量（如 `_first_addr_extracted`）。拆类后不要指望「另一个 Test 类上的类变量」还能读到。
 
 #### 分组 ID 也可走 extract
 
@@ -496,11 +501,12 @@ def test_xxx(self, base_url, auth_headers, group_fixture, case):
 1. **session / 模块级环境数据** → 在 `conftest.py` 定义**对应 fixture** 并注入；名称与返回结构以项目为准。
 2. **同文件链路动态值** → `extract.yaml` + YAML `{{占位符}}`；避免重复创建与已有 fixture **同职责**的资源。
 3. **优先不修改** `parametrize` 注入的 `case` 字典，保持「方法体内组装参数」，与现有 `_assert_and_report` 一致。
-4. 「只保留第一次成功提取」→ 类级布尔或等价状态（与 `_first_addr_extracted` 同思路）。
+4. 「只保留第一次成功提取」→ 写 extract 的那一类（或模块级）布尔；不要用单类 `created_id` 跨类传递。
+5. 多接口文件按「四层对齐」拆类；`parametrize` 不要传中文 `ids=`，不要 `@allure.title(case["name"])`。
 
 ### 模式C：已移除
 
-> `run_case` / `api_test_framework` 已从仓库删除。jkpt **禁止**生成该模式。无状态用模式 A，有依赖用模式 B / B′，协议用 `bd_client`。
+> `run_case` / `api_test_framework` 已从仓库删除。jkpt **禁止**生成该模式。无状态用模式 A，有依赖用模式 B′（文件内多类 + extract），协议用 `bd_client`。
 
 ### 断言标准模式
 
@@ -619,13 +625,13 @@ delete_xxx_cases:
 |------|------|
 | 文件头注释 | 推荐写清路径与覆盖范围，便于检索 |
 | 多顶层 `*_cases` | 按场景分块；Python 中 `read_yaml("./yaml/...yaml")["某key"]` 与各 `@pytest.mark.parametrize` 一一对应；**不必**强行合并为单一 `xxx_cases` |
-| `name` | 语义化，建议含模块、行为、正向/负向；需要时供 Python 关键字分支 |
+| `name` | 语义化，建议含模块、行为、正向/负向；用于日志、`case_name` 附件、断言。**不是** Allure Suites 树标题 |
 | 业务字段 | 与真实接口参数名一致（如 `groupName`、`parentId`、`groupId`、`groupIds`） |
 | `expected` | 正向用 `code` + `msg`；负向用 `code` + `error_msg`。断言走 `read_expected_msg(case["expected"])`，禁止正向写 `error_msg: "成功"` |
 | `{{变量名}}` | 与 `extract.yaml` 写入键一致；须为整段占位（如 `{{one_id}}`），由 `resolve_extract_value` 解析 |
 | 运行时占位串 | 如 `Updated_{int(time.time())}`，在测试代码里 `replace` 替换，**不要**在 YAML 中写可执行表达式 |
 | 开关字段 | 如 `no_auth: true`，用于分支构造请求头或鉴权 |
-| 用例顺序 | 正向在前、负向在后，便于按切片 `test_data[:N]` 分组参数化（若采用切片） |
+| 用例顺序 | 正向在前、负向在后；每个 `*_cases` 整段交给一个 Test 类，**不要**再 `test_data[:N]` 切片塞进同一类 |
 
 ---
 
@@ -641,8 +647,8 @@ delete_xxx_cases:
 - 预期的正向返回和各类错误返回
 
 ### Step 2: 判断使用哪种模式
-- 无状态接口 → **模式A**
-- CRUD有关联 → **模式B / B′**
+- 无状态接口 → **模式A**（多接口仍拆类）
+- CRUD有关联 → **模式B′**（文件内多类 + extract）；不要用模式 B 单类切片
 - 二进制协议 → **协议层**（`bd_client`）
 - 不要使用已删除的模式C（`run_case`）
 
@@ -653,7 +659,9 @@ delete_xxx_cases:
 ### Step 4: 检查清单
 - [ ] 导入是否正确（`BaseRequest` from `common.requests_util`）
 - [ ] `read_yaml` 路径是否正确（`./yaml/test_xxx.yaml`）
-- [ ] `@pytest.mark.parametrize` 数据源是否匹配 YAML 顶层 key（以 `_cases` 结尾）
+- [ ] `@pytest.mark.parametrize` 数据源是否匹配 YAML 顶层 key（以 `_cases` 结尾）；**一个 key 对一个 class**，不要 `ids=` 中文、不要 `@allure.title` 用 `name`
+- [ ] 多接口文件是否一类一报告分组单元、类名是否带补零前缀；Helpers 是否不以 `Test` 开头
+- [ ] 有 extract 时清理是否在 module/session，而不是只挂在最后一个 Test 类
 - [ ] fixture 注入是否完整（`base_url`、`auth_headers`、业务 fixture）
 - [ ] 断言是否优先使用 `assert_api_result(...)` 并传 `biz_context`
 - [ ] 关键字匹配逻辑是否覆盖了所有 case name
@@ -680,6 +688,9 @@ repo-root/
     │   ├── logger_util.py
     │   ├── captcha_util.py
     │   ├── yaml_util.py
+    │   ├── order_cleanup_util.py
+    │   ├── buy_cooldown_util.py
+    │   ├── run_artifact_util.py
     │   ├── ipconfig.py
     │   ├── common_data.py
     │   ├── bd_protocol_client.py

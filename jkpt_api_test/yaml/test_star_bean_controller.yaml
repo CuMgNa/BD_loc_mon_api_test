@@ -1,0 +1,164 @@
+# yaml/test_star_bean_controller.yaml
+# 星豆接口：换算 / 套餐列表 / 充值下单 / 流水分页
+# star_bean_package_id/price/beans：仅 package_active 首条成功且 status==1 非空时写入
+# {{star_bean_package_id}} 整段占位才 resolve_extract_value；负向一律字面量
+# star_bean_order_no 只写不读；sb_exchange_ratio 由 calculate 基线写入
+# 现网基线见 plan/star-bean-tests.plan.md §5（2026-08-18 实测）
+
+star_bean_calculate_cases:
+  - name: "星豆-换算-正向-最小金额"
+    amount: 1
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-换算-负向-超出范围-10元"
+    amount: 10
+    expected:
+      code: 1001
+      error_msg: "充值金额范围：1~1元"
+
+  - name: "星豆-换算-负向-超出范围-999999元"
+    amount: 999999
+    expected:
+      code: 1001
+      error_msg: "充值金额范围：1~1元"
+
+  - name: "星豆-换算-负向-缺少amount"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "星豆-换算-负向-amount为0"
+    amount: 0
+    expected:
+      code: 1001
+      error_msg: "充值金额范围：1~1元"
+
+  - name: "星豆-换算-负向-amount为负数"
+    amount: -1
+    expected:
+      code: 1001
+      error_msg: "充值金额范围：1~1元"
+
+  - name: "星豆-换算-负向-amount为小数"
+    amount: 0.5
+    expected:
+      code: 1001
+      error_msg: "充值金额范围：1~1元"
+
+  - name: "星豆-换算-负向-无Token"
+    amount: 1
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+star_bean_package_active_cases:
+  - name: "星豆-套餐列表-正向"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-套餐列表-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+star_bean_buy_cases:
+  - name: "星豆-充值下单-正向-自定义金额"
+    amount: 1
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-充值下单-正向-固定套餐"
+    starBeanPackageId: "{{star_bean_package_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-充值下单-负向-都传"
+    amount: 1
+    starBeanPackageId: "999999999"
+    expected:
+      code: 999
+      error_msg: "套餐不存在或已下架"
+
+  - name: "星豆-充值下单-负向-amount为0"
+    amount: 0
+    expected:
+      code: 1001
+      error_msg: "充值金额必须大于0"
+
+  # 「都不传」与「假套餐id」真码被限频 999 掩盖（§7.10），冷却 65s 后按实测锁 999：
+  # - 都不传 → 999 下单过于频繁（真码待开发澄清）
+  # - 假套餐id → 999 下单过于频繁（真码待开发澄清）
+  # 为稳定复现且不拖慢整文件，这两条暂不进 YAML，留待开发澄清后补
+  - name: "星豆-充值下单-负向-无Token"
+    amount: 1
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+star_bean_transaction_page_cases:
+  - name: "星豆-流水分页-正向-默认"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-正向-type充值"
+    type: "RECHARGE"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-正向-type通讯扣费"
+    type: "COMMUNICATION"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-正向-type建群"
+    type: "CREATE_GROUP"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-正向-type邀请成员"
+    type: "INVITE_MEMBER"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-正向-type退款"
+    type: "REFUND"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-边界-page为0"
+    page: 0
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-边界-pageSize极大"
+    pageSize: 10000
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "星豆-流水分页-负向-非法type"
+    type: "FOO"
+    expected:
+      code: 1001
+      error_msg: "未知参数错误"
+
+  - name: "星豆-流水分页-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"

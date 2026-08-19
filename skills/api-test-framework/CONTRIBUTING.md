@@ -9,7 +9,7 @@
 | `common/<新模块或新方法>` | [references/methods-reference.md](references/methods-reference.md) 对应章节 + [CHANGELOG.md](CHANGELOG.md) |
 | `conftest.py` 新增 / 修改 fixture | [references/conftest-jkpt.md](references/conftest-jkpt.md) 速查表 / 详解 / 依赖图 + [CHANGELOG.md](CHANGELOG.md) |
 | YAML 字段约定（新增顶层 key 模式、占位符、`expected` 结构） | [references/yaml-conventions.md](references/yaml-conventions.md) + [CHANGELOG.md](CHANGELOG.md) |
-| 新增用例编码模式 / 调整 import 路径 | [SKILL.md](SKILL.md)（模式 / 必须 / 禁止）+ `assets/templates/` 模板 + [CHANGELOG.md](CHANGELOG.md) |
+| 新增用例编码模式 / 调整 import 路径 | [SKILL.md](SKILL.md)（模式 / 必须 / 禁止）+ `assets/templates/` 模板 + 若改「必须」项则 [.cursor/rules/jkpt-api-test.mdc](../../jkpt_api_test/.cursor/rules/jkpt-api-test.mdc) + [CHANGELOG.md](CHANGELOG.md) |
 | 标记某能力废弃 / 未实现 | 在原文加 `> ⚠️ ...` 块 + [CHANGELOG.md](CHANGELOG.md) Deprecated 段 |
 
 ## 公共能力提取流程（从 testcase → common）

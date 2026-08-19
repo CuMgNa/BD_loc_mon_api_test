@@ -57,7 +57,7 @@ get_xxx_cases:
 delete_xxx_cases:
 ```
 
-在 testcase 内分别用 `@pytest.mark.parametrize("case", test_data["add_xxx_cases"])` 等绑定各方法。
+在 testcase 内分别用 `@pytest.mark.parametrize("case", test_data["add_xxx_cases"])` 等绑定各方法。**每个 key 对应一个 Test 类**，不要把多个 key 的数据切片进同一个类。
 
 ---
 
@@ -67,7 +67,7 @@ delete_xxx_cases:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `name` | str | 用例名称，**语义化**含模块/动作/正负向；用于关键字匹配、Allure 标题、日志 |
+| `name` | str | 用例名称，**语义化**含模块/动作/正负向；用于关键字匹配、日志、`send_request(case_name=)` 与失败附件。**不是** Allure Suites 树节点标题 |
 | `expected.code` | int | 预期业务码（与项目接口规范一致；成功一般为 0） |
 
 ### 推荐字段
@@ -176,13 +176,13 @@ testcase 内分支处理 `.json()` vs `.content`。
 
 ---
 
-## 6. 顺序与切片
+## 6. 顺序
 
 | 习惯 | 说明 |
 |------|------|
-| 正向在前，负向在后 | 便于 `test_data[:N]` 切片用于「先 CREATE 成功后 UPDATE」 |
-| 多正向时第一条为基线 | 便于「只写一次 extract」类逻辑（如 `_first_addr_extracted`） |
-| 删除类放最后 | 避免后续用例无数据可用 |
+| 正向在前，负向在后 | 同一 `*_cases` 内的叶子序；不要靠 `test_data[:N]` 跨接口切片 |
+| 多正向时第一条为基线 | 便于「只写一次 extract」 |
+| 删除类放最后 | 避免后续用例无数据可用；兜底清理仍用 **module/session** fixture |
 
 ---
 
@@ -190,7 +190,8 @@ testcase 内分支处理 `.json()` vs `.content`。
 
 | YAML 现象 | 对应能力 |
 |----------|---------|
-| 顶层 `_cases` 多块 | 模式 B / B′ 多个 `parametrize` |
+| 顶层 `_cases` 多块 | 模式 B′：每块一个 Test 类 + 一次 `parametrize` |
+| YAML `name` | 日志 / 附件 / 断言；Suites 叶子默认是方法名 + `[caseN]`，不要 `ids=` 中文 |
 | `{{bd_test_terminal}}` | conftest `bd_test_terminal` fixture |
 | `{{one_id}}` 等分组占位 | conftest `group_fixture` 或 `extract.yaml` |
 | `no_auth: true` | testcase 内 strip Authorization 头 |
@@ -200,11 +201,28 @@ testcase 内分支处理 `.json()` vs `.content`。
 
 ---
 
-## 8. 自检清单
+## 8. jkpt 对四层的填法（仅本项目）
+
+通用轴见 SKILL 第 4 层。jkpt 适配如下：
+
+| 层 | jkpt 填法 |
+|----|-----------|
+| 文件 | 一个 controller：`test_<controller>.py` + `yaml/test_<controller>.yaml` |
+| 类 | **一个 HTTP 接口**（方法+路径）一个 `Test` 类。类名 `Test<前缀><两位序号><动作>`，如 `TestEn01EnclosureAdd`、`TestEc05bSendVoice`（`05b` 插在 05 与 06 之间） |
+| 方法 | 一个 YAML 顶层 `*_cases` |
+| 叶子 | **不传 `ids=`**（当前 pytest 下多为 `[case0]`；升级后核 nodeid）。禁止中文 ids、禁止 `@allure.title(case["name"])` |
+
+Helpers 不以 `Test` 开头（`_EnclosureHelpers`）。单接口文件可维持一类：`test_login.py`、`test_bd_protocol_client.py`。有 extract 的文件不要按 class 开 xdist。
+
+---
+
+## 9. 自检清单
+
 
 写完 YAML 对照：
 
-- [ ] 顶层 key 以 `_cases` 结尾且与 testcase `parametrize` 一致
+- [ ] 顶层 key 以 `_cases` 结尾且与 testcase **一类一 key** 的 `parametrize` 一致
+- [ ] 没有给 `parametrize` 传中文 `ids=`，也没有 `@allure.title` 用 `name`
 - [ ] 正向 `expected.msg`，负向 `expected.error_msg`；禁止正向写 `error_msg: "成功"`
 - [ ] 占位符 `{{xxx}}` 在 testcase 中有明确解析路径（fixture 或 `resolve_extract_value`）
 - [ ] 没有可执行表达式（如 `!python` / `eval`）

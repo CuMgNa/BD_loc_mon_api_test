@@ -22,8 +22,10 @@ globs: testcases/**, yaml/**, common/**, conftest.py, skills/api-test-framework/
 - YAML 读取：`from common.yaml_util import read_yaml, write_yaml, clear_yaml, read_expected_msg`
 - 正向 YAML：`expected.msg`；负向 YAML：`expected.error_msg`（禁止正向写 `error_msg: "成功"`）
 - 日志：`from common.logger_util import sep, key, print_request, print_response`
-- 数据驱动：`@pytest.mark.parametrize("case", read_yaml("./yaml/test_xxx.yaml")["xxx_cases"])`
-- 用例模式：**模式 A**（无状态）或 **模式 B / B′**（CRUD / `extract.yaml` 链路）
+- 数据驱动：`@pytest.mark.parametrize("case", …)`，**不传 `ids=`**，不要 `@allure.title` 用 YAML `name`
+- 用例模式：**模式 A**（无状态，多接口仍拆类）或 **模式 B′**（文件内多类 + `extract.yaml`）
+- 多接口文件：**一类一 HTTP 接口**；类名 `Test<前缀><两位序号>…`（如 `TestEn01`）；Helpers 不以 `Test` 开头
+- 单接口文件（登录 / 协议探测）允许一类到底
 - jsonpath 风格：`_jsonpath_parse = jsonpath.jsonpath`（函数式 API）
 - 鉴权头：注入 `auth_headers` fixture；`no_auth: true` 用例**方法体内** strip Authorization
 - 协议用例：注入 `bd_client` + `bd_test_terminal`，断言 `result.success`
@@ -38,7 +40,10 @@ globs: testcases/**, yaml/**, common/**, conftest.py, skills/api-test-framework/
 - YAML 中写可执行表达式（`!python`、`eval` 等）
 - 在用例中硬编码生产 URL、明文密码、真实手机号 / 身份证
 - 在 `conftest.py` 写 `extract.yaml`（清理职责单独，写入由 testcase 完成）
-- 自创 `headers_no_auth` 等同义 fixture（用 `auth_headers` + 方法体内剥离）
+- 模式 B 单类 + `test_data[:N]` 切片（Suites 会摊平）
+- 中文 `parametrize ids=`、`@allure.title(case["name"])`
+- 有 extract 链的文件按 class 做 pytest-xdist
+- 清理只挂在最后一个 Test 类（`-k` 跳过该类会漏删）
 
 ## 命名与文件
 
@@ -48,16 +53,18 @@ globs: testcases/**, yaml/**, common/**, conftest.py, skills/api-test-framework/
 
 ## 决策树（生成时）
 
-1. 接口无依赖 → 模式 A
-2. 接口有 CRUD 链路 → 模式 B（类变量）或 B′（fixture + extract.yaml）
+1. 接口无依赖 → 模式 A（多接口仍一类一接口）
+2. 接口有 CRUD 链路 → 模式 B′（文件内多类 + extract.yaml）；不要模式 B 类变量
 3. 二进制协议 → 协议层 + `bd_client.send_*`
 4. 任何场景断言 → `assert_api_result(...)` 优先
 5. 失败上下文 → 已由 `pytest_runtest_makereport` 自动附 Allure，不重复实现
+6. YAML `name` → 日志/附件；Suites 叶子用默认参数下标
 
 ## 生成后自检
 
 - 仅引用 `common.*` 与 `pytest`、`jsonpath`、标准库
-- YAML 顶层 key 与 `parametrize` 一一对应
+- YAML 顶层 key 与 `parametrize` **一类一 key**
+- 类名带补零序号；collect 不是单类摊平整个 controller
 - 正向 `expected.msg`、负向 `expected.error_msg`
 - `no_auth` 路径与正向路径在同一方法内分支
 - 协议用例不出现 `auth_headers`

@@ -15,6 +15,7 @@ test_xxx_protocol.tpl.py — 北斗协议用例模板（jkpt 协议层）
   - 仅注入 bd_client + bd_test_terminal，**不要**注入 auth_headers
   - 协议返回 ProtocolSendResult；统一用 .success 断言
   - 坐标 / 手机号 / 时间戳缺省时由 codec 自动生成，仅测试边界场景才传入
+  - 单接口文件允许一类到底（与 SKILL 四层对齐的豁免一致）
 """
 
 import pytest

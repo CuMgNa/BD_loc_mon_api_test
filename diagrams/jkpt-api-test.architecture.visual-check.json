@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "visual-check",
+  "status": "fail",
+  "visualReview": "pending",
+  "artifact": {
+    "path": "c:\\Users\\33606\\Desktop\\BD_loc_mon_api_test\\diagrams\\jkpt-api-test.architecture.html",
+    "sha256": "5a7538b2625ad198ec1a564babc3d473b7e230b10582aa582225820d9fef4bc1",
+    "bytes": 658972
+  },
+  "state": {
+    "detail": "read",
+    "motion": "still"
+  },
+  "chrome": {
+    "status": "available",
+    "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+  },
+  "containment": {
+    "status": "fail",
+    "viewports": []
+  },
+  "captures": {
+    "status": "fail",
+    "screenshots": [],
+    "contactSheet": null
+  },
+  "sidecars": {
+    "receipt": "jkpt-api-test.architecture.visual-check.json",
+    "contactSheet": "jkpt-api-test.architecture.visual-check.html"
+  },
+  "error": "Chrome exited before visual-check completed (0)"
+}
