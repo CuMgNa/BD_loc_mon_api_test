@@ -10,7 +10,13 @@ import jsonpath
 import pytest
 
 from common.allure_assert_util import assert_api_result
-from common.cleanup import register_intercom_group, intercom_group, register_cleanup, rescue_chat
+from common.cleanup import (
+    register_intercom_group,
+    intercom_group,
+    register_cleanup,
+    register_glht_inventory,
+    rescue_chat,
+)
 from common.logger_util import key, print_request, print_response, print_result, sep
 from common.rescue_platform_client import generate_rescue_sn
 
@@ -296,6 +302,7 @@ class _IgHelpers:
         if _jp_first(data, "$.code") != 0:
             raise AssertionError(f"满员造棒入库失败: {data}")
         register_cleanup(f"rescue_chat_{sn}", [sn], rescue_chat.cleaner, tier=100)
+        register_glht_inventory(sn)
         r = http.send_request(
             "post", f"{base_url}/api/monitor/groups/{group_id}/terminals",
             json={

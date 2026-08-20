@@ -17,6 +17,7 @@ import time
 from common.requests_util import BaseRequest, NonJsonResponseError, parse_response_json
 from common.yaml_util import read_yaml, write_yaml, resolve_extract_value, read_expected_msg
 from common.logger_util import sep, key, print_request, print_response
+from common.cleanup import register_glht_inventory
 from common.allure_assert_util import assert_api_result
 from common.common_data import get_current_datetime
 
@@ -332,6 +333,7 @@ class TestTm07AddTerminalByEnum(_TerminalHelpers):
                     f"入库失败 [{case['terminalType']} SN={case['sn']}]: "
                     f"code={storage_code}, msg={storage_msg}"
                 )
+            register_glht_inventory(case["sn"])
 
             sep(f" 添加: {case['terminalType']} SN={case['sn']}")
             r_add = http.send_request(

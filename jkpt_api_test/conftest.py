@@ -2,7 +2,6 @@
 import pytest
 import time
 import datetime
-import hashlib
 import logging
 import json
 import os
@@ -45,21 +44,16 @@ ocr = CaptchaRecognizer()
 
 # ==================== 配置清理行为 ====================
 ENABLE_AUTO_CLEANUP = os.getenv("ENABLE_AUTO_CLEANUP", "true").lower() == "true"
-ENABLE_GLHT_CLEANUP = os.getenv("ENABLE_GLHT_CLEANUP", "false").lower() == "true"
 
 JKPT_ACCOUNT = os.getenv("JKPT_ACCOUNT", "user1752216001906")
 JKPT_PASSWORD = os.getenv("JKPT_PASSWORD", "4f9cb165cd6249312e5804fcf9416c5e")
 JKPT_ACCOUNT_B = os.getenv("JKPT_ACCOUNT_B", "user13128251672")
 JKPT_PASSWORD_B = os.getenv("JKPT_PASSWORD_B", JKPT_PASSWORD)  # 同 A 的 MD5
-GLHT_ACCOUNT = os.getenv("GLHT_ACCOUNT", "admin")
-GLHT_PASSWORD = os.getenv("GLHT_PASSWORD", "123abc!!")
+# GLHT_* 常量与 ENABLE_GLHT_CLEANUP 已挪进 common/cleanup/glht.py（域模块自读环境变量）
 
 # ==================== 配置 ====================
 def pytest_configure(config):
     config.base_url = os.getenv("JKPT_BASE_URL", "http://back.tdwtv2.pg8.ink")
-    global pytest_session_start_day
-    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
-    pytest_session_start_day = _dt.now(_tz(_td(hours=8))).strftime("%Y%m%d")
     config.accept_language = "zh-CN"
     wiped = wipe_allure_raw_dirs(config.rootpath)
     sep(" 配置信息 ")
@@ -459,11 +453,11 @@ def rescue_client():
 
 
 @pytest.fixture(scope="session")
-def rescue_sat_terminal(base_url, auth_headers, group_fixture, pytestconfig):
+def rescue_sat_terminal(base_url, auth_headers, group_fixture):
     """入库+添加一台卫星救援终端（TT_RESCUE_STICK），返回 sn（12位纯数字）。
 
     链：GET mock-in-storage（remark=天通救援棒-tmn）→ POST groups/{one_id}/terminals。
-    任一步失败 pytest.fail（不静默复用）。sn 存 pytestconfig.stash 供 glht 精确清理。
+    任一步失败 pytest.fail（不静默复用）。入库成功即 register_glht_inventory(sn)。
     """
     sep(" 🛰️ 创建卫星救援终端 ")
     sn = generate_rescue_sn()
@@ -492,10 +486,11 @@ def rescue_sat_terminal(base_url, auth_headers, group_fixture, pytestconfig):
     key("入库", f"sn={sn} type=TT_RESCUE_STICK")
 
     # 副作用落地即注册（纪律 1）：入库成功立刻登记——
-    # 即便下一步「添加设备」失败，session 末也有据可收（堵 glht 入库记录泄漏）。
-    from common.cleanup import register_cleanup, rescue_chat as _rc
+    # 即便下一步「添加设备」失败，session 末也有据可收（真正堵住 glht 入库记录泄漏，
+    # 不再依赖"日期猜格式"）。
+    from common.cleanup import register_cleanup, register_glht_inventory, rescue_chat as _rc
     register_cleanup(f"rescue_chat_{sn}", [sn], _rc.cleaner, tier=100)
-    pytestconfig.stash.setdefault("rescue_terminal_sns", []).append(sn)
+    register_glht_inventory(sn)
 
     # ② 添加到 one_id 分组（复用 _create_terminal 模板，仅换类型）
     group_id = group_fixture["one_id"]
@@ -556,7 +551,7 @@ def _ensure_b_l1_group(base_url, auth_headers_b):
     return gid
 
 
-def _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, label):
+def _provision_b_rescue_stick(base_url, auth_headers_b, label):
     """B 名下救援棒：与 A 同款 web 链。建 L1 → mock-in-storage → POST groups/{id}/terminals。
 
     不走小程序 pre-bind / bind/addr（会把 webAccount 写成 useruser…）。
@@ -585,9 +580,9 @@ def _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, label):
         pytest.fail(f"{label}入库失败: code={code}, msg={msg[0] if msg else '未知'}")
     key(f"{label}入库", f"sn={sn} type=TT_RESCUE_STICK")
 
-    from common.cleanup import register_cleanup, rescue_chat as _rc
+    from common.cleanup import register_cleanup, register_glht_inventory, rescue_chat as _rc
     register_cleanup(f"rescue_chat_{sn}", [sn], _rc.cleaner, tier=100)
-    pytestconfig.stash.setdefault("rescue_terminal_sns", []).append(sn)
+    register_glht_inventory(sn)
 
     body = {
         "sn": sn, "remark": "天通救援棒-tmn", "groupId": group_id,
@@ -611,21 +606,21 @@ def _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, label):
 
 
 @pytest.fixture(scope="session")
-def rescue_sat_terminal_b(base_url, auth_headers_b, pytestconfig):
+def rescue_sat_terminal_b(base_url, auth_headers_b):
     """B 名下救援棒（批 2）。仅被 B 支路 getfixturevalue / 注入时拉活。"""
-    return _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, "B棒1")
+    return _provision_b_rescue_stick(base_url, auth_headers_b, "B棒1")
 
 
 @pytest.fixture(scope="session")
-def rescue_sat_terminal_b2(base_url, auth_headers_b, pytestconfig):
+def rescue_sat_terminal_b2(base_url, auth_headers_b):
     """B 第二根棒（拒绝支路）。仅拒绝用例注入时拉活。"""
-    return _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, "B棒2")
+    return _provision_b_rescue_stick(base_url, auth_headers_b, "B棒2")
 
 
 @pytest.fixture(scope="session")
-def rescue_sat_terminal_b3(base_url, auth_headers_b, pytestconfig):
+def rescue_sat_terminal_b3(base_url, auth_headers_b):
     """B 第三根棒（关群非群主-被邀请人）。仅 Ig09 invitee 拉活，勿复用 B棒1。"""
-    return _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, "B棒3")
+    return _provision_b_rescue_stick(base_url, auth_headers_b, "B棒3")
 
 
 @pytest.fixture(scope="session")
@@ -781,7 +776,9 @@ def cleanup_test_data(base_url, auth_headers, group_fixture, pytestconfig):
       rescue_sat_terminal → rescue_chat_{sn}(tier100，入库成功即注册)
       rescue_sat_terminal_b → b_terminals(200) + b_groups(300)（payload 自带 B headers）
       用例 buy → unpaid_orders(tier100，经包级入口 register_unpaid_order_no)
-    执行序由 registry tier 保证：群/订单(100) → 设备(200) → 分组(300)。
+      4 处 mock-in-storage 入库点 → glht_inventory_{sn}(tier400) + glht_inventory_flush(tier410，
+        经包级入口 register_glht_inventory，按 sn 精确查删，格式无关)
+    执行序由 registry tier 保证：群/订单(100) → 设备(200) → 分组(300) → 外部系统(400/410)。
     """
     yield
 
@@ -811,59 +808,3 @@ def cleanup_test_data(base_url, auth_headers, group_fixture, pytestconfig):
         key("⚠️ 清理报告落盘失败", str(exc))
 
     sep(" 🎉 清理完成 ")
-
-
-# ==================== glht 管理员系统清理（独立运转） ====================
-GLHT_BASE_URL_DEFAULT = "http://back.tdwt.admin.pg8.ink"
-
-
-@pytest.fixture(scope="session")
-def glht_base_url():
-    """glht 管理员系统 base URL"""
-    return os.environ.get("GLHT_BASE_URL", GLHT_BASE_URL_DEFAULT)
-
-
-@pytest.fixture(scope="session")
-def glht_token(glht_base_url):
-    """glht 管理员系统登录，获取 glht token"""
-    sep(" 🔐 glht 管理员登录 ")
-    password_md5 = hashlib.md5(GLHT_PASSWORD.encode()).hexdigest()
-    resp = http.send_request(
-        method="post",
-        url=f"{glht_base_url}/api/admin/login",
-        json={"account": GLHT_ACCOUNT, "password": password_md5},
-        case_name="glht管理员登录",
-        log_level="none",
-    )
-    json_data = parse_response_json(resp, context="glht管理员登录")
-    code = _jsonpath_parse(json_data, "$.code")[0]
-    assert code == 0, f"glht 登录失败: code={code}, msg={_jsonpath_parse(json_data, '$.msg')[0]}"
-    token = _jsonpath_parse(json_data, "$.data.token")[0]
-    key("glht token", f"{token[:20]}...")
-    return token
-
-
-@pytest.fixture(scope="session", autouse=True)
-def glht_cleanup_test_data(request):
-    """glht 入库记录清理。默认关闭；ENABLE_GLHT_CLEANUP=true 时才登录并清理。"""
-    from datetime import datetime, timezone, timedelta
-
-    if not ENABLE_GLHT_CLEANUP:
-        yield
-        return
-
-    glht_token = request.getfixturevalue("glht_token")
-    glht_base_url = request.getfixturevalue("glht_base_url")
-    yield
-
-    sep(" 🧹 glht 入库记录清理 ")
-    # 日期口径：session 起始日（堵跨午夜漏清；迁移时顺带修复）
-    start_day = pytest_session_start_day
-    try:
-        from common.cleanup.glht import cleanup_inventory
-        deleted = cleanup_inventory(glht_token, glht_base_url, start_day)
-        key("glht清理结果", f"删除 {deleted} 条入库记录")
-    except Exception as e:
-        key("glht清理异常", str(e))
-
-    sep(" 🎉 glht 清理完成 ")

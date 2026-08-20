@@ -12,7 +12,8 @@
 #   100  intercom_group 收对讲群（close→delete）；登记入口 = register_intercom_group
 #   200  terminal       删设备（按分组聚合）
 #   300  group          删三级分组（倒序）
-#   独立  glht           独立闸直调（自带登录态，不走 tier 调度）
+#   400  glht(cleaner)  查 glht 入库记录 id（按 sn 精确定位，不在此层删除）
+#   410  glht(flush)    批量删除 400 层定位到的 id；登记入口 = register_glht_inventory
 from common.cleanup.registry import (
     CleanupContext,
     register_cleanup,
@@ -34,6 +35,9 @@ register_unpaid_order_no = unpaid_order.register
 # 对讲群登记包级入口：create 成功后调用；用例内 delete 成功后调 unregister。
 register_intercom_group = intercom_group.register
 
+# glht 入库登记包级入口：mock-in-storage 成功后调用（副作用落地即注册，tier 400/410）。
+register_glht_inventory = glht.register
+
 __all__ = [
     "CleanupContext",
     "register_cleanup",
@@ -42,6 +46,7 @@ __all__ = [
     "reset_registry",
     "register_unpaid_order_no",
     "register_intercom_group",
+    "register_glht_inventory",
     "rescue_chat",
     "terminal",
     "group",
