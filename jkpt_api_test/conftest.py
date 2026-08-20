@@ -452,16 +452,15 @@ def rescue_client():
         key("救援平台会话清理", f"断开 {n} 个会话")
 
 
-@pytest.fixture(scope="session")
-def rescue_sat_terminal(base_url, auth_headers, group_fixture):
-    """入库+添加一台卫星救援终端（TT_RESCUE_STICK），返回 sn（12位纯数字）。
+def _provision_a_rescue_stick(base_url, auth_headers, group_id, label):
+    """A 名下救援棒：GET mock-in-storage → POST groups/{group_id}/terminals，返回 sn。
 
-    链：GET mock-in-storage（remark=天通救援棒-tmn）→ POST groups/{one_id}/terminals。
-    任一步失败 pytest.fail（不静默复用）。入库成功即 register_glht_inventory(sn)。
+    任一步失败 pytest.fail（不静默复用）。入库成功即登记（rescue_chat + glht 入库记录）。
+    label 只影响日志/用例名，便于多根棒在报告里区分归属。
     """
-    sep(" 🛰️ 创建卫星救援终端 ")
+    sep(f" 🛰️ 创建卫星救援终端（{label}） ")
     sn = generate_rescue_sn()
-    key("救援终端 sn", sn)
+    key(f"{label} sn", sn)
 
     # ① 入库
     r = http.send_request(
@@ -475,14 +474,14 @@ def rescue_sat_terminal(base_url, auth_headers, group_fixture):
             "useScope": "STEAMER",
         },
         headers=auth_headers,
-        case_name="救援终端入库",
+        case_name=f"{label}入库",
         log_level="none",
     )
-    json_data = parse_response_json(r, context="救援终端入库")
+    json_data = parse_response_json(r, context=f"{label}入库")
     code = _jsonpath_parse(json_data, "$.code")[0]
     if code != 0:
         msg = _jsonpath_parse(json_data, "$.msg")
-        pytest.fail(f"救援终端入库失败: code={code}, msg={msg[0] if msg else '未知'}")
+        pytest.fail(f"{label}入库失败: code={code}, msg={msg[0] if msg else '未知'}")
     key("入库", f"sn={sn} type=TT_RESCUE_STICK")
 
     # 副作用落地即注册（纪律 1）：入库成功立刻登记——
@@ -493,7 +492,6 @@ def rescue_sat_terminal(base_url, auth_headers, group_fixture):
     register_glht_inventory(sn)
 
     # ② 添加到 one_id 分组（复用 _create_terminal 模板，仅换类型）
-    group_id = group_fixture["one_id"]
     body = {
         "sn": sn, "remark": "天通救援棒-tmn", "groupId": group_id,
         "terminalType": "TT_RESCUE_STICK", "useScope": "STEAMER",
@@ -504,17 +502,35 @@ def rescue_sat_terminal(base_url, auth_headers, group_fixture):
         method="post",
         url=f"{base_url}/api/monitor/groups/{group_id}/terminals",
         json=body, headers=auth_headers,
-        case_name="救援终端添加", log_level="none",
+        case_name=f"{label}添加", log_level="none",
     )
-    json_data = parse_response_json(r, context="救援终端添加")
+    json_data = parse_response_json(r, context=f"{label}添加")
     code = _jsonpath_parse(json_data, "$.code")[0]
     if code != 0:
         msg = _jsonpath_parse(json_data, "$.msg")
-        pytest.fail(f"救援终端添加失败: code={code}, msg={msg[0] if msg else '未知'}")
+        pytest.fail(f"{label}添加失败: code={code}, msg={msg[0] if msg else '未知'}")
     key("添加", f"sn={sn} → group={group_id}")
-
-    # sn 的 stash/registry 登记已前移到「入库成功即注册」（堵半途失败泄漏）
     return sn
+
+
+@pytest.fixture(scope="session")
+def rescue_sat_terminal(base_url, auth_headers, group_fixture):
+    """求救群聊模块用的 A 名下救援棒（TT_RESCUE_STICK），返回 sn（12位纯数字）。"""
+    return _provision_a_rescue_stick(
+        base_url, auth_headers, group_fixture["one_id"], "救援终端",
+    )
+
+
+@pytest.fixture(scope="session")
+def rescue_sat_terminal_c(base_url, auth_headers, group_fixture):
+    """对讲群消息域专用 A 名下救援棒，与 rescue_sat_terminal 隔离。
+
+    隔离理由（intercom-message-tests.plan.md §5.1）：同一根棒同一时刻只能在一个活跃
+    对讲群，且本域的 flag=1/2 上行会自动伴生 SOS 求救群——复用会与求救群聊模块抢设备。
+    """
+    return _provision_a_rescue_stick(
+        base_url, auth_headers, group_fixture["one_id"], "A棒C",
+    )
 
 
 # B 测试分组（session 内两根棒共用一个 L1）。payload 自带 B headers——
@@ -621,6 +637,13 @@ def rescue_sat_terminal_b2(base_url, auth_headers_b):
 def rescue_sat_terminal_b3(base_url, auth_headers_b):
     """B 第三根棒（关群非群主-被邀请人）。仅 Ig09 invitee 拉活，勿复用 B棒1。"""
     return _provision_b_rescue_stick(base_url, auth_headers_b, "B棒3")
+
+
+@pytest.fixture(scope="session")
+def rescue_sat_terminal_b4(base_url, auth_headers_b):
+    """B 第四根棒（对讲群消息域双账号已读验证）。勿复用 B棒1~3：设备互斥，
+    一根棒只能在一个活跃对讲群，复用会把它从对讲群 suite 的群里拽走。"""
+    return _provision_b_rescue_stick(base_url, auth_headers_b, "B棒4")
 
 
 @pytest.fixture(scope="session")
@@ -754,6 +777,188 @@ def emergency_chat_voice(base_url, auth_headers, emergency_chat_item, rescue_cli
         "voiceRecordId": voice_record.get("id"),
         "chatItemId": chat_id,
         "sn": sn,
+    }
+
+
+# ==================== 对讲群消息域造数 ====================
+IM_UPLINK_GAP = float(os.getenv("IM_UPLINK_GAP", "62"))
+
+
+def _im_jp1(data, expr):
+    found = _jsonpath_parse(data, expr)
+    return found[0] if found else None
+
+
+@pytest.fixture(scope="session")
+def intercom_message_group(base_url, auth_headers, rescue_sat_terminal_c,
+                           rescue_client) -> dict:
+    """对讲群「消息域」造数主链（session 级，约 4~5 分钟；计划 §3.3）。
+
+    ① PUT intercom/group/create（扣 20 豆）——建成即 register_intercom_group（tier 100）
+    ② POST intercom/group/invitation 邀 A棒C（扣 10 豆，confirm=1 直接入群）
+    ③ 5 次终端上行，相邻间隔 > 60s（协议硬约束，2026-08-17 定稿）：
+       flag=1 按键SOS → flag=2 落水SOS → flag=0 心跳 → flag=10 取消SOS → 语音
+    ④ 每步落库闸门：轮询 message/page（发送成功 ≠ 落库，10304 异步 UDP）
+    ⑤ SOS 伴生群捕获：flag=1 后轮询 emergency/chat/item/page?itemName=sn
+
+    逐步快照全部随返回值带出（`totals` / `sosRecords`），下游「零增长」「双群一致性」
+    断言直接读快照，不重发上行——重发一次要多等 60s，且会污染消息数。
+    """
+    from common.cleanup import register_intercom_group
+
+    sn = rescue_sat_terminal_c
+    name = f"AUTO_IM_{time.strftime('%H%M%S')}"  # 群名上限 15 字符
+    sep(" 📣 对讲群消息域造数 ")
+
+    def _fail(reason):
+        records = rescue_client.session_records(terminal_id=sn, page_size=3)
+        logs = rescue_client.message_logs(terminal_id=sn, page_size=3)
+        pytest.fail(f"{reason}\n  10304会话记录: {records}\n  消息日志: {logs}")
+
+    # ① 建群
+    r = http.send_request(
+        "put", f"{base_url}/api/monitor/intercom/group/create",
+        params={"intercomGroupName": name}, headers=auth_headers,
+        case_name="消息域建群", log_level="none",
+    )
+    data = parse_response_json(r, context="消息域建群")
+    gid = _im_jp1(data, "$.data.id")
+    if _im_jp1(data, "$.code") != 0 or not gid:
+        pytest.fail(f"消息域建群失败: {data}")
+    register_intercom_group(gid)
+    key("消息域对讲群", f"{gid} name={name}")
+
+    # ② 邀 A棒C 入群
+    r = http.send_request(
+        "post", f"{base_url}/api/monitor/intercom/group/invitation",
+        json={"intercomGroupId": gid, "addrInfos": [{"addr": sn}], "force": False},
+        headers=auth_headers, case_name="消息域邀A棒C", log_level="none",
+    )
+    data = parse_response_json(r, context="消息域邀A棒C")
+    if _im_jp1(data, "$.code") != 0:
+        pytest.fail(f"消息域邀请失败: {data}")
+    r = http.send_request(
+        "get", f"{base_url}/api/monitor/intercom/group/terminal/list",
+        params={"intercomGroupId": gid}, headers=auth_headers,
+        case_name="消息域成员复核", log_level="none",
+    )
+    members = _jsonpath_parse(r.json(), "$.data[*].addr") or []
+    if sn not in members:
+        pytest.fail(f"消息域造数棒未入群: sn={sn} members={members}")
+    key("入群复核", f"{sn} 已在成员列表（{len(members)} 台）")
+
+    def snapshot(tag):
+        res = http.send_request(
+            "get", f"{base_url}/api/monitor/intercom/message/page",
+            params={"intercomGroupId": gid, "page": 1, "pageSize": 100},
+            headers=auth_headers, case_name=f"消息落库快照-{tag}", log_level="none",
+        )
+        body = parse_response_json(res, context=f"消息落库快照-{tag}")
+        its = _jsonpath_parse(body, "$.data.items[*]") or []
+        return {"total": _im_jp1(body, "$.data.total"), "count": len(its),
+                "sendTypes": [i.get("sendType") for i in its], "items": its}
+
+    def wait_landed(tag, want):
+        snap = None
+        for _ in range(8):
+            snap = snapshot(tag)
+            if snap["count"] >= want:
+                key(f"落库-{tag}", f"{snap['count']} 条 {snap['sendTypes']}")
+                return snap
+            time.sleep(2)
+        _fail(f"消息未落库({tag}): 期望 ≥{want} 条，实际 {(snap or {}).get('count')} 条")
+
+    def send_uplink(tag, kind):
+        result = (rescue_client.send_speech(sn) if kind == "speech"
+                  else rescue_client.send_position(sn, report_flag=kind))
+        if not result.success:
+            key("会话兜底", f"{tag} 失败(code={result.code})，login_terminal 重建后重发")
+            rescue_client.login_terminal(sn)
+            result = (rescue_client.send_speech(sn) if kind == "speech"
+                      else rescue_client.send_position(sn, report_flag=kind))
+        if not result.success:
+            _fail(f"{tag} 上行失败: code={result.code}, msg={result.message}")
+        key(f"上行-{tag}", f"sid={result.session_id}")
+
+    def gap(label):
+        sep(f" ⏳ 上行间隔合规等待 {IM_UPLINK_GAP:.0f}s（{label}） ")
+        time.sleep(IM_UPLINK_GAP)
+
+    def sos_group():
+        res = http.send_request(
+            "get", f"{base_url}/api/monitor/emergency/chat/item/page",
+            params={"itemName": sn, "page": 1, "pageSize": 10}, headers=auth_headers,
+            case_name="SOS伴生群查询", log_level="none",
+        )
+        its = _jsonpath_parse(res.json(), "$.data.items[*]") or []
+        return its[0] if its else None
+
+    totals = {"baseline": snapshot("上行前")["total"]}
+
+    # ③④⑤ 五次上行 + 逐步落库闸门
+    send_uplink("flag=1按键SOS", 1)
+    totals["flag1"] = wait_landed("flag=1后", 1)["total"]
+    sos = None
+    for _ in range(5):
+        sos = sos_group()
+        if sos:
+            break
+        time.sleep(2)
+    if sos:
+        key("SOS伴生群", f"{sos.get('id')} itemName={sos.get('itemName')} "
+                         f"status={sos.get('status')}")
+
+    gap("flag=1 → flag=2")
+    send_uplink("flag=2落水SOS", 2)
+    totals["flag2"] = wait_landed("flag=2后", 2)["total"]
+
+    gap("flag=2 → flag=0")
+    send_uplink("flag=0心跳", 0)
+    time.sleep(8)  # 心跳不产对讲群消息，无可等的落库信号，固定观察窗
+    totals["flag0"] = snapshot("flag=0后")["total"]
+
+    gap("flag=0 → flag=10")
+    send_uplink("flag=10取消SOS", 10)
+    time.sleep(8)
+    totals["flag10"] = snapshot("flag=10后")["total"]
+    sos_after = sos_group()
+
+    gap("flag=10 → 语音")
+    send_uplink("语音", "speech")
+    final = wait_landed("语音后", 3)
+    totals["speech"] = final["total"]
+
+    # SOS 侧同期记录（双落群一致性证据源）
+    sos_records = {"total": None, "sendTypes": [], "chatTimes": []}
+    if sos:
+        res = http.send_request(
+            "get", f"{base_url}/api/monitor/emergency/chat/record/page",
+            params={"chatItemId": sos.get("id"), "page": 1, "pageSize": 50},
+            headers=auth_headers, case_name="SOS侧记录", log_level="none",
+        )
+        body = res.json()
+        its = _jsonpath_parse(body, "$.data.items[*]") or []
+        sos_records = {
+            "total": _im_jp1(body, "$.data.total"),
+            "sendTypes": [i.get("sendType") for i in its],
+            "chatTimes": [i.get("chatTime") for i in its],
+        }
+    key("造数完成", f"对讲群 {totals['speech']} 条 {final['sendTypes']}；"
+                    f"SOS 侧 {sos_records['total']} 条 {sos_records['sendTypes']}")
+
+    return {
+        "groupId": gid,
+        "groupName": name,
+        "sn": sn,
+        "members": members,
+        "messages": final["items"],
+        "messageIds": [i.get("id") for i in final["items"]],
+        "sendTypes": final["sendTypes"],
+        "totals": totals,
+        "sosChatItemId": (sos or {}).get("id"),
+        "sosStatusAfterCancel": (sos_after or {}).get("status"),
+        "sosRecords": sos_records,
+        "created_at": time.time(),
     }
 
 

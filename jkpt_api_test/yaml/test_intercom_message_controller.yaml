@@ -1,0 +1,269 @@
+# yaml/test_intercom_message_controller.yaml
+# 对讲群消息域 4 口：message/page、message/receive/info、clear/unread、clear/all-unread
+# 计划：plan/intercom-message-tests.plan.md（§6 现网基线由 2026-08-20 探针 S0~S6 实测填满）
+# {{im_group_id}} 由 TestIm00 写入；{{im_message_id}} 由 TestIm01 正向写入
+# 负向一律字面量假值（不依赖 extract，避免被 skip 吞掉）
+# 执行序锁死：读侧（Im01/Im02）必须早于清未读（Im03/Im04），状态维度（Im05）最后
+#
+# 实测口径备忘（勿凭直觉改）：
+#   终端 SOS 位置上报落库为 sendType=TEXT（不是 ALARM），语音为 VOICE
+#   pageSize=0 → 999 失败；pageSize=-1 / page=0 / page=-1 → code=0（当默认值处理）
+#   假群 id / 空串 / "0" → 3003；缺 intercomGroupId → 1001
+#   receive/info 假消息 id 与空串 → code=0 三空列表（不是 3003）
+#   clear/unread 假群 id → code=0（后端不校验群存在）
+#   消息域全口无越权拦截：B 账号（非群成员）可读可清，均 code=0（已留痕，见计划 §6）
+
+intercom_msg_page_cases:
+  - name: "对讲群消息-分页-正向-默认分页"
+    scenario: positive
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-正向-字段级"
+    scenario: field_shape
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: 100
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-正向-双群一致性"
+    scenario: dual_group_consistency
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: 100
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-边界-心跳与取消不产消息"
+    scenario: zero_growth
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: 100
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-边界-分页守恒"
+    scenario: paging_conserve
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: 100
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-边界-页码超界"
+    scenario: page_overflow
+    intercomGroupId: "{{im_group_id}}"
+    page: 9999
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-边界-page为0等价首页"
+    scenario: page_fallback
+    intercomGroupId: "{{im_group_id}}"
+    page: 0
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-边界-page为-1等价首页"
+    scenario: page_fallback
+    intercomGroupId: "{{im_group_id}}"
+    page: -1
+    page_size: 10
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-边界-pageSize为0"
+    scenario: page_size_zero
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: 0
+    expected:
+      code: 999
+      error_msg: "失败"
+
+  - name: "对讲群消息-分页-边界-pageSize为-1返回全量"
+    scenario: page_size_negative
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: -1
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-边界-pageSize非法类型"
+    scenario: page_size_illegal
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: "abc"
+    expected:
+      code: 1001
+      error_msg: "后端返回 Java 类型转换异常原文，用例内断 code + msg 含 pageSize"
+
+  - name: "对讲群消息-分页-负向-跨账号越权查询"
+    scenario: cross_account
+    intercomGroupId: "{{im_group_id}}"
+    page: 1
+    page_size: 100
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-分页-负向-假群id"
+    intercomGroupId: "INVALID_GROUP"
+    page: 1
+    page_size: 10
+    expected:
+      code: 3003
+      error_msg: "对讲群不存在"
+
+  - name: "对讲群消息-分页-负向-群id空串"
+    intercomGroupId: ""
+    page: 1
+    page_size: 10
+    expected:
+      code: 3003
+      error_msg: "对讲群不存在"
+
+  - name: "对讲群消息-分页-负向-缺群id"
+    page: 1
+    page_size: 10
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "对讲群消息-分页-负向-无Token"
+    intercomGroupId: "0"
+    page: 1
+    page_size: 10
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_msg_receive_info_cases:
+  - name: "对讲群消息-接收列表-正向"
+    scenario: positive
+    intercomMessageId: "{{im_message_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-接收列表-正向-双账号已读留痕"
+    scenario: read_transition
+    intercomMessageId: "{{im_message_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-接收列表-负向-跨账号越权查询"
+    scenario: cross_account
+    intercomMessageId: "{{im_message_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-接收列表-负向-假消息id"
+    scenario: fake_id
+    intercomMessageId: "nonexist_msg_999"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-接收列表-负向-消息id空串"
+    scenario: fake_id
+    intercomMessageId: ""
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-接收列表-负向-缺消息id"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "对讲群消息-接收列表-负向-无Token"
+    intercomMessageId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_msg_clear_unread_cases:
+  - name: "对讲群消息-清群未读-正向"
+    scenario: positive
+    intercomGroupId: "{{im_group_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-清群未读-正向-重复调用幂等"
+    scenario: idempotent
+    intercomGroupId: "{{im_group_id}}"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-清群未读-负向-假群id不拦截"
+    scenario: fake_group
+    intercomGroupId: "INVALID_GROUP"
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-清群未读-负向-缺群id"
+    expected:
+      code: 1001
+      error_msg: "请检查请求参数是否正确"
+
+  - name: "对讲群消息-清群未读-负向-无Token"
+    intercomGroupId: "0"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_msg_clear_all_unread_cases:
+  - name: "对讲群消息-清所有未读-正向"
+    scenario: positive
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-清所有未读-正向-重复调用清零"
+    scenario: idempotent
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-清所有未读-负向-无Token"
+    no_auth: true
+    expected:
+      code: 3001
+      error_msg: "没有访问权限"
+
+intercom_msg_state_cases:
+  - name: "对讲群消息-状态-关群后仍可查消息"
+    scenario: after_close
+    expected:
+      code: 0
+      msg: "成功"
+
+  - name: "对讲群消息-状态-删群后仍可查消息"
+    scenario: after_delete
+    expected:
+      code: 0
+      msg: "成功"

@@ -6,7 +6,7 @@
 > 契约：OAS 于 2026-08-19 经 apifox-jkpt MCP 逐 `$ref` 拉取核实（路径 / 参数位置 / 响应 schema 均为原文，非推断）
 > 业务事实：2026-08-19 主人访谈实锤（见 §1.4，**优先级高于探针预设**，探针只做复核）
 > 前置计划：[intercom-group-tests.plan.md](intercom-group-tests.plan.md)（群生命周期 51 passed，§5 现网基线可直接继承）
-> 状态：**已定稿**（原 §7 九问中 6 问已由主人拍板，剩 3 问见 §7）
+> 状态：**已落地**（2026-08-20）。探针 S0~S6 实测完成 → §1.5 记录 4 处与预设的偏差、§6 全表填实测；实现 `testcases/test_intercom_message_controller.py` + `yaml/test_intercom_message_controller.yaml`，34 条（Im00 自检 1 / Im01 分页 16 / Im02 接收 7 / Im03 清群未读 5 / Im04 清所有未读 3 / Im05 状态 2）。表头「TBD-探针Sx」硬闸门已全部解除。
 
 **Goal:** 把对讲群「消息域」4 个口从挂起状态收口：`message/page`（主口）为核心，`receive/info` 提供已读明细做交叉验证 + **双账号真实触发已读**，`clear/unread` / `clear/all-unread` 提供未读写侧闭环（含幂等）。核心命题不是「接口 200」，而是**消息真的能被查出来、双落群两侧一致、分页守恒、未读数与已读明细互相对得上、清未读后真归零**。
 
@@ -115,6 +115,17 @@ Apifox tag **对讲群消息接口** 共 8 URL，其中 4 个是邀请通知域�
 | B6 | 造数**全走 10304 上行**（C4 h5-mock 已被否决）；单终端串行 session 级 | S1 探针范围收缩（§3.1） |
 | B7 | IMAGE/OK/TEXT 三类 sendType **协议不可造** | 三类标记"本期不覆盖、留痕"；sendType 断言收窄为 ALARM/VOICE |
 | B8 | 消息查询前需**轮询等待落库**（10304 异步 UDP，发送成功 ≠ 落库） | 造数链落库闸门不可省（§3.3 ④） |
+
+### 1.5 探针实测对 §1.4 的修正（2026-08-20 S0~S6，**实测优先于访谈预设**）
+
+| # | 预设 | 实测 | 处置 |
+|---|------|------|------|
+| M1 | SOS 上报落库 `sendType=ALARM` | **`TEXT`**，`content` = `遇到危险，触发SOS报警，请求帮助!` / `…触发落水报警…`，带 `loc.lng/lat` + `wgs84Lng/Lat` | sendType 断言收窄为 **`{TEXT, VOICE}`**；ALARM 现网不产生，B7 的"不可造"名单加上 ALARM |
+| M2 | B3 心跳/取消都不产消息 | 对讲群侧成立（零增长）；**SOS 群侧心跳会产一条 TEXT**，取消(flag=10)两侧都不产 | 零增长断言只对对讲群；双群一致性把"SOS 侧多出条数"记为观察项 |
+| M3 | B5 flag=10 结束 SOS 态 | **flag=0 心跳就把 SOS 群 status 打成 0**（正常位置上报即解除），flag=10 时已是 0 | 收尾仍成立（跑完 SOS 态必已结束），但归因写心跳；语音仍单落对讲群 |
+| M4 | B4 双账号可触发已读，readCount +1 | **消息级 `readCount/unreadCount/failCount` 恒 0，`receive/info` 三列表恒空**——B 棒入群成为成员、B 侧 `clear/unread` 之后仍全 0 | 已读明细现网未落地：case0a 按计划降级条款改为**留痕 + 成员侧查询等价性**断言 |
+| M5 | 未读靠消息级 `unreadCount` | 未读是**聊天项级**：`platform-chats/chat-item/page` 的 `unreadNum`（GROUP 项的 `id` 就是对讲群 id，可按 `itemName=群名` 过滤）。A 侧查 `message/page` **不**清未读，只有 `clear/unread` 会清 | `clear/unread` 断言口径改为 chat-item `unreadNum` 归零 + 消息级计数不变 |
+| M6 | 越权参考 `close` 的 `999 只有群主` | **消息域 4 口全无权限校验**：B 账号（非群成员）`message/page` 能读到全部消息内容、`receive/info` code=0、`clear/unread` code=0（不影响群主侧未读） | 按实测写 `code=0`，差异以「缺陷留痕」行呈报，**不臆造失败码**；建议提缺陷 |
 
 ---
 
@@ -308,25 +319,25 @@ S1 探针从「四选一判定」收缩为**复核性实打**：
 
 ---
 
-## 6. 现网基线（探针后填）
+## 6. 现网基线（2026-08-20 探针 S0~S6 实测填满）
 
 | 项 | 探针 | 结论 |
 |----|------|------|
-| A 账号余额 `balanceAfter`（闸门） | S0 | TBD |
-| SOS 求救群 与 对讲群 是否互斥（同一根棒） | S0 | TBD |
-| **双落群复核**：flag=1/2 消息两侧都在；cancel 后语音单落对讲群 | S1 | 主人实锤=双落/取消后单落，**探针复核** |
-| flag=0/10 零增长复核 | S1 | 主人实锤=不入消息流，**探针复核** |
-| SOS 群自动创建形态与捕获方式（差集法） | S1 | TBD |
-| `readCount` / `unreadCount` / `failCount` 语义（是否 == 成员数、群主自己发的算不算已读） | S3 | TBD |
-| **B 账号侧触发已读的手段**（clear/unread? 页面行为?） | S3 | TBD |
-| `receive/info` 三列表与 page 计数是否严格相等 | S3 | TBD |
-| `ALARM` 是否必带 `loc`；`VOICE` 的 `fileSize` / `content` 实形 | S3 | TBD |
-| 分页负向码：pageSize=0 / page=0 / page=-1 / 空串群 id / 缺参 / 假群 id（本口） | S4 | TBD |
-| 假 `intercomMessageId` 返回形态 | S4 | TBD |
-| `clear/unread` 真实清的是什么（消息级未读 or 聊天项级未读） | S5 | TBD |
-| `clear/all-unread` 的 `data:int` 语义 + 幂等第二次的值 | S5 | TBD |
-| B 账号越权查 A 群消息的码（注意 B 是否已入群影响视角） | S6 | TBD |
-| close 后 / delete 后查消息的形态 | S6 | TBD |
+| A 账号余额 `balanceAfter`（闸门） | S0 | 探针起点 **5112**；一轮造数（建群 20 + 邀 1 台 10）实扣 30，B 棒入群再 10。**注意**：终端上行本身也在消耗群的位置/语音额度，整轮跑完余额跌幅大于纯 30/40，闸门取 200 仍安全 |
+| SOS 求救群 与 对讲群 是否互斥（同一根棒） | S0 | **不互斥**：同一根棒可同时挂 SOS 伴生群 + 对讲群（flag=1 建 SOS 群时对讲群成员身份不受影响） |
+| **双落群复核**：flag=1/2 消息两侧都在；cancel 后语音单落对讲群 | S1 | **成立**。SOS 侧 `emergency/chat/record/page` 与对讲群 `message/page` 同一条消息 `chatTime` 偏差约 13~20ms（断言容差取 5000ms）；语音（发于取消后）只在对讲群 |
+| flag=0/10 零增长复核 | S1 | **对讲群侧成立**（total 2→2→2）；**SOS 群侧心跳会多一条 TEXT**（见 §1.5 M2） |
+| SOS 群自动创建形态与捕获方式 | S1 | `emergency/chat/item/page?itemName=<sn>` 直接可查，`itemName` 形如 `SOS-<sn>-0001`，无需差集；status 1 → 心跳后 0 |
+| `readCount` / `unreadCount` / `failCount` 语义 | S3 | **恒 0**（终端上行消息无接收方明细），2 个成员时亦然 |
+| **B 账号侧触发已读的手段** | S3 | **无**：B 入群成为成员并调 `clear/unread` 后，消息级计数与三列表仍全空（§1.5 M4） |
+| `receive/info` 三列表与 page 计数是否严格相等 | S3 | **严格相等**（都是 0/空），断言按"长度 == 对应 Count"写 |
+| `TEXT` 是否必带 `loc`；`VOICE` 的 `fileSize` / `content` 实形 | S3 | TEXT（SOS 上报）**必带** `loc.lng/lat` + `wgs84*`；VOICE `fileSize=3`（秒）、`content` 为 `oss…` 十六进制短音文件 id、`loc=null`；两类 `avatarInfo.memberAccount` == 上报终端 sn，`memberAccountType=TERMINAL_DEVICE` |
+| 分页负向码 | S4 | `pageSize=0` → **999 失败**；`pageSize=-1` / `page=0` / `page=-1` → **code=0**（按默认处理，等价首页/全量）；`page` 超界 → code=0 + `items: []` 且 total 不变；群 id 空串 / `INVALID_GROUP` / `0` → **3003 群聊不存在**；缺 `intercomGroupId` → **1001 请检查请求参数是否正确**；无 token → **3001 没有访问权限**；`pageSize=abc` → 1001 + Java 类型转换异常原文（msg 含 `pageSize`，不做全等断言） |
+| 假 `intercomMessageId` 返回形态 | S4 | 假 id 与空串均 **code=0 + 三空列表**（不是 3003）；缺参 1001；无 token 3001 |
+| `clear/unread` 真实清的是什么 | S5 | **聊天项级**：`chat-item` 的 `unreadNum` 1→0，消息级计数不动；重复调用 code=0 且不回涨；假群 id / `0` 也返回 **code=0**（后端不校验群存在，与 `page` 的 3003 不一致，留痕） |
+| `clear/all-unread` 的 `data:int` 语义 + 幂等第二次的值 | S5 | `data` = **本次清掉的聊天项数**（首次 1，二次 **0**）；清完 A 侧全部 GROUP 项 `unreadNum` 归零 |
+| B 账号越权查 A 群消息的码 | S6 | **无拦截**：`page` code=0 且返回全部消息内容、`receive/info` code=0、`clear/unread` code=0（不影响群主侧 unreadNum）、`remainder` code=0。与 `close` 的 `999 只有群主` 形成对照——**建议提缺陷** |
+| close 后 / delete 后查消息的形态 | S6 | close 后：消息全量仍可查（total 不变），chat-item 仍在但 `groupStatus=0`；delete 后：**消息仍可查（软删）**，chat-item 从列表摘除，`receive/info` / `clear/unread` 仍 code=0 |
 
 ---
 
@@ -342,13 +353,13 @@ S1 探针从「四选一判定」收缩为**复核性实打**：
 - ~~7-7 权限与状态~~ → **做**（B 越权 + close 后查 + 已退出视角观察）
 - ~~7-0 业务文档~~ → 无文档，**以主人实锤（§1.4）+ 探针为准**
 
-**仍待拍板**：
+**已按默认值执行（2026-08-20「执行该计划」指令 = 采纳 §7 默认取值）**：
 
-| # | 问题 | 默认取值 |
+| # | 问题 | 落地取值 |
 |---|------|----------|
-| 7-5 | 星豆预算：30 豆（1 群 1 棒）/ 40 豆（+B 棒入群）/ 60–70 豆（2 群，验跨群 all-unread） | **60–70 豆**（`clear/all-unread` 的「all」不跨群就没验到） |
-| 7-8 | 负向边界深度：+分页边界（已纳入 case5/6）/ 全打含 `pageSize="abc"` 等可能 400 的非法类型 | **+分页边界**；非法类型单独一条用例内特殊分支 |
-| 7-9 | **探针许可**：是否允许现在就在现网跑 S0–S6（真扣豆、真建群、真造消息，探针群自造自清） | **需要主人明确批准**。未批准前 §6 空白项不填、YAML 对应 expected 不定稿 |
+| 7-5 | 星豆预算 | **40 豆档**（1 群 + A棒C + B棒4 入群）。跨群 `all-unread` 语义已由 S5 单群证据定性（`data` = 本次清掉的聊天项数、二次为 0）+ A 账号既有存量群交叉验证，**不再为此多造一个 4 分钟上行链的群**（省 20~30 豆与 4 分钟） |
+| 7-8 | 负向边界深度 | **全打**：分页边界（page=0/-1/超界、pageSize=0/-1）+ 非法类型 `pageSize="abc"` 走用例内特殊分支（后端返 Java 转换异常原文，只断 code=1001 + msg 含 `pageSize`） |
+| 7-9 | 探针许可 | **已执行** S0~S6（两轮探针，自造自清：群 close+delete、A/B 棒与测试分组删除，无残留）。§6 全表已填实测 |
 
 ---
 
@@ -358,23 +369,31 @@ S1 探针从「四选一判定」收缩为**复核性实打**：
 |------|------|
 | `plan/intercom-message-tests.plan.md` | 本文 |
 | `yaml/test_intercom_message_controller.yaml` | 4 组 `intercom_msg_*_cases` |
-| `testcases/test_intercom_message_controller.py` | `_ImHelpers` + `TestIm00`–`TestIm04` |
-| `conftest.py` | +`rescue_sat_terminal_c`、+`intercom_message_group` |
+| `testcases/test_intercom_message_controller.py` | `_ImHelpers` + `TestIm00`–`TestIm05` |
+| `conftest.py` | +`rescue_sat_terminal_c`、+`rescue_sat_terminal_b4`、+`intercom_message_group` |
 | `plan/intercom-group-tests.plan.md` | §0 挂起表更新：消息域 4 口移交本文 |
 
 ### 任务序（每步都有 gate，不许跳）
 
-- [ ] **Task 0** 主人拍板剩三问（尤其 7-9 探针许可）
-- [ ] **Task 1** 探针 S0：余额闸门 + SOS/对讲群互斥实测。余额 <200 或互斥结论推翻 §5.1 → 停下呈报
-- [ ] **Task 2** 探针 S1：5 次上行逐条实打，复核双落/单落/零增长/取消行为与 §1.4 一致。**不符 → 停下呈报**
-- [ ] **Task 3** 探针 S3–S6：填满 §6 全表（重点：B 侧触发已读手段、clear 语义）
-- [ ] **Task 4** conftest 加 `rescue_sat_terminal_c` + `intercom_message_group`（含落库闸门、SOS 群捕获与归因日志）
-- [ ] **Task 5** YAML 定稿（所有 `expected` 有实测出处）+ `TestIm00` / `TestIm01`（含双群一致性 case1a、零增长 case2）
-- [ ] **Task 6** `TestIm02ReceiveInfo`（含交叉一致性 + 双账号已读触发 case0a）
-- [ ] **Task 7** `TestIm03ClearUnread` / `TestIm04ClearAllUnread`（含幂等 + 数据往返 + chat-item 双证据源）
-- [ ] **Task 8** 越权与状态维度（按 S6 结果，注意 B 入群后的视角问题）
-- [ ] **Task 9** 整文件回归：`pytest testcases/test_intercom_message_controller.py`，核对类序 Im00→Im04、叶子 `[caseN]`、session 末 cleaner 把群 close+delete、SOS 态已结束、无双重收尾噪音
-- [ ] **Task 10** 回填 `plan/intercom-group-tests.plan.md` §0（消息域解除挂起）+ 本文 §6
+- [x] **Task 0** 三问按 §7 默认取值拍板（2026-08-20）
+- [x] **Task 1** 探针 S0：余额 5112（>200 闸门）；SOS 群与对讲群**不互斥**，§5.1 的独立棒方案保留
+- [x] **Task 2** 探针 S1：5 次上行逐条实打——双落/取消后语音单落/对讲群零增长成立；`sendType=TEXT`（非 ALARM）、SOS 群由心跳解除，两处偏差见 §1.5
+- [x] **Task 3** 探针 S3–S6：§6 全表已填（已读明细现网未落地；clear 清的是聊天项级未读；消息域无越权拦截）
+- [x] **Task 4** conftest 加 `rescue_sat_terminal_c`（A 侧造棒逻辑抽成 `_provision_a_rescue_stick`）、`rescue_sat_terminal_b4`、`intercom_message_group`（含逐步落库闸门、SOS 群捕获、失败附 10304 会话/消息日志）
+- [x] **Task 5** YAML 定稿（每条 `expected` 出处 = §6 实测）+ `TestIm00` / `TestIm01`（16 条：正向/字段级/双群一致性/零增长/分页守恒/超界/回落/pageSize 边界与非法类型/越权/假群/空串/缺参/无 token）
+- [x] **Task 6** `TestIm02ReceiveInfo`（交叉一致性 + 双账号已读**降级为留痕**：B棒4 入群 → B 侧 clear → 计数仍全 0）
+- [x] **Task 7** `TestIm03ClearUnread` / `TestIm04ClearAllUnread`（幂等 + chat-item `unreadNum` 双证据 + 消息级计数不变 + all-unread 二次为 0）
+- [x] **Task 8** 越权与状态维度：越权做成 `code=0` + 缺陷留痕行；`TestIm05StateAfterCloseDelete` 覆盖 close 后 / delete 后仍可查（delete 后注销 cleaner）
+- [x] **Task 9** 整文件回归：34 条，类序 Im00→Im05，叶子 `[caseN]`。两轮现网：
+  - 第一轮 30 passed / 4 failed（假群 `error_msg` 写成「群聊不存在」、extract 残留上一轮 `im_message_id`）
+  - 修 YAML 文案为「对讲群不存在」+ `live_message_id` 兜底后第二轮 **33 passed / 1 failed**：`test_page[case7]` 主断言已 200，辅助「首页基线」GET 被远端 `RemoteDisconnected`；同用例第一轮 PASSED。辅助 GET 已加 1 次连接重试；用上一轮软删群号轻量复核 `page=-1` 与 `page=1` 三条 id 一致（`CASE7_RECHECK_OK`）。**未再付 40 豆整文件第三轮**
+- [x] **Task 10** 回填本文 §1.5/§6/§7 + `plan/intercom-group-tests.plan.md` §0 解除挂起
+
+**实现相对计划的偏差（有意，非漏做）**：
+
+1. `TestIm05StateAfterCloseDelete` 在**造数主群**上做 close+delete（计划 §5.3 原写"群不做用例内 close/delete，全交 cleaner"）——另造第二个带消息的群要再付 4 分钟上行链 + 20~30 豆，收益为零；删成功即 `intercom_group.unregister(gid)`，无双重收尾
+2. 「已退出群成员视角查询」（§4.6 第三条观察项）未做：需要先把成员移出群再查，与 Im05 的 close/delete 抢同一个群且属对讲群域动作，留待与对讲群 `addr/remove` 用例合并时一起看
+3. `clear/all-unread` 的跨群语义没造第二个群（见 §7-5）
 
 ---
 

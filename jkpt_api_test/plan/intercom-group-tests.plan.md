@@ -50,14 +50,14 @@ Apifox tag **对讲群接口** 13 URL，本计划规划全部、两批执行：
 | 11 | `TestIg11InviteNotice` | GET×3 | `/intercom/message/invitation/{notice/list,pending/count,send/list}` | 邀请通知域 | 批 2 |
 | 12 | `TestIg12InviteHandler` | PUT | `/api/monitor/intercom/message/invitation/handler` | 处理邀请通知（同意） | 批 2 |
 | — | — | POST | `/intercom/group/closed/delivery/cancel` | 管理后台投递取消 | **挂起**（web 账号预期无权限，参考 complete/addr 3001 先例） |
-| — | — | GET×4 | `/intercom/message/{page,receive/info,clear/unread,clear/all-unread}` | 消息域 | **挂起**（主人拍板本轮不落地） |
+| — | — | GET×4 | `/intercom/message/{page,receive/info,clear/unread,clear/all-unread}` | 消息域 | **已解除挂起**，另立 [intercom-message-tests.plan.md](intercom-message-tests.plan.md) 落地（2026-08-20，`testcases/test_intercom_message_controller.py`，34 条） |
 | — | — | PUT | `/intercom/member/update/nickname` 已并入 #7；边界场景（换群/并发/上限） | — | 批 2 尾部 |
 
 文件内类定义顺序 01→12。批 1 类序 01→10；批 2 追加 11→12（同一文件追加类，不另开文件）。
 
 **明确不做（本计划全文）：**
 
-- 消息域 4 口（page / receive/info / clear×2）——挂起，等前两批落地另评估
+- ~~消息域 4 口（page / receive/info / clear×2）——挂起~~ → 2026-08-20 已在 [intercom-message-tests.plan.md](intercom-message-tests.plan.md) 独立落地（造数走 10304 终端上行，不占本文件）
 - `closed/delivery/cancel`（管理后台）
 - 微信/扫码支付、星豆充值链（星豆模块已覆盖）
 - §9.1 拒绝退费、§9.2 自己设备换群弹窗/静默——**口径冲突未收口，断言不写死**（批 2 拒绝支路按「退还开关开/关各打一枪、只锁返回码不锁流水方向」处理；换群场景批 2 尾部探明后写双预期）

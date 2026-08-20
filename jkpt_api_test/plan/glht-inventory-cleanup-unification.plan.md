@@ -23,6 +23,7 @@
 - 不处理历史遗留的 1321 条存量数据——本计划的 `cleaner` 只按"本次 session 实际登记过的 sn"精确查删，不做任何全表扫描/批量猜测
 - 按内容定位改 `conftest.py`，不按行号（历史教训：删除会导致后续行号整体偏移）
 - 每个任务改完至少跑一次语法自检（`python -c "import ..."`），核心改动（Task 3）跑一次真实回归
+- 零孤儿纪律：本次删除 fixture / 数据结构时，连带删除因此失去消费者的 import、参数、stash 写入（见 §0.5 R3/R4），不允许留半截
 
 ---
 
@@ -35,6 +36,22 @@
 > **模板 D = 逐项登记（沿用模板 B 的 domain 命名/去重/可诊断性）+ 集中批量收尾（沿用模板 C 的"一次批量请求"效率）**：每个实例仍然各开一个 `f"{prefix}_{id}"` domain（tier N），`cleaner(ctx, id, **flags)` 只做"定位"（查询/校验，不做实际删除动作），把结果写入模块级累积容器；额外用 `register_cleanup_once` 挂一个**全局唯一**、**tier = N+10**（保证在所有逐项 domain 之后执行）的 `flush_cleaner`，读取累积容器，一次批量执行。
 >
 > 适用场景：批量接口存在 + 登记时机动态 + 想保留逐项可诊断性，三者都要时选模板 D；只要三者有一个不成立，仍然选 A/B/C。
+
+---
+
+## 0.5 风险登记与处置（评审补充，R1–R5）
+
+计划初稿评审发现 5 个未覆盖点，处置如下——执行时按这张表逐条落实，不要漏掉「只是文档层面」的那几条。
+
+| # | 等级 | 风险 | 本计划处置 | 落点 |
+|---|------|------|-----------|------|
+| R1 | 中 | `ENABLE_AUTO_CLEANUP=false` 时 `cleanup_test_data` 直接 return，`run_session_cleanup` 不跑 → `_REGISTRY`（纪律 3 只在 `run_session_cleanup` 的 `finally` 里清）和 `_pending_ids` 都不清空；同进程若跑第二个 session 且开着总闸，会把上一个 session 的登记一并补删。行为本身可接受（进程退出即释放，且补删是好事），但**是隐式的、计划未声明** | 只声明不改代码：`glht.py` 模块 docstring + CHANGELOG Breaking 段各写一句；Task 5 补一条实跑确认 | Task 1 Step 1 / Task 4 Step 4 / Task 5 Step 6 |
+| R2 | 低 | `cleaner` 查询 `pageSize=10`，同一 sn 若历史存量里重复入库超过 10 条会漏定位 | `pageSize` 提到 **100**（与旧实现口径一致） | Task 1 Step 1 |
+| R3 | 低 | Step 6 删掉 `glht_token` 后，`conftest.py` 第 5 行 `import hashlib` 成为孤儿（已 grep 确认 conftest 内唯一消费者就是第 830 行） | 一并删除该 import | Task 3 Step 7 |
+| R4 | 低 | `pytestconfig.stash["rescue_terminal_sns"]` 变成 write-only 死数据：全仓库只有 2 处 append、0 处读取；其唯一预期消费方正是本计划（`plan/emergency-chat-controller-tests.plan.md:488` 写「独立计划实施时消费」），现已被 registry 登记取代 | 一并删除两处 append，**并连带清理因此失去消费者的 `pytestconfig` 参数**（连锁面见下方说明） | Task 3 Step 3/4/8 |
+| R5 | 提示 | flush 分块上限 100 是继承旧实现的经验值，`DELETE /api/admin/inventory` 的真实单次上限未验证 | 保留 100（旧实现按 `pageSize=100` 取回后整批删，线上跑过，风险等同），注释写明出处；Task 5 补一条「单批 >100 时核对 `删除 N/N`」的判读口径 | Task 1 Step 1 / Task 5 Step 3 |
+
+> R4 连锁说明（执行前先看清楚）：删掉两处 append 后，`rescue_sat_terminal` 与 `_provision_b_rescue_stick` 的 `pytestconfig` 参数就没有任何消费者了；而 `_provision_b_rescue_stick` 是普通函数，它的 `pytestconfig` 形参又是 `rescue_sat_terminal_b`/`b2`/`b3` 三个 fixture 按位置传进来的。所以"删两行 append"实际要动 5 个函数（2 处 append + `rescue_sat_terminal` 签名 + `_provision_b_rescue_stick` 签名 + 3 个 B 棒 fixture 的签名及其调用实参）。这是本次唯一超出"glht 迁移"主线的清理动作，收益是彻底消灭死数据，代价是 `conftest.py` 改动面变大——若执行中发现连锁超预期，可退回"只删 append、`pytestconfig` 形参保留并加注释说明"的保守方案，但不允许两头不沾（删了 append 又留着无注释的孤儿参数）。
 
 ---
 
@@ -58,6 +75,13 @@
 # flush_cleaner 统一批量 DELETE，避免 N 次入库对应 N 次删除请求。
 # 完全自包含：自读 GLHT_* 环境变量，登录态惰性缓存于进程内，不依赖任何
 # conftest fixture（对齐 unpaid_order.py/intercom_group.py 的自包含形状）。
+#
+# 跨 session 语义（R1，显式声明）：ENABLE_AUTO_CLEANUP=false 时 conftest 的
+# cleanup_test_data 直接 return，run_session_cleanup 不执行，因此 _REGISTRY
+# （registry 纪律 3 只在 run_session_cleanup 的 finally 里清空）与本模块的
+# _pending_ids 都不会被清理。登记会在进程内累积；同进程若随后跑一个开着总闸的
+# session，上一轮的登记会被一并收走（补删，非泄漏）。单进程单 session 的常规
+# 跑法下进程退出即释放，无实际影响。
 import hashlib
 import os
 
@@ -121,7 +145,9 @@ def cleaner(ctx, sn, **flags) -> str:
         params={
             "Authorization": token, "content": sn, "index": 0,
             "specifyTime": "false", "startTimeStr": "", "endTimeStr": "",
-            "page": 1, "pageSize": 10,
+            # pageSize 与旧实现口径一致取 100：同 sn 正常只有 1 条，
+            # 但历史存量里可能有同 sn 重复入库，取小了会漏定位（R2）
+            "page": 1, "pageSize": 100,
         },
         case_name=f"glht查询入库记录 {sn}", log_level="none",
     )
@@ -151,7 +177,9 @@ def flush_cleaner(ctx, _payload, **flags) -> str:
     ids = list(dict.fromkeys(_pending_ids))  # 去重保序
     _pending_ids.clear()
     deleted_total = 0
-    for i in range(0, len(ids), 100):  # 单次删除量上限未知，按 100 分块保守处理
+    # 分块 100 沿用旧实现口径（旧版按 pageSize=100 取回后整批删，线上跑过）；
+    # DELETE 接口真实单次上限未验证，故保守分块而非一次性全量拼接（R5）
+    for i in range(0, len(ids), 100):
         chunk = ids[i:i + 100]
         resp = _http.send_request(
             method="delete", url=f"{GLHT_BASE_URL}/api/admin/inventory",
@@ -295,8 +323,9 @@ def pytest_configure(config):
     from common.cleanup import register_cleanup, register_glht_inventory, rescue_chat as _rc
     register_cleanup(f"rescue_chat_{sn}", [sn], _rc.cleaner, tier=100)
     register_glht_inventory(sn)
-    pytestconfig.stash.setdefault("rescue_terminal_sns", []).append(sn)
 ```
+
+注意 `pytestconfig.stash.setdefault("rescue_terminal_sns", []).append(sn)` 这一行**一并删除**（R4：write-only 死数据，其预期消费方就是本计划，现已被 registry 登记取代），随后由 Step 8 清理因此空转的 `pytestconfig` 形参。
 
 > 定位提示：此段紧跟在 `key("入库", f"sn={sn} type=TT_RESCUE_STICK")` 之后，`_provision_b_rescue_stick` 里有一段几乎相同的文字（见 Step 4），改的时候要连同各自上一行的 `key(...)` 一起框进匹配范围，避免两处文本冲突导致替换工具报"不唯一"。
 
@@ -330,8 +359,9 @@ def pytest_configure(config):
     from common.cleanup import register_cleanup, register_glht_inventory, rescue_chat as _rc
     register_cleanup(f"rescue_chat_{sn}", [sn], _rc.cleaner, tier=100)
     register_glht_inventory(sn)
-    pytestconfig.stash.setdefault("rescue_terminal_sns", []).append(sn)
 ```
+
+同 Step 3，`pytestconfig.stash.setdefault(...)` 那一行一并删除（R4）。
 
 （此函数是 `rescue_sat_terminal_b`/`b2`/`b3` 三个 fixture 的共用实现，改一处即覆盖三个 B 棒。）
 
@@ -424,7 +454,67 @@ def glht_cleanup_test_data(request):
 
 直接删除，不保留替代代码（glht 清理现在完全由 `common/cleanup/glht.py` + 主 `cleanup_test_data` 调度承担）。
 
-### Step 7：`test_intercom_group_controller.py` — `provision_rescue_stick` 接入登记
+### Step 7：`conftest.py` — 删除孤儿 `import hashlib`（R3）
+
+Step 6 删掉 `glht_token` 之后，`hashlib` 在 `conftest.py` 内再无消费者（已 grep 确认全文件仅第 5 行 import + 第 830 行 `glht_token` 内的 `hashlib.md5` 两处）。删除文件顶部这一行：
+
+```python
+import hashlib
+```
+
+> 注意：`JKPT_PASSWORD` 存的已经是 MD5 后的密文（`4f9cb165cd…`），登录链路不做二次 MD5，所以删掉 `hashlib` 不影响 jkpt 登录；真正需要 MD5 的是 glht（明文密码），而那段逻辑已经搬进 `glht.py` 并在那里自行 `import hashlib`。执行完 Step 9 的语法自检 + Step 11 回归可确认。
+
+### Step 8：`conftest.py` — 清理 `rescue_terminal_sns` 死数据的连锁（R4）
+
+Step 3/4 已删掉两处 `pytestconfig.stash.setdefault("rescue_terminal_sns", []).append(sn)`，随之失去消费者的还有 4 个函数签名里的 `pytestconfig`。逐一处理（改完 grep `rescue_terminal_sns` 应当零命中，grep `pytestconfig` 在这 4 个函数里也应当零命中）：
+
+1. `rescue_sat_terminal` 签名去掉 `pytestconfig`：
+
+```python
+def rescue_sat_terminal(base_url, auth_headers, group_fixture, pytestconfig):
+```
+
+改为：
+
+```python
+def rescue_sat_terminal(base_url, auth_headers, group_fixture):
+```
+
+2. `_provision_b_rescue_stick` 签名去掉 `pytestconfig`（普通函数，非 fixture）：
+
+```python
+def _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, label):
+```
+
+改为：
+
+```python
+def _provision_b_rescue_stick(base_url, auth_headers_b, label):
+```
+
+3. 三个 B 棒 fixture 的签名与调用实参同步（`rescue_sat_terminal_b` / `b2` / `b3`，三处形状相同，只有 label 与 docstring 不同）：
+
+```python
+@pytest.fixture(scope="session")
+def rescue_sat_terminal_b(base_url, auth_headers_b, pytestconfig):
+    """B 名下救援棒（批 2）。仅被 B 支路 getfixturevalue / 注入时拉活。"""
+    return _provision_b_rescue_stick(base_url, auth_headers_b, pytestconfig, "B棒1")
+```
+
+改为：
+
+```python
+@pytest.fixture(scope="session")
+def rescue_sat_terminal_b(base_url, auth_headers_b):
+    """B 名下救援棒（批 2）。仅被 B 支路 getfixturevalue / 注入时拉活。"""
+    return _provision_b_rescue_stick(base_url, auth_headers_b, "B棒1")
+```
+
+`b2`（`"B棒2"`）、`b3`（`"B棒3"`）照此处理。
+
+> 若执行中发现 `pytestconfig` 在这些函数里还有本计划未识别到的用途，立即停手改走保守方案（保留形参 + 注释说明），不要硬删。
+
+### Step 9：`test_intercom_group_controller.py` — `provision_rescue_stick` 接入登记
 
 顶部 import（原第 13 行）：
 
@@ -463,7 +553,7 @@ from common.cleanup import (
         register_glht_inventory(sn)
 ```
 
-### Step 8：`test_terminal_controller.py` — `TestTm07AddTerminalByEnum` 接入登记
+### Step 10：`test_terminal_controller.py` — `TestTm07AddTerminalByEnum` 接入登记
 
 顶部 import 区新增一行（放在现有 `from common.logger_util import ...` 之后）：
 
@@ -500,7 +590,7 @@ from common.cleanup import register_glht_inventory
             sep(f" 添加: {case['terminalType']} SN={case['sn']}")
 ```
 
-**Step 9：语法自检**
+**Step 11：语法自检 + 死数据核对**
 
 ```bash
 python -c "import ast; ast.parse(open('conftest.py', encoding='utf-8').read())"
@@ -508,7 +598,15 @@ python -c "import ast; ast.parse(open('testcases/test_intercom_group_controller.
 python -c "import ast; ast.parse(open('testcases/test_terminal_controller.py', encoding='utf-8').read())"
 ```
 
-**Step 10：Commit**
+外加三条零命中核对（R3/R4 收口）：
+
+```bash
+rg "rescue_terminal_sns" jkpt_api_test/            # 期望：只剩历史 plan 文档里的引用，代码零命中
+rg "hashlib" jkpt_api_test/conftest.py             # 期望：零命中
+rg "pytest_session_start_day" jkpt_api_test/       # 期望：零命中
+```
+
+**Step 12：Commit**
 
 ```bash
 git add jkpt_api_test/common/cleanup/glht.py jkpt_api_test/common/cleanup/__init__.py jkpt_api_test/conftest.py jkpt_api_test/testcases/test_intercom_group_controller.py jkpt_api_test/testcases/test_terminal_controller.py
@@ -580,8 +678,12 @@ git commit -m "fix(cleanup): glht 入库记录改为精确按 sn 登记查删，
 - `conftest.py` 删除独立的 `glht_base_url`/`glht_token`/`glht_cleanup_test_data` fixture 及 `pytest_session_start_day` 全局变量（唯一消费者已随之删除），glht 清理并入主 `cleanup_test_data` 调度
 - `ENABLE_GLHT_CLEANUP` 默认值：`false` → `true`
 
+### Removed
+- `pytestconfig.stash["rescue_terminal_sns"]`：write-only 死数据（2 处写、0 处读），其预期消费方即本次迁移，已被 registry 逐项登记取代；连带移除 `rescue_sat_terminal`/`_provision_b_rescue_stick`/`rescue_sat_terminal_b`/`b2`/`b3` 中随之空转的 `pytestconfig` 形参
+- `conftest.py` 的 `import hashlib`（唯一消费者 `glht_token` 已删除；glht 侧的 MD5 现由 `common/cleanup/glht.py` 自行 import）
+
 ### Breaking
-- glht 清理从"独立于 `ENABLE_AUTO_CLEANUP` 运行"变为"并入 `run_session_cleanup`，受 `ENABLE_AUTO_CLEANUP` 总闸控制"——`ENABLE_AUTO_CLEANUP=false` 时会连带跳过 glht 清理（此前不会）
+- glht 清理从"独立于 `ENABLE_AUTO_CLEANUP` 运行"变为"并入 `run_session_cleanup`，受 `ENABLE_AUTO_CLEANUP` 总闸控制"——`ENABLE_AUTO_CLEANUP=false` 时会连带跳过 glht 清理（此前不会）。此时登记不会被清空（`registry` 纪律 3 的清表动作在 `run_session_cleanup` 的 `finally` 里，总闸关闭时整个调度不进入），登记与 `glht._pending_ids` 在进程内累积；同进程后续若跑一个开着总闸的 session，会把上一轮登记一并收走（补删，非泄漏）。单进程单 session 的常规跑法无影响
 - `cleanup-report.yaml` 新增 `glht_inventory_<sn>` / `glht_inventory_flush` 两类 key；不影响已有 key
 
 ### Deferred（未处理，需后续单独决策）
@@ -624,6 +726,8 @@ Get-Content .\cleanup-report.yaml -Tail 60
 
 期望：能看到 `glht_inventory_<sn>: 已定位 1 条，待批量删除` 若干条，以及 `glht_inventory_flush: 删除 N/N 条`（N 应等于本次运行中所有 mock-in-storage 成功入库的 sn 数量）。
 
+**分块口径核对（R5）**：`test_terminal_controller.py` 单跑一轮枚举约产生 35–40 个 sn，达不到 100 的分块阈值；两个文件合跑若累计超过 100，`flush` 会分 2 批发出。此时重点看 `删除 N/M` 的 **N 是否等于 M**——若出现 `N < M` 且失败批次恰好是"满 100 条"的那批，说明 DELETE 接口单次上限低于 100，需要把分块值调小后重跑（这是本计划唯一一个未经实测的经验值）。
+
 **Step 4：抽样验证真删除**（可选但推荐，复用之前分析用的只读探测手法）——挑一个刚在报告里出现的 sn，用只读查询确认 glht 后台已查不到：
 
 ```python
@@ -645,7 +749,15 @@ pytest testcases/test_emergency_chat_controller.py testcases/test_intercom_group
 
 期望：全部通过（或与迁移前基线一致），说明 `register_glht_inventory` 的接入没有影响原有 `rescue_chat_{sn}`/群相关清理逻辑。
 
-**Step 6：无需 commit**（本任务是验证；若发现问题回退到对应 Task 修复）
+**Step 6：总闸关闭时的行为确认（R1）**——跑一次关掉总闸的短用例，确认"登记照做、清理不做、且不报错"：
+
+```bash
+$env:ENABLE_AUTO_CLEANUP="false"; pytest testcases/test_terminal_controller.py -k Tm07 -vs; $env:ENABLE_AUTO_CLEANUP="true"
+```
+
+期望：控制台有 `[登记glht入库]` 日志（登记正常发生），有 `⚠️ 自动清理已禁用` 提示，**没有** glht 查询/删除请求，`cleanup-report.yaml` 本轮不新增 `glht_inventory_*` 记录。这即是 CHANGELOG Breaking 段声明的语义：总闸关闭 → 连 glht 一起跳过，登记留在进程内不清空。跑完记得把环境变量改回（上面命令末尾已带）。
+
+**Step 7：无需 commit**（本任务是验证；若发现问题回退到对应 Task 修复）
 
 ---
 
@@ -655,7 +767,7 @@ pytest testcases/test_emergency_chat_controller.py testcases/test_intercom_group
 |----------|---------|------|
 | `jkpt_api_test/common/cleanup/glht.py` | 重写 | 模板 D：`register`/`cleaner`（定位）/`flush_cleaner`（批量删），自读环境变量 |
 | `jkpt_api_test/common/cleanup/__init__.py` | 修改 | 加 `register_glht_inventory`，更新域清单注释 |
-| `jkpt_api_test/conftest.py` | 修改 | 删旧 glht fixture 链路 + `pytest_session_start_day`，4 处接入点中 2 处（`rescue_sat_terminal`/`_provision_b_rescue_stick`），更新 `cleanup_test_data` 文档注释 |
+| `jkpt_api_test/conftest.py` | 修改 | 删旧 glht fixture 链路 + `pytest_session_start_day`，4 处接入点中 2 处（`rescue_sat_terminal`/`_provision_b_rescue_stick`），更新 `cleanup_test_data` 文档注释；连带清理孤儿 `import hashlib`（R3）与 `rescue_terminal_sns` 死数据及其 `pytestconfig` 形参连锁（R4，涉 5 个函数签名） |
 | `jkpt_api_test/testcases/test_intercom_group_controller.py` | 修改 | `provision_rescue_stick` 接入 `register_glht_inventory` |
 | `jkpt_api_test/testcases/test_terminal_controller.py` | 修改 | `TestTm07AddTerminalByEnum` 接入 `register_glht_inventory` |
 | `jkpt_api_test/common/cleanup/registry.py` | 修改 | tier 语义文档补 400/410 |

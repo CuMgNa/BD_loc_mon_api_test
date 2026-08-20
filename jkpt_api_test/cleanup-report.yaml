@@ -240,3 +240,224 @@ session_cleanup:
   unpaid_order_2089993935356215296: cancel=True, delete=True
   unpaid_order_2089994219067326464: cancel=True, delete=True
   unpaid_order_2089994504774926336: cancel=True, delete=True
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  glht_inventory_202608202492001: 已定位 1 条，待批量删除
+  glht_inventory_202608202492002: 已定位 1 条，待批量删除
+  glht_inventory_202608202492003: 已定位 1 条，待批量删除
+  glht_inventory_202608202492004: 已定位 1 条，待批量删除
+  glht_inventory_202608202492005: 已定位 1 条，待批量删除
+  glht_inventory_202608202492006: 已定位 1 条，待批量删除
+  glht_inventory_202608202492007: 已定位 1 条，待批量删除
+  glht_inventory_202608202492008: 已定位 1 条，待批量删除
+  glht_inventory_202608202492009: 已定位 1 条，待批量删除
+  glht_inventory_202608202492010: 已定位 1 条，待批量删除
+  glht_inventory_202608202492011: 已定位 1 条，待批量删除
+  glht_inventory_202608202492012: 已定位 1 条，待批量删除
+  glht_inventory_202608202492013: 已定位 1 条，待批量删除
+  glht_inventory_202608202492014: 已定位 1 条，待批量删除
+  glht_inventory_202608202492015: 已定位 1 条，待批量删除
+  glht_inventory_202608202492016: 已定位 1 条，待批量删除
+  glht_inventory_202608202492017: 已定位 1 条，待批量删除
+  glht_inventory_202608202492018: 已定位 1 条，待批量删除
+  glht_inventory_202608202492019: 已定位 1 条，待批量删除
+  glht_inventory_820102302583: 已定位 1 条，待批量删除
+  glht_inventory_820102313641: 已定位 1 条，待批量删除
+  glht_inventory_820102408301: 已定位 1 条，待批量删除
+  glht_inventory_820102429858: 已定位 1 条，待批量删除
+  glht_inventory_820102513001: 已定位 1 条，待批量删除
+  glht_inventory_820102515205: 已定位 1 条，待批量删除
+  glht_inventory_820102517488: 已定位 1 条，待批量删除
+  glht_inventory_flush: 删除 26/26 条
+  groups: '成功: 3, 失败: 0'
+  intercom_group_6a8665155b70f42010a55cf4: close=True, delete=True
+  intercom_group_6a86654c5b70f42010a55d90: close=True, delete=True
+  intercom_group_6a8665695b70f42010a56715: close=True, delete=True
+  intercom_group_6a8665705b70f42010a56f3a: close=True, delete=True
+  intercom_group_6a8665755b70f42010a56f48: close=True, delete=True
+  intercom_group_6a8665875b70f42010a5771c: close=True, delete=True
+  rescue_chat_820102302583: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102313641: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102408301: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102429858: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102513001: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102515205: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102517488: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 24, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 3, 失败: 0'
+  glht_inventory_202608202716001: 已定位 1 条，待批量删除
+  glht_inventory_202608202716002: 已定位 1 条，待批量删除
+  glht_inventory_202608202716003: 已定位 1 条，待批量删除
+  glht_inventory_202608202716004: 已定位 1 条，待批量删除
+  glht_inventory_202608202716005: 已定位 1 条，待批量删除
+  glht_inventory_202608202716006: 已定位 1 条，待批量删除
+  glht_inventory_202608202716007: 已定位 1 条，待批量删除
+  glht_inventory_202608202716008: 已定位 1 条，待批量删除
+  glht_inventory_202608202716009: 已定位 1 条，待批量删除
+  glht_inventory_202608202716010: 已定位 1 条，待批量删除
+  glht_inventory_202608202716011: 已定位 1 条，待批量删除
+  glht_inventory_202608202716012: 已定位 1 条，待批量删除
+  glht_inventory_202608202716013: 已定位 1 条，待批量删除
+  glht_inventory_202608202716014: 已定位 1 条，待批量删除
+  glht_inventory_202608202716015: 已定位 1 条，待批量删除
+  glht_inventory_202608202716016: 已定位 1 条，待批量删除
+  glht_inventory_202608202716017: 已定位 1 条，待批量删除
+  glht_inventory_202608202716018: 已定位 1 条，待批量删除
+  glht_inventory_202608202716019: 已定位 1 条，待批量删除
+  glht_inventory_202608202716020: 已定位 1 条，待批量删除
+  glht_inventory_202608202716021: 已定位 1 条，待批量删除
+  glht_inventory_202608202716022: 已定位 1 条，待批量删除
+  glht_inventory_202608202716023: 已定位 1 条，待批量删除
+  glht_inventory_202608202716024: 'FAILED: (''Connection aborted.'', RemoteDisconnected(''Remote
+    end closed connection without response''))'
+  glht_inventory_202608202716025: 已定位 1 条，待批量删除
+  glht_inventory_202608202716026: 已定位 1 条，待批量删除
+  glht_inventory_202608202716027: 已定位 1 条，待批量删除
+  glht_inventory_202608202716028: 已定位 1 条，待批量删除
+  glht_inventory_202608202716029: 已定位 1 条，待批量删除
+  glht_inventory_202608202716030: 已定位 1 条，待批量删除
+  glht_inventory_202608202716031: 已定位 1 条，待批量删除
+  glht_inventory_202608202716032: 已定位 1 条，待批量删除
+  glht_inventory_202608202716033: 已定位 1 条，待批量删除
+  glht_inventory_202608202716034: 已定位 1 条，待批量删除
+  glht_inventory_202608202716035: 已定位 1 条，待批量删除
+  glht_inventory_202608202716036: 已定位 1 条，待批量删除
+  glht_inventory_820102711058: 已定位 1 条，待批量删除
+  glht_inventory_820102729920: 已定位 1 条，待批量删除
+  glht_inventory_820102820351: 已定位 1 条，待批量删除
+  glht_inventory_820102841357: 已定位 1 条，待批量删除
+  glht_inventory_820102927426: 已定位 1 条，待批量删除
+  glht_inventory_820102930213: 已定位 1 条，待批量删除
+  glht_inventory_820102932449: 已定位 1 条，待批量删除
+  glht_inventory_820102934705: 已定位 1 条，待批量删除
+  glht_inventory_flush: 删除 43/43 条
+  groups: '成功: 3, 失败: 0'
+  intercom_group_6a8666155b70f42010a58e3c: close=True, delete=True
+  intercom_group_6a8666485b70f42010a58ec4: close=True, delete=True
+  intercom_group_6a8666645b70f42010a5998a: close=True, delete=True
+  intercom_group_6a86666f5b70f42010a5a053: close=True, delete=True
+  intercom_group_6a8666775b70f42010a5a80a: close=True, delete=True
+  intercom_group_6a8666865b70f42010a5a82a: close=True, delete=True
+  rescue_chat_820102711058: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102729920: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102820351: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102841357: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102927426: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102930213: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102932449: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820102934705: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 41, 失败: 0'
+session_cleanup:
+  glht_inventory_820103101725: 已定位 1 条，待批量删除
+  glht_inventory_flush: 删除 1/1 条
+  groups: '成功: 3, 失败: 0'
+  rescue_chat_820103101725: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 1, 失败: 0'
+session_cleanup:
+  groups: '成功: 3, 失败: 0'
+  terminals: '成功: 0, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 1, 失败: 0'
+  glht_inventory_820104304214: 已定位 1 条，待批量删除
+  glht_inventory_820104832754: 已定位 1 条，待批量删除
+  glht_inventory_flush: 删除 2/2 条
+  groups: 'FAILED: (''Connection aborted.'', RemoteDisconnected(''Remote end closed
+    connection without response''))'
+  rescue_chat_820104304214: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820104832754: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 1, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 1, 失败: 0'
+  glht_inventory_820104604543: 已定位 1 条，待批量删除
+  glht_inventory_820105149103: 已定位 1 条，待批量删除
+  glht_inventory_flush: 删除 2/2 条
+  groups: '成功: 3, 失败: 0'
+  rescue_chat_820104604543: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820105149103: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 1, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 1, 失败: 0'
+  glht_inventory_820105433645: 已定位 1 条，待批量删除
+  glht_inventory_820110003322: 已定位 1 条，待批量删除
+  glht_inventory_flush: 删除 2/2 条
+  groups: '成功: 3, 失败: 0'
+  rescue_chat_820105433645: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820110003322: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 1, 失败: 0'
+session_cleanup:
+  b_groups: '成功: 1, 失败: 0'
+  b_terminals: '成功: 4, 失败: 0'
+  glht_inventory_202608206311001: 已定位 1 条，待批量删除
+  glht_inventory_202608206311002: 已定位 1 条，待批量删除
+  glht_inventory_202608206311003: 已定位 1 条，待批量删除
+  glht_inventory_202608206311004: 已定位 1 条，待批量删除
+  glht_inventory_202608206311005: 已定位 1 条，待批量删除
+  glht_inventory_202608206311006: 已定位 1 条，待批量删除
+  glht_inventory_202608206311007: 已定位 1 条，待批量删除
+  glht_inventory_202608206311008: 已定位 1 条，待批量删除
+  glht_inventory_202608206311009: 已定位 1 条，待批量删除
+  glht_inventory_202608206311010: 已定位 1 条，待批量删除
+  glht_inventory_202608206311011: 已定位 1 条，待批量删除
+  glht_inventory_202608206311012: 已定位 1 条，待批量删除
+  glht_inventory_202608206311013: 已定位 1 条，待批量删除
+  glht_inventory_202608206311014: 已定位 1 条，待批量删除
+  glht_inventory_202608206311015: 已定位 1 条，待批量删除
+  glht_inventory_202608206311016: 已定位 1 条，待批量删除
+  glht_inventory_202608206311017: 已定位 1 条，待批量删除
+  glht_inventory_202608206311018: 已定位 1 条，待批量删除
+  glht_inventory_202608206311019: 已定位 1 条，待批量删除
+  glht_inventory_202608206311020: 已定位 1 条，待批量删除
+  glht_inventory_202608206311021: 已定位 1 条，待批量删除
+  glht_inventory_202608206311022: 已定位 1 条，待批量删除
+  glht_inventory_202608206311023: 已定位 1 条，待批量删除
+  glht_inventory_202608206311024: 已定位 1 条，待批量删除
+  glht_inventory_202608206311025: 已定位 1 条，待批量删除
+  glht_inventory_202608206311026: 已定位 1 条，待批量删除
+  glht_inventory_202608206311027: 已定位 1 条，待批量删除
+  glht_inventory_202608206311028: 已定位 1 条，待批量删除
+  glht_inventory_202608206311029: 已定位 1 条，待批量删除
+  glht_inventory_202608206311030: 已定位 1 条，待批量删除
+  glht_inventory_202608206311031: 已定位 1 条，待批量删除
+  glht_inventory_202608206311032: 已定位 1 条，待批量删除
+  glht_inventory_202608206311033: 已定位 1 条，待批量删除
+  glht_inventory_202608206311034: 已定位 1 条，待批量删除
+  glht_inventory_202608206311035: 已定位 1 条，待批量删除
+  glht_inventory_202608206311036: 已定位 1 条，待批量删除
+  glht_inventory_820111322923: 已定位 1 条，待批量删除
+  glht_inventory_820111702081: 已定位 1 条，待批量删除
+  glht_inventory_820111703883: 已定位 1 条，待批量删除
+  glht_inventory_820111704650: 已定位 1 条，待批量删除
+  glht_inventory_820111706326: 已定位 1 条，待批量删除
+  glht_inventory_820111706478: 已定位 1 条，待批量删除
+  glht_inventory_820111706632: 已定位 1 条，待批量删除
+  glht_inventory_820111706780: 已定位 1 条，待批量删除
+  glht_inventory_820111707539: 已定位 1 条，待批量删除
+  glht_inventory_820112141934: 已定位 1 条，待批量删除
+  glht_inventory_flush: 删除 46/46 条
+  groups: '成功: 3, 失败: 0'
+  intercom_group_6a8671ae5b70f42010a7d6fd: close=True, delete=True
+  intercom_group_6a8671b05b70f42010a7d712: close=True, delete=True
+  intercom_group_6a8671b15b70f42010a7d734: close=True, delete=True
+  intercom_group_6a8671b25b70f42010a7d73e: close=True, delete=True
+  intercom_group_6a8671b25b70f42010a7d745: close=True, delete=True
+  intercom_group_6a8671b25b70f42010a7d74e: close=True, delete=True
+  rescue_chat_820111322923: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111702081: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111703883: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111704650: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111706326: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111706478: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111706632: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111706780: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820111707539: '关闭: 0, 仍活跃: 0'
+  rescue_chat_820112141934: '关闭: 0, 仍活跃: 0'
+  terminals: '成功: 45, 失败: 0'
+  unpaid_order_2090276335382478848: cancel=False, delete=True
+  unpaid_order_2090278126790688768: cancel=True, delete=True
+  unpaid_order_2090278401739898880: cancel=True, delete=True

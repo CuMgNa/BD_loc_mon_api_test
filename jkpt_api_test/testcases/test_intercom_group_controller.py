@@ -3,13 +3,18 @@
 # 计划：plan/intercom-group-tests.plan.md；现网基线 §5
 # 群收尾：用例内 close+delete 即清理；registry 兜底中断遗留（消费完成即注销）
 # 扩展断言：信封走 assert_api_result；成功一行结论，失败才打对照表（grilling 共识）
-import json
 import time
 
 import jsonpath
 import pytest
 
-from common.allure_assert_util import assert_api_result
+from common.case_report_util import (
+    assert_case as _assert_case,
+    case_headers,
+    report_extra as _report_extra,
+    report_extra_and_assert as _report_extra_and_assert,
+    send_case,
+)
 from common.cleanup import (
     register_intercom_group,
     intercom_group,
@@ -17,19 +22,14 @@ from common.cleanup import (
     register_glht_inventory,
     rescue_chat,
 )
-from common.logger_util import key, print_request, print_response, print_result, sep
+from common.logger_util import key
 from common.rescue_platform_client import generate_rescue_sn
-
-try:
-    import allure
-except Exception:
-    allure = None
 from common.requests_util import BaseRequest
+from common.star_bean_util import latest_balance, latest_entry
 from common.yaml_util import (
     read_yaml,
     write_yaml,
     resolve_extract_value,
-    read_expected_msg,
     is_extract_placeholder,
 )
 
@@ -55,12 +55,7 @@ def _jp_first(data, expr):
 class _IgHelpers:
     """共享逻辑；不以 Test 开头，pytest 不收集。"""
 
-    @staticmethod
-    def headers(auth_headers, case):
-        headers = {**auth_headers}
-        if case.get("no_auth"):
-            headers.pop("Authorization", None)
-        return headers
+    headers = staticmethod(case_headers)
 
     @staticmethod
     def resolve_addr(raw, rescue_sat_terminal=None, bd_test_terminal=None,
@@ -93,98 +88,13 @@ class _IgHelpers:
             return resolve_extract_value(gid, required=required)
         return gid
 
-    @staticmethod
-    def send(http, method, url, case, headers, *, params=None, json=None):
-        sep(f" 测试用例: {case['name']}")
-        print_request(method.upper(), url, params=params, json=json, headers=headers)
-        res = http.send_request(
-            method, url, params=params, json=json, headers=headers,
-            case_name=case["name"], log_level="none",
-        )
-        print_response(res)
-        return res.json()
+    send = staticmethod(send_case)
+    assert_case = staticmethod(_assert_case)
+    report_extra = staticmethod(_report_extra)
+    report_extra_and_assert = staticmethod(_report_extra_and_assert)
 
-    @staticmethod
-    def assert_case(case, json_data, biz_context):
-        code = _jp_first(json_data, "$.code")
-        msg = _jp_first(json_data, "$.msg") or ""
-        sep(" 断言结果 ")
-        key("预期 code", case["expected"]["code"])
-        key("实际 code", code)
-        key("预期 msg", read_expected_msg(case["expected"]))
-        key("实际 msg", msg)
-        assert_api_result(
-            case_name=case["name"],
-            expected_code=case["expected"]["code"],
-            expected_msg=read_expected_msg(case["expected"]),
-            actual_code=code,
-            actual_msg=msg,
-            biz_context=biz_context,
-        )
-        return code, msg
-
-    @staticmethod
-    def report_extra(title, rows, *, ok, summary=None):
-        """扩展结果：成功一行结论 + Allure 压缩 JSON；失败框+全表 + Allure rows。"""
-        line = summary or (f"{title}通过" if ok else f"{title}失败")
-        if ok:
-            print(f"  ✅ {line}")
-            if allure:
-                allure.attach(
-                    json.dumps({"title": title, "ok": True, "summary": line},
-                               indent=2, ensure_ascii=False, default=str),
-                    name=f"【扩展】{title}",
-                    attachment_type=allure.attachment_type.JSON,
-                )
-            return
-        sep(title)
-        print(f"  {'项':<32} {'期望':<28} {'实际'}")
-        for row in rows:
-            print(
-                f"  {str(row.get('项', '')):<32} "
-                f"{str(row.get('期望', '')):<28} "
-                f"{str(row.get('实际', ''))}"
-            )
-        print_result(False, f"{title}失败")
-        if allure:
-            allure.attach(
-                json.dumps({"title": title, "ok": False, "rows": rows},
-                           indent=2, ensure_ascii=False, default=str),
-                name=f"【扩展】{title}",
-                attachment_type=allure.attachment_type.JSON,
-            )
-
-    @staticmethod
-    def report_extra_and_assert(title, rows, summary):
-        ok = all(r.get("通过", True) for r in rows)
-        _IgHelpers.report_extra(title, rows, ok=ok, summary=summary if ok else None)
-        if not ok:
-            bad = [r for r in rows if r.get("通过") is False]
-            raise AssertionError(f"{title}失败: {bad}")
-
-    @staticmethod
-    def latest_bean_entry(http, base_url, auth_headers, ttype):
-        """最新一条该类型星豆流水 → (amount, balanceAfter) 或 None。"""
-        res = http.send_request(
-            "get", f"{base_url}/api/monitor/star-bean/transaction/page",
-            params={"type": ttype, "page": 1, "pageSize": 1},
-            headers=auth_headers, case_name=f"查{ttype}流水", log_level="none",
-        )
-        items = _jsonpath_parse(res.json(), "$.data.items[*]") or []
-        if not items:
-            return None
-        return items[0].get("amount"), items[0].get("balanceAfter")
-
-    @staticmethod
-    def global_balance(http, base_url, auth_headers):
-        """全局最新一条流水的 balanceAfter（不限类型）。"""
-        res = http.send_request(
-            "get", f"{base_url}/api/monitor/star-bean/transaction/page",
-            params={"page": 1, "pageSize": 1},
-            headers=auth_headers, case_name="查全局余额", log_level="none",
-        )
-        items = _jsonpath_parse(res.json(), "$.data.items[*]") or []
-        return items[0].get("balanceAfter") if items else None
+    latest_bean_entry = staticmethod(latest_entry)
+    global_balance = staticmethod(latest_balance)
 
     @staticmethod
     def wait_new_deduction(http, base_url, auth_headers, ttype, beans, before, label,
