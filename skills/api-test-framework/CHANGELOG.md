@@ -1,3 +1,32 @@
+## [Unreleased] — 2026-08-19 glht 入库记录清理改为精确登记
+
+### Fixed
+- `glht.py` 原按"session 起始日模糊字符串"猜测 SN 编码规则来批量删除入库记录，对 `generate_rescue_sn()`（月+日+时+分+秒+盐，无年份）生成的救援棒 SN 完全失效，只对含 `YYYYMMDD` 前缀的 SN（`terminal_type_enum_cases`）有效——迁移为按 sn 精确登记查删后，与 SN 格式完全无关
+
+### Added
+- `common/cleanup/glht.py`：`register(sn)`（副作用落地即注册入口）、`flush_cleaner`（tier410，批量执行删除）
+- `common/cleanup/__init__.py`：包级入口 `register_glht_inventory`
+- `references/cleanup-framework.md`：新增模板 D（逐项登记 + 集中批量收尾），适用于"批量接口 + 动态登记 + 需要逐项可诊断性"三者并存的场景
+
+### Changed
+- `glht.py` 从"半独立"（依赖 conftest 的 `glht_token`/`glht_base_url` fixture）改为完全自包含域模块（自读 `GLHT_*` 环境变量），对齐其余域模块的形状
+- `registry.py` tier 语义文档新增 400/410（外部系统，两阶段"定位/执行"约定）
+- `conftest.py` 删除独立的 `glht_base_url`/`glht_token`/`glht_cleanup_test_data` fixture 及 `pytest_session_start_day` 全局变量（唯一消费者已随之删除），glht 清理并入主 `cleanup_test_data` 调度
+- `ENABLE_GLHT_CLEANUP` 默认值：`false` → `true`
+
+### Removed
+- `pytestconfig.stash["rescue_terminal_sns"]`：write-only 死数据（2 处写、0 处读），其预期消费方即本次迁移，已被 registry 逐项登记取代；连带移除 `rescue_sat_terminal`/`_provision_b_rescue_stick`/`rescue_sat_terminal_b`/`b2`/`b3` 中随之空转的 `pytestconfig` 形参
+- `conftest.py` 的 `import hashlib`（唯一消费者 `glht_token` 已删除；glht 侧的 MD5 现由 `common/cleanup/glht.py` 自行 import）
+
+### Breaking
+- glht 清理从"独立于 `ENABLE_AUTO_CLEANUP` 运行"变为"并入 `run_session_cleanup`，受 `ENABLE_AUTO_CLEANUP` 总闸控制"——`ENABLE_AUTO_CLEANUP=false` 时会连带跳过 glht 清理（此前不会）。此时登记不会被清空（`registry` 纪律 3 的清表动作在 `run_session_cleanup` 的 `finally` 里，总闸关闭时整个调度不进入），登记与 `glht._pending_ids` 在进程内累积；同进程后续若跑一个开着总闸的 session，会把上一轮登记一并收走（补删，非泄漏）。单进程单 session 的常规跑法无影响
+- `cleanup-report.yaml` 新增 `glht_inventory_<sn>` / `glht_inventory_flush` 两类 key；不影响已有 key
+
+### Deferred（未处理，需后续单独决策）
+- glht 后台历史遗留的存量入库记录（本次分析发现的量级：全量 1321 条，其中「今日」新增 141 条，均由 `terminal_type_enum_cases` 产生）本次不做一次性清理，仅保证"以后新造的都能精确清掉"
+
+---
+
 ## [Unreleased] — 2026-08-19 清理框架统一化
 
 ### Fixed

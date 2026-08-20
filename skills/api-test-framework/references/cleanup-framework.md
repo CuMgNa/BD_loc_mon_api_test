@@ -11,7 +11,8 @@
 有真批量接口（如 `/terminals/batch` 逗号拼 addr）→ 选右列；没有 → 选左列。
 
 **`rescue_chat_{sn}`（`conftest.py` 内 `register_cleanup(f"rescue_chat_{sn}", ...)`）是已知技术债，
-不是范例**——它没有包一层 `register()`，也没有用 `register_cleanup_once` 去重。不要抄它，抄下面两个模板。
+不是范例**——它没有包一层 `register()`，也没有用 `register_cleanup_once` 去重。不要抄它，抄下面的模板。
+`glht.py` 是模板 D 的范例实现（`register(sn)` / `cleaner` 定位 / `flush_cleaner` 批量执行）。
 
 ## 1. 模板 A：静态一次性域
 
@@ -84,12 +85,25 @@ def cleaner(ctx, _payload, **flags) -> str:
 后续调用只管往 `_PENDING` 追加。跟模板 B 的用法容易混——模板 B 每次传的 domain 都不同（带 id），
 模板 C 每次传的 domain 都相同。
 
+## 3.5 模板 D：逐项登记 + 集中批量收尾
+
+正交问题：**cleaner 要不要把"定位"和"执行"拆成两步？**
+
+如果域的删除动作本身支持批量接口（像 glht 的 `DELETE /api/admin/inventory` 一次可传多个 id），但登记时机是逐项、动态的（每次入库成功才知道一个新 sn），模板 B（逐项 domain，cleaner 里直接单项调 HTTP）会把 1 次批量接口拆成 N 次单项请求，浪费；模板 C（共享 domain + 累积列表）又要求所有实例走同一个 `register()` 才能攒进同一个列表，登记语义上不如"每个实例一个 domain"直观、不好单独 `unregister`。
+
+**模板 D = 逐项登记（沿用模板 B 的 domain 命名/去重/可诊断性）+ 集中批量收尾（沿用模板 C 的"一次批量请求"效率）**：每个实例仍然各开一个 `f"{prefix}_{id}"` domain（tier N），`cleaner(ctx, id, **flags)` 只做"定位"（查询/校验，不做实际删除动作），把结果写入模块级累积容器；额外用 `register_cleanup_once` 挂一个**全局唯一**、**tier = N+10**（保证在所有逐项 domain 之后执行）的 `flush_cleaner`，读取累积容器，一次批量执行。
+
+适用场景：批量接口存在 + 登记时机动态 + 想保留逐项可诊断性，三者都要时选模板 D；只要三者有一个不成立，仍然选 A/B/C。
+
+完整范例见 `common/cleanup/glht.py`。
+
 ## 4. 新增域 checklist
 
 1. 什么时候知道要清？fixture 一次性 → 模板 A；运行中逐次 → B 或 C。
 2. cleaner 处理时是逐项调 HTTP 还是要打包批量？逐项 → B；批量 → C。
 3. 用例内会不会主动消费掉这个实例（如 delete 成功）？会 → 模板 B 要写 `unregister`。
-4. tier 怎么选：100 会话级业务对象（群/订单）/ 200 设备 / 300 组织（分组）；新域挑层不挑位置。
+4. tier 怎么选：100 会话级业务对象（群/订单）/ 200 设备 / 300 组织（分组）/ 400+ 外部系统（与内部 100-300 无依赖；两阶段定位/执行时执行层用 N+10，见 `glht.py`）；新域挑层不挑位置。
+5. 删除动作是否支持批量接口，但登记时机又是动态逐项？两者都成立 → 模板 D（逐项定位 + 集中批量收尾，参考 `common/cleanup/glht.py`）。
 
 ## 5. 可移植性：换项目怎么套用
 

@@ -17,7 +17,7 @@
 | **认证** | `auth_token`、`auth_headers`（`generate_captcha_id` 在 `common.captcha_util`） |
 | **失败上下文 hook** | `pytest_runtest_makereport` |
 | **业务前置** | `group_fixture`、`terminal_types`、`terminal_use_scopes`、`terminal_type_enum_cases`、`bd_test_terminal`、`msg_test_terminal`、`bd_client` |
-| **会话清理** | `clear_data_per_session`（autouse）、`cleanup_test_data`（autouse，实为 `common/cleanup/` 包一行调度）、`glht_cleanup_test_data`（autouse，默认不登录 glht） |
+| **会话清理** | `clear_data_per_session`（autouse）、`cleanup_test_data`（autouse，实为 `common/cleanup/` 包一行调度；glht 入库记录已并入此调度，不再有独立 fixture） |
 
 ### 全局常量与环境
 
@@ -27,9 +27,9 @@
 | `JKPT_ACCOUNT` / `JKPT_PASSWORD` | 监控平台登录凭据（密码按接口要求传，本地可设 fallback） |
 | `accept_language` | `zh-CN` |
 | `BD_TEST_ADDR` | BD 协议测试设备 SN（固定值，见源码 `TEST_TERMINALS`） |
-| `ENABLE_AUTO_CLEANUP` | 环境变量，默认 `true`；`false` 时跳过 jkpt session 末：登记待支付单收尾、设备/分组清理 |
-| `ENABLE_GLHT_CLEANUP` | 环境变量，默认 `false`。为 `true` 时才登录 glht 并清理入库记录 |
-| `GLHT_BASE_URL` / `GLHT_ACCOUNT` / `GLHT_PASSWORD` | glht 登录（仅 `ENABLE_GLHT_CLEANUP=true` 时使用；密码为明文，conftest 内 MD5） |
+| `ENABLE_AUTO_CLEANUP` | 环境变量，默认 `true`；`false` 时跳过整个 `run_session_cleanup`（含 glht 入库记录清理） |
+| `ENABLE_GLHT_CLEANUP` | 环境变量，默认 `true`。由 `common/cleanup/glht.py` 自读，非 conftest 常量。为 `false` 时 glht cleaner 直接跳过（零网络开销） |
+| `GLHT_BASE_URL` / `GLHT_ACCOUNT` / `GLHT_PASSWORD` | glht 登录凭据（由 `common/cleanup/glht.py` 自读；密码为明文，模块内 MD5） |
 | 全局 `http` | `BaseRequest()` 单实例，供本 conftest 内部直接调用（用例不要复用） |
 | 全局 `ocr` | `CaptchaRecognizer()` 单实例 |
 
@@ -66,9 +66,6 @@ flowchart TD
   auth_headers --> cleanup_test_data
   group_fixture --> cleanup_test_data
   pytestconfig --> cleanup_test_data
-  flag[ENABLE_GLHT_CLEANUP=true] -.-> glht_token
-  glht_base_url --> glht_token
-  glht_token -.-> glht_cleanup_test_data
 ```
 
 ---
@@ -89,10 +86,7 @@ flowchart TD
 | `msg_test_terminal` | session | `base_url`, `auth_headers`, `group_fixture` | `str`（addr） | 报警/消息类用例 |
 | `bd_client` | session | `base_url`, `auth_headers` | `BDProtocolClient` | 协议发送场景 |
 | `clear_data_per_session` | session autouse | — | None | 自动；用例无需感知 |
-| `cleanup_test_data` | session autouse | `base_url`, `auth_headers`, `group_fixture`, `pytestconfig` | None | 自动；session 结束清理 jkpt 数据 |
-| `glht_base_url` | session | — | `str` | 仅显式注入或开启 glht 清理时 |
-| `glht_token` | session | `glht_base_url` | `str` | 同上 |
-| `glht_cleanup_test_data` | session autouse | 按需 `request.getfixturevalue` | None | 默认不登录；`ENABLE_GLHT_CLEANUP=true` 才清理 |
+| `cleanup_test_data` | session autouse | `base_url`, `auth_headers`, `group_fixture`, `pytestconfig` | None | 自动；session 结束清理 jkpt 数据 + glht 入库记录 |
 
 ---
 
@@ -260,14 +254,9 @@ def test_protocol_alarm(self, bd_client, bd_test_terminal):
 1. **tier 100**：`rescue_chat_{sn}`（关求救群）、`unpaid_order_{no}`（收待支付单，逐单 cancel→delete）、`intercom_group_{gid}`（收对讲群，逐群 close→delete）
 2. **tier 200**：`terminals`/`b_terminals`（删设备，按 `three_id → two_id → one_id` 聚合分组批量删）
 3. **tier 300**：`groups`/`b_groups`（删分组，按 `three_id → two_id → one_id` 倒序）
+4. **tier 400/410**：`glht_inventory_{sn}`（按 sn 精确定位入库记录 id）→ `glht_inventory_flush`（批量 DELETE）。模板 D，见 [cleanup-framework.md](./cleanup-framework.md)
 
-`group_fixture` 返回的字典通过 `pytestconfig.stash["test_group_ids"]` 持久化，防止 fixture 失效。要留本轮待支付单给人工扫码：`ENABLE_AUTO_CLEANUP=false`。
-
-### 4.13 `glht_cleanup_test_data` — session autouse（默认空转）
-
-默认 **不** 登录 glht。仅当 `ENABLE_GLHT_CLEANUP=true` 时通过 `request.getfixturevalue` 拉取 `glht_token` / `glht_base_url`，session 结束清理当日入库记录。
-
-只跑 jkpt HTTP 用例时不要开这个开关。凭据只用环境变量名：`GLHT_BASE_URL`、`GLHT_ACCOUNT`、`GLHT_PASSWORD`。
+`group_fixture` 返回的字典通过 `pytestconfig.stash["test_group_ids"]` 持久化，防止 fixture 失效。要留本轮待支付单给人工扫码：`ENABLE_AUTO_CLEANUP=false`（会连带跳过 glht 清理）。
 
 ---
 
